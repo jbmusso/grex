@@ -20,5 +20,5 @@
   "engines": {
     "node": ">=0.6.0"
   },
-  "main": "./grex.js"
+  "main": "grex.js"
 }
