@@ -12,11 +12,7 @@
   "dependencies": {
     "q": ">=0.8.0"
   },
-  "licenses": [
-      {
-          "type": "MIT"
-      }
-  ],
+  "license": "MIT",
   "engines": {
     "node": ">=0.6.0"
   },

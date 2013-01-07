@@ -155,7 +155,7 @@
         }
     }
 
-    //and | or | put  => g.v(1).outE().or(g._().has('id', 'T.eq', "9"), g._().has('weight', 'T.lt', '0.6f'))
+    //and | or | put  => g.v(1).outE().or(g._().has('id', 'T.eq', 9), g._().has('weight', 'T.lt', '0.6f'))
     function _qryPipes(method){
         return function() {
             var gremlin = new Grex(this.params),
