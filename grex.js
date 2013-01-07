@@ -217,32 +217,36 @@
                 argLen = arguments.length,
                 i = 0;
 
-            if(action == 'delete'){
-                o._id = arguments[0];
-                if (argLen > 1) {
-                    o._keys = arguments[1];
-                }
-            } else {
-                o = arguments[argLen - 1];
-                if (type == 'edge') {
-                    if (argLen > 4) {
-                        i = 1;
-                        o._id = arguments[0];
-                    }
-                    o._outV = arguments[0 + i];
-                    o._inV = arguments[1 + i];
-                    o._label = arguments[2 + i];
-                } else {
+            if (!!argLen) {
+                if(action == 'delete'){
+                    o._id = arguments[0];
                     if (argLen > 1) {
-                        i = 1;
-                        o._id = arguments[0];
+                        o._keys = arguments[1];
                     }
-                    o = arguments[0 + i];
+                } else {
+                    if (type == 'edge') {
+                        o = arguments[argLen - 1];
+                        if (argLen > 4) {
+                            i = 1;
+                            o._id = arguments[0];
+                        }
+                        o._outV = arguments[0 + i];
+                        o._inV = arguments[1 + i];
+                        o._label = arguments[2 + i];
+                    } else {
+                        if (_isObject(arguments[0])) {
+                            o = arguments[0];
+                        } else {
+                            if(argLen == 2){
+                                o = arguments[1];
+                            }
+                            o._id = arguments[0];
+                        }
+                    }
                 }
             }
             o._action = action;
             o._type = type;
-
             push.call(txArray, o);
         }
     }
@@ -406,6 +410,7 @@
             });
 
             req.on('error', function(e) {
+              txArray = [];
               console.log('problem with request: ' + e.message);
               deferred.reject("Got error: " + e.message);
             });
