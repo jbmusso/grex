@@ -1,4 +1,5 @@
-
+// This module can be loaded as a RequireJS module, a CommonJS module, or
+// a browser script.  As a script, it creates a "g" global name space.
 (function (definition) {
 
     // RequireJS
@@ -12,14 +13,16 @@
     // CommonJS
     } else if (typeof exports === "object") {
         definition(exports);
+
+    // <script>
+    } else {
+        definition(g = {});
     }
 
 })(function (exports) {
-    var q = require("q");
-    var http = require('http');
     var toString = Object.prototype.toString,
         push = Array.prototype.push;
-        
+
     //default options
     var OPTS = {
         'host': 'localhost',
@@ -45,7 +48,7 @@
         };
 
     }
- 
+
     exports.setOptions= _setOptions();
     exports._ = _qryMain('_', true);
     exports.E = _qryMain('E', true); 
@@ -208,7 +211,11 @@
         argList = argList.substr(0, argList.length - 1);
         return '(' + argList + ')' + append;
     }
-
+    
+    function rollback(){
+        txArray = [];
+    };
+    
     function _cud(action, type) {
         return function() {
             var o = {},
@@ -248,10 +255,6 @@
             push.call(txArray, o);
         }
     }
-
-    function rollback(){
-        txArray = [];
-    };
 
     Grex.prototype = {
         
@@ -329,98 +332,99 @@
         get: get()
     }
 
-    function get() {
-        return function(headers) {
-            var deferred = q.defer();
-
-            var options = {
-                'host': OPTS.host,
-                'port': OPTS.port,
-                'path': _pathBase + OPTS.graph + _gremlinExt + this.params,
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                'method': 'GET'
-            };
-
-            for (var h in headers) {
-                if (headers.hasOwnProperty(h)) {
-                    options.headers[h] = headers[h];
-                }
-            }
-            http.get(options, function(res) {
-                console.log("Response: " + res.statusCode);
-                res.setEncoding('utf8');
-                var body = '';
-                res.on('data', function(results) {
-                    body += results + "\n";
-                });
-
-                res.on('end', function() {
-                    deferred.resolve(body);
-                });
-            }).on('error', function(e) {
-                deferred.reject("Got error: " + e.message);
-            });
+    /*
+     * AJAX
+     */
+    function get () {
+        return function(url, headers) {
+            var url = url || 'http://' + OPTS.host + ':' + OPTS.port + _pathBase + OPTS.graph + _gremlinExt;
+                headers = headers || { 'Content-Type':'application/x-www-form-urlencoded' };
             
-            console.log(this.params);
-            return deferred.promise;
-        }
+            return ajax('GET', url, this.params, headers);  
+        } 
     }
 
-    function post() {
-        return function(headers) {
-            var deferred = q.defer();
-            var data = { tx: txArray };
-            var payload = JSON.stringify(data);
-            
-            var options = {
-                'host': OPTS.host,
-                'port': OPTS.port,
-                'path': _pathBase + OPTS.graph + _batchExt,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Content-Length': payload.length
-                },
-                'method': 'POST'
-            };
+    function post () {
+        return function(url, headers) {
+            var url = url || 'http://' + OPTS.host + ':' + OPTS.port + _pathBase + OPTS.graph + _batchExt,
+                data = { tx: txArray };
+                headers = headers || { 'Content-Type':'application/json' };
 
-            for (var h in headers) {
-                if (headers.hasOwnProperty(h)) {
-                    options.headers[h] = headers[h];
+            return ajax('POST', url, JSON.stringify(data), headers);
+        } 
+    }
+
+    function _encode(data) {
+        var result = "";
+        if (typeof data === "string") {
+            result = data;
+        } else {
+            var e = encodeURIComponent;
+            for (var k in data) {
+                if (data.hasOwnProperty(k)) {
+                    result += '&' + e(k) + '=' + e(data[k]);
                 }
             }
-            var body = '';
-            var req = http.request(options, function(res) {
-                res.setEncoding('utf-8');
-                console.log('STATUS: ' + res.statusCode);
-                console.log('HEADERS: ' + JSON.stringify(res.headers));
+        }
+        return result;
+    }
 
-                //Need to check this.
-                if(res.statusCode == 200){
-                    //reset array
-                    txArray = [];
-                }
-                
-                res.on('data', function (chunk) {
-                    console.log('BODY: ' + chunk);
-                    body += chunk;
-                });
-                res.on('end', function() {
-                    deferred.resolve(JSON.parse(body));
-                });
-            });
+    function new_xhr() {
+        var xhr;
+        if (window.XMLHttpRequest) {
+            xhr = new XMLHttpRequest();
+        } else if (typeof XDomainRequest != "undefined") {
+            // Otherwise, check if XDomainRequest.
+            // XDomainRequest only exists in IE, and is IE's way of making CORS requests.
+            xhr = new XDomainRequest();
+      } else if (window.ActiveXObject) {
+            try {
+                xhr = new ActiveXObject("Msxml2.XMLHTTP");
+            } catch (e) {
+                xhr = new ActiveXObject("Microsoft.XMLHTTP");
+            }
+        }
+        return xhr;
+    }
 
-            req.on('error', function(e) {
-              txArray = [];
-              console.log('problem with request: ' + e.message);
-              deferred.reject("Got error: " + e.message);
-            });
+    function ajax(method, url, data, headers) {
+        var deferred = Q.defer();
+        var xhr, payload;
+        data = data || {};
+        headers = headers || {};
 
-            // write data to request body
-            req.write(payload);
-            req.end();
+        try {
+            xhr = new_xhr();
+        } catch (e) {
+            deferred.reject(-1);
             return deferred.promise;
         }
+
+        payload = _encode(data);
+        if (method === 'GET' && payload) {
+            url += payload;
+            payload = null;
+        }
+
+        xhr.open(method, url, true);
+        for (var h in headers) {
+            if (headers.hasOwnProperty(h)) {
+                xhr.setRequestHeader(h, headers[h]);
+            }
+        }
+
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    deferred.resolve(xhr.responseText);
+                } else {
+                    deferred.reject(xhr);
+                }
+            }
+        };
+
+        xhr.send(payload);
+        return deferred.promise;
     }
+
 });
