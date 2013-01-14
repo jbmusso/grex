@@ -15,8 +15,9 @@
     }
 
 })(function (exports) {
-    var q = require("q");
+    var q = require('q');
     var http = require('http');
+
     var toString = Object.prototype.toString,
         push = Array.prototype.push;
         
@@ -336,7 +337,7 @@
             var options = {
                 'host': OPTS.host,
                 'port': OPTS.port,
-                'path': _pathBase + OPTS.graph + _gremlinExt + this.params,
+                'path': _pathBase + OPTS.graph + _gremlinExt + encodeURIComponent(this.params),
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded'
                 },
