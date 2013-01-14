@@ -150,7 +150,15 @@ grex>     g.v(1).outE().or(g._().has('id', 'T.eq', 9), g._().has('weight', 'T.lt
 
 ```
 
-__Example 6: retain__
+__Example 6: groupBy__
+
+```
+gremlin>    g.V.out.groupBy{it.name}{it.in}{it.unique().findAll{i -> i.age > 30}.name}.cap
+
+grex>       g.V().out().groupBy('{it.name}','{it.in}','{it.unique().findAll{i -> i.age > 30}.name}').cap()
+```
+
+__Example 7: retain__
 
 ```
 gremlin>  g.V.retain([g.v(1), g.v(2), g.v(3)])
@@ -158,7 +166,7 @@ gremlin>  g.V.retain([g.v(1), g.v(2), g.v(3)])
 grex>     g.V().retain([g.v(1), g.v(2), g.v(3)])
 ```
 
-__Example 7: indexing__
+__Example 8: indexing__
 
 ```
 gremlin>  g.createIndex("my-index", Vertex.class)
@@ -174,7 +182,7 @@ gremlin>  g.idx("my-index")[[name:"marko"]]
 grex>     g.idx("my-index", {name:"marko"});  
 ```
 
-__Example 8: Create, Update, Delete__
+__Example 9: Create, Update, Delete__
 
 ```
 grex>     g.addVertex(100, {k1:'v1', 'k2':'v2', k3:'v3'});
