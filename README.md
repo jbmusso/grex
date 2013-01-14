@@ -107,12 +107,12 @@ var error = function (err) {
 };
 ```
 
-```gremlin>
-g.v(1).outE.or(_().has('id', T.eq, "9"), _().has('weight', T.lt, 0.6f))
+```
+gremlin> g.v(1).outE.or(_().has('id', T.eq, "9"), _().has('weight', T.lt, 0.6f))
 ```
 
-```grex>
-g.v(1).outE().or(g._().has('id', 'T.eq', 9), g._().has('weight', 'T.lt', '0.6f')).get().then(result, error); 
+```
+grex> g.v(1).outE().or(g._().has('id', 'T.eq', 9), g._().has('weight', 'T.lt', '0.6f')).get().then(result, error); 
 ```
 
 ##License
