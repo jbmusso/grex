@@ -1,4 +1,4 @@
-grex
+Grex
 ====
 
 [Gremlin](https://github.com/tinkerpop/gremlin/wiki) inspired javascript client for [Rexster Graph Server](https://github.com/tinkerpop/rexster/wiki).
@@ -23,7 +23,7 @@ A tool for making and composing asynchronous promises in JavaScript.
 
 ## Installation
 
-grex can be loaded as:
+Grex can be loaded as:
 
 -   a ``<script>`` tag in the browser (creating a ``g`` global variable)
 
@@ -48,7 +48,7 @@ grex can be loaded as:
 
 ## Introduction
 
-grex tries to implement Gremlin syntax as closely as possible. However, there are some differences.
+Grex tries to implement Gremlin syntax as closely as possible. However, there are some differences.
 
 * All method calls require brackets __()__, even if there are no arguments.
 * __Closures__ do not translate to javascript and are passed in as string arguments to grex methods. 
@@ -158,18 +158,18 @@ gremlin>  g.V.retain([g.v(1), g.v(2), g.v(3)])
 grex>     g.V().retain([g.v(1), g.v(2), g.v(3)])
 ```
 
-__Example7: indexing__
+__Example 7: indexing__
 
 ```
 gremlin>  g.createIndex("my-index", Vertex.class)
 
-gremlin>  g.idx("my-index").put("name", "marko", g.v(1))
-
-gremlin>  g.idx("my-index")[[name:"marko"]]  
-
 grex>     g.createIndex("my-index", "Vertex.class")
 
+gremlin>  g.idx("my-index").put("name", "marko", g.v(1))
+
 grex>     g.idx("my-index").put("name", "marko", g.v(1))
+
+gremlin>  g.idx("my-index")[[name:"marko"]]  
 
 grex>     g.idx("my-index", {name:"marko"});  
 ```
@@ -192,6 +192,10 @@ grex>     g.removeVertex(200);
 grex>     g.commit()
 
 ```
+
+##TODO
+* More around indexing
+* Testing
 
 ##License
 ###The MIT License (MIT)
