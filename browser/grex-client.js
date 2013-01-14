@@ -38,7 +38,7 @@
     var txArray = [];
     var graphRegex = /^g\./;
     var TRegex = /^T\.(gt|gte|eq|neq|lte|lt)$/;
-    var closureRegex = /^\{\s*\bit\.(\w|\W)+\s*\}$/;
+    var closureRegex = /^\{\[?\s*\bit\.(\w|\W)+\s*\]?\}$/;
 
     function Grex(qryString) {
         if(!!qryString){
@@ -230,8 +230,8 @@
                     }
                 } else {
                     if (type == 'edge') {
-                        o = arguments[argLen - 1];
-                        if (argLen > 4) {
+                        o = _isObject(arguments[argLen - 1]) ? arguments[argLen - 1] : {};
+                        if (argLen == 5 || (argLen == 4 && !_isObject(o))) {
                             i = 1;
                             o._id = arguments[0];
                         }
