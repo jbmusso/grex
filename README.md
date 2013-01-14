@@ -59,7 +59,7 @@ grex tries to implement Gremlin syntax as closely as possible. However, there ar
 * __Comparators__ and __Float__'s are not native javascript Types so need to be passed in as a string to grex methods. Floats need to be suffixed with a 'f'.
 
     ```e.g.
-    g.v(1).outE.has("weight", "T.gte", "0.5f").property("weight")
+    g.v(1).outE().has("weight", "T.gte", "0.5f").property("weight")
     ```
 * Certain methods cannot be implemented. Such as ``aggregate``, ``store``, ``table``, ``tree`` and ``fill``. These methods take a local object and populate it with data, which cannot be done in this environment.
 
@@ -104,11 +104,11 @@ grex>     g.V('name', 'marko').out();
 
 grex>     g.V({name: 'marko'}).out();
 
-gremlin> g.v(1, 4).out('knows', 'created').in
+gremlin>  g.v(1, 4).out('knows', 'created').in
 
-grex> g.v(1, 4).out('knows', 'created').in();
+grex>     g.v(1, 4).out('knows', 'created').in();
 
-grex> g.v([1, 4]).out(['knows', 'created']).in(); 
+grex>     g.v([1, 4]).out(['knows', 'created']).in(); 
 
 ```
 
@@ -131,66 +131,65 @@ grex>     g.V().range('0..<2').property('name');
 __Example 4: has__
 
 ```
-gremlin> g.E.has('weight', T.gt, 0.5f).outV.transform{[it.id,it.age]}
+gremlin>  g.E.has('weight', T.gt, 0.5f).outV.transform{[it.id,it.age]}
 
-grex> g.E().has('weight', 'T.gt', '0.5f').outV().transform('{[it.id,it.size()]}');
+grex>     g.E().has('weight', 'T.gt', '0.5f').outV().transform('{[it.id,it.size()]}');
 ```
 
 __Example 5: and & or__
 
 
 ```
-gremlin> g.V.and(_().both("knows"), _().both("created"))
+gremlin>  g.V.and(_().both("knows"), _().both("created"))
 
-grex> g.V().and(g._().both("knows"), g._().both("created"))
+grex>     g.V().and(g._().both("knows"), g._().both("created"))
 
-gremlin> g.v(1).outE.or(_().has('id', T.eq, "9"), _().has('weight', T.lt, 0.6f))
+gremlin>  g.v(1).outE.or(_().has('id', T.eq, "9"), _().has('weight', T.lt, 0.6f))
 
-grex> g.v(1).outE().or(g._().has('id', 'T.eq', 9), g._().has('weight', 'T.lt', '0.6f')); 
+grex>     g.v(1).outE().or(g._().has('id', 'T.eq', 9), g._().has('weight', 'T.lt', '0.6f')); 
 
 ```
 
 __Example 6: retain__
 
 ```
-gremlin> g.V.retain([g.v(1), g.v(2), g.v(3)])
+gremlin>  g.V.retain([g.v(1), g.v(2), g.v(3)])
 
-grex> g.V().retain([g.v(1), g.v(2), g.v(3)])
+grex>     g.V().retain([g.v(1), g.v(2), g.v(3)])
 ```
 
 __Example7: indexing__
 
 ```
-gremlin> g.createIndex("my-index", Vertex.class)
+gremlin>  g.createIndex("my-index", Vertex.class)
 
-gremlin> g.idx("my-index").put("name", "marko", g.v(1))
+gremlin>  g.idx("my-index").put("name", "marko", g.v(1))
 
-gremlin> g.idx("my-index")[[name:"marko"]]  
+gremlin>  g.idx("my-index")[[name:"marko"]]  
 
-grex> g.createIndex("my-index", "Vertex.class")
+grex>     g.createIndex("my-index", "Vertex.class")
 
-grex> g.idx("my-index").put("name", "marko", g.v(1))
+grex>     g.idx("my-index").put("name", "marko", g.v(1))
 
-grex> g.idx("my-index", {name:"marko"});  
+grex>     g.idx("my-index", {name:"marko"});  
 ```
 
 __Example 8: Create, Update, Delete__
 
-to be completed
 ```
-grex> g.addVertex(100, {k1:'v1', 'k2':'v2', k3:'v3'});
+grex>     g.addVertex(100, {k1:'v1', 'k2':'v2', k3:'v3'});
 
-grex> g.addVertex(200, {k1:'v1', 'k2':'v2', k3:'v3'});
+grex>     g.addVertex(200, {k1:'v1', 'k2':'v2', k3:'v3'});
 
-gremlin> g.addEdge(null,v1,v2,'pal',[weight:0.75f])
+grex>     g.addEdge(300,100,200,'pal',{weight:'0.75f'})
 
-grex> g.addEdge(300, {k1:'v1', 'k2':'v2', k3:'v3'});
+grex>     g.updateVertex(100, {k2: 'v4'});
 
-grex> g.updateVertex(100, {k1:'v1', 'k2':'v2', k3:'v3'});
+grex>     g.removeVertex(100, ['k2', 'k3']);
 
-g.delete -> props & element
+grex>     g.removeVertex(200);
 
-g.commit()
+grex>     g.commit()
 
 ```
 
