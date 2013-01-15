@@ -5,9 +5,9 @@ Grex
 
 ## Dependancies
 
-__batch kibble__ (extension)
+__batch kibble__ (Rexster extension)
 
-Place the batch-kibble-XXX.jar in the ``/ext`` folder in the rexster server directory.
+Move the batch-kibble-XXX.jar, located in the modules ``lib`` folder, to the ``/ext`` folder under the rexster server directory.
 Add an ``allow`` tag to the database extensions configuration in the rexster.xml file.
 
     <extensions>
