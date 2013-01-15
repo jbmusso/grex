@@ -1,18 +1,7 @@
 
 (function (definition) {
 
-    // RequireJS
-    if (typeof define === "function") {
-        define([], function () {
-            var exports = {};
-            definition(exports);
-            return exports;
-        });
-
-    // CommonJS
-    } else if (typeof exports === "object") {
-        definition(exports);
-    }
+    definition(exports);
 
 })(function (exports) {
     var q = require('q');
