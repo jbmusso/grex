@@ -93,11 +93,13 @@ g.setOptions({ host: 'myDomain', graph: 'myOrientdb', idRegex: /^[0-9]+:[0-9]+$/
 
 A good resource to understand the Gremlin API is [GremlinDocs](http://gremlindocs.com/). Below are examples of gremlin and it's equivalent grex syntax.
 
-__N.B.:__ Grex uses the [Q](http://documentup.com/kriskowal/q/) module to return a Promise when making Ajax calls. All ``GET`` requests are invoked with ``get()`` and the callback is captured by ``then(result, error);`` and ``POST`` requests are invoked by ``g.commit().then(result, error);``. For simplicity these calls are not included in the examples below.
+__N.B.:__ Grex uses the [Q](http://documentup.com/kriskowal/q/) module to return a Promise when making Ajax calls. All ``GET`` requests are invoked with ``get()`` and the callback is captured by ``then(result, error);`` and ``POST`` requests are invoked by ``g.commit().then(result, error);``.
 
 ```javascript
 g.V('name', 'marko').out().get().then(function(result){console.log(result)}, function(err){console.log(err)});
 ```
+
+For simplicity these calls are not included in the examples below.
 
 __Example 1: Basic Transforms__
 
