@@ -83,7 +83,7 @@ Graph database name
 
 ####idRegex (default: false)
 
-This can remain as false ids are numbers. If the id is not a number (i.e. alpha-numeric or string), then idRegex must to be set. This property will enable grex to distinduish between an id and another expression.
+This can remain as false ids are numbers. If the id is not a number (i.e. alpha-numeric or string), but passing parseFloat() test, then idRegex must to be set. This property will enable grex to distinduish between an id and a float expression.
 
 ```e.g.
 g.setOptions({ host: 'myDomain', graph: 'myOrientdb', idRegex: /^[0-9]+:[0-9]+$/ });
@@ -93,7 +93,11 @@ g.setOptions({ host: 'myDomain', graph: 'myOrientdb', idRegex: /^[0-9]+:[0-9]+$/
 
 A good resource to understand the Gremlin API is [GremlinDocs](http://gremlindocs.com/). Below are examples of gremlin and it's equivalent grex syntax.
 
-__N.B.:__ Grex uses the [Q](http://documentup.com/kriskowal/q/) module to return a Promise when making Ajax calls. Therefore all ``GET`` requests are suffixed with ``.get().then(result, error);`` and ``POST`` requests are invoked by ``g.commit().then(result, error);``. For simplicity these calls are not included in the examples below unless required.
+__N.B.:__ Grex uses the [Q](http://documentup.com/kriskowal/q/) module to return a Promise when making Ajax calls. All ``GET`` requests are invoked with ``get()`` and the callback is captured by ``then(result, error);`` and ``POST`` requests are invoked by ``g.commit().then(result, error);``. For simplicity these calls are not included in the examples below.
+
+```javascript
+g.V('name', 'marko').out().get().then(function(result){console.log(result)}, function(err){console.log(err)});
+```
 
 __Example 1: Basic Transforms__
 
