@@ -139,7 +139,7 @@ __Example 4: has__
 ```
 gremlin>  g.E.has('weight', T.gt, 0.5f).outV.transform{[it.id,it.age]}
 
-grex>     g.E().has('weight', 'T.gt', '0.5f').outV().transform('{[it.id,it.size()]}');
+grex>     g.E().has('weight', 'T.gt', '0.5f').outV().transform('{[it.id,it.age]}');
 ```
 
 __Example 5: and & or__
