@@ -25,7 +25,7 @@
     var txArray = [];
     var graphRegex = /^g\./;
     var TRegex = /^T\.(gt|gte|eq|neq|lte|lt)$/;
-    var closureRegex = /^\{\[?\s*\bit\.(\w|\W)+\s*\]?\}$/;
+    var closureRegex = /^\{\[?\s*(\bit\.(\w|\W)*|\bit)\s*\]?\}$/;
 
     function Grex(qryString) {
         if(!!qryString){
