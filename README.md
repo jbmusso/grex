@@ -51,10 +51,12 @@ Grex can be loaded as:
 Grex tries to implement Gremlin syntax as closely as possible. However, there are some differences.
 
 * All method calls require brackets __()__, even if there are no arguments.
-* __Closures__ do not translate to javascript and are passed in as string arguments to grex methods. 
+* __Closures__ do not translate to javascript. Closures need to passed in as one string argument to grex methods. 
 
     ```e.g.
-    g.v(1).out().gather("{it.size()}")
+    g.v(1).out().gather("{it.size()}");
+
+    g.v(1).out().ifThenElse("{it.name=='josh'}{it.age}{it.name}");
     ```
 * __Comparators__ and __Float__'s are not native javascript Types so need to be passed in as a string to grex methods. Floats need to be suffixed with a 'f'.
 
@@ -161,7 +163,7 @@ __Example 6: groupBy__
 ```
 gremlin>    g.V.out.groupBy{it.name}{it.in}{it.unique().findAll{i -> i.age > 30}.name}.cap
 
-grex>       g.V().out().groupBy('{it.name}','{it.in}','{it.unique().findAll{i -> i.age > 30}.name}').cap()
+grex>       g.V().out().groupBy('{it.name}{it.in}{it.unique().findAll{i -> i.age > 30}.name}').cap()
 ```
 
 __Example 7: retain__
