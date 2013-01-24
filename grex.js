@@ -25,8 +25,17 @@
     var txArray = [];
     var graphRegex = /^g\./;
     var TRegex = /^T\.(gt|gte|eq|neq|lte|lt)$/;
-    var closureRegex = /^\{\[?\s*\bit(\w|\W)*\s*\]?\}$/;
+    var closureRegex = /^\{.*\}$/;
 
+    var Tokens = {
+        'gt': 'T.gt',
+        'lt': 'T.lt',
+        'eq': 'T.eq',
+        'gte': 'T.gte',
+        'lte': 'T.lte',
+        'neq': 'T.neq'
+    }        
+    
     function Grex(qryString) {
         if(!!qryString){
             this.params = qryString;
@@ -55,7 +64,8 @@
 
     exports.commit = post();
     exports.rollback = rollback();
-
+    exports.Tokens = Tokens;
+    
     function _setOptions (){
         return function (options){
             if(!!options){
