@@ -213,6 +213,10 @@ grex>     g.commit()
 * More around indexing
 * Testing
 
+## Author
+
+Frank Panetta  - [Follow @entrendipity](https://twitter.com/intent/follow?screen_name=entrendipity)
+
 ##License
 ###The MIT License (MIT)
 
