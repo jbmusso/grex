@@ -85,7 +85,7 @@ Graph database name
 
 ####idRegex (default: false)
 
-This can remain as false ids are numbers. If the id is not a number (i.e. alpha-numeric or string), but passing parseFloat() test, then idRegex must to be set. This property will enable grex to distinduish between an id and a float expression.
+This can remain as false, if IDs are number. If IDs are not numbers (i.e. alpha-numeric or string), but still pass parseFloat() test, then idRegex must be set. This property will enable grex to distinguish between an ID and a float expression.
 
 ```e.g.
 g.setOptions({ host: 'myDomain', graph: 'myOrientdb', idRegex: /^[0-9]+:[0-9]+$/ });
@@ -95,13 +95,34 @@ g.setOptions({ host: 'myDomain', graph: 'myOrientdb', idRegex: /^[0-9]+:[0-9]+$/
 
 A good resource to understand the Gremlin API is [GremlinDocs](http://gremlindocs.com/). Below are examples of gremlin and it's equivalent grex syntax.
 
-__N.B.:__ Grex uses the [Q](http://documentup.com/kriskowal/q/) module to return a Promise when making Ajax calls. All ``GET`` requests are invoked with ``get()`` and the callback is captured by ``then(result, error);`` and ``POST`` requests are invoked by ``g.commit().then(result, error);``.
+__N.B.:__ Grex uses the [Q](http://documentup.com/kriskowal/q/) module to return a Promise when making Ajax calls. All requests are invoked with ``get()`` and the callback is captured by ``then(result, error);``. However, this is not the case when performing Create, Update and Deletes of Vertices or Edges. These actions are batched to reduce the number of calls to the server. In order to send these type of requests invok ``g.commit().then(result, error);`` after making your updates to the data.
 
+___All calls are invoked with get()___
 ```javascript
 g.V('name', 'marko').out().get().then(function(result){console.log(result)}, function(err){console.log(err)});
+
+g.createIndex('my-index', 'Vertex.class').get().then(function(result){console.log(result)}, function(err){console.log(err)});
 ```
 
-For simplicity these calls are not included in the examples below.
+___Except when creating, updating or deleting Vetices or Edges. Use g.commit() to commit all changes.___
+```
+grex>     g.addVertex(100, {k1:'v1', 'k2':'v2', k3:'v3'});
+
+grex>     g.addVertex(200, {k1:'v1', 'k2':'v2', k3:'v3'});
+
+grex>     g.addEdge(300,100,200,'pal',{weight:'0.75f'})
+
+grex>     g.updateVertex(100, {k2: 'v4'});
+
+grex>     g.removeVertex(100, ['k2', 'k3']);
+
+grex>     g.removeVertex(200);
+
+grex>     g.commit().then(function(result){console.log(result)}, function(err){console.log(err)});
+```
+
+
+For simplicity the callbacks are not included in the examples below.
 
 __Example 1: Basic Transforms__
 
@@ -155,7 +176,6 @@ grex>     g.V().and(g._().both("knows"), g._().both("created"))
 gremlin>  g.v(1).outE.or(_().has('id', T.eq, "9"), _().has('weight', T.lt, 0.6f))
 
 grex>     g.v(1).outE().or(g._().has('id', 'T.eq', 9), g._().has('weight', 'T.lt', '0.6f')); 
-
 ```
 
 __Example 6: groupBy__
@@ -174,23 +194,39 @@ gremlin>  g.V.retain([g.v(1), g.v(2), g.v(3)])
 grex>     g.V().retain([g.v(1), g.v(2), g.v(3)])
 ```
 
-__Example 8: indexing__
+__Example 8: Create index__
 
 ```
 gremlin>  g.createIndex("my-index", Vertex.class)
 
 grex>     g.createIndex("my-index", "Vertex.class")
+```
 
+__Example 9: Add to index__
+
+```
 gremlin>  g.idx("my-index").put("name", "marko", g.v(1))
 
 grex>     g.idx("my-index").put("name", "marko", g.v(1))
+```
 
+__Example 10: Retrieving indexed Element__
+
+```
 gremlin>  g.idx("my-index")[[name:"marko"]]  
 
 grex>     g.idx("my-index", {name:"marko"});  
 ```
 
-__Example 9: Create, Update, Delete__
+__Example 11: Drop index__
+
+```
+gremlin>  g.dropIndex("my-index", Vertex.class)
+
+grex>     g.dropIndex("my-index", "Vertex.class")
+```
+
+__Example 12: Create, Update, Delete - use g.commit()__
 
 ```
 grex>     g.addVertex(100, {k1:'v1', 'k2':'v2', k3:'v3'});
@@ -206,7 +242,6 @@ grex>     g.removeVertex(100, ['k2', 'k3']);
 grex>     g.removeVertex(200);
 
 grex>     g.commit()
-
 ```
 
 ##TODO
