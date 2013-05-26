@@ -23,19 +23,9 @@
     var _batchExt = '/tp/batch/tx'
 
     var txArray = [];
-    var graphRegex = /^g\./;
-    var TRegex = /^T\.(gt|gte|eq|neq|lte|lt)$/;
+    var graphRegex = /^T\.(gt|gte|eq|neq|lte|lt)$|^g\.|^Vertex(?=\.class\b)|^Edge(?=\.class\b)/;
     var closureRegex = /^\{.*\}$/;
 
-    var Tokens = {
-        'gt': 'T.gt',
-        'lt': 'T.lt',
-        'eq': 'T.eq',
-        'gte': 'T.gte',
-        'lte': 'T.lte',
-        'neq': 'T.neq'
-    }        
-    
     function Grex(qryString) {
         if(!!qryString){
             this.params = qryString;
@@ -61,10 +51,22 @@
     exports.removeEdge = _cud('delete', 'edge');
     exports.updateVertex = _cud('update', 'vertex');
     exports.updateEdge = _cud('update', 'edge');
+    
+    //Indexing
+    exports.createIndex = _qryMain('createIndex');
+    exports.createKeyIndex = _qryMain('createKeyIndex');
+    exports.getIndices =  _qryMain('getIndices');
+    exports.getIndexedKeys =  _qryMain('getIndexedKeys');
+    exports.getIndex =  _qryMain('getIndex');
+    exports.dropIndex = _qryMain('dropIndex');
+    exports.dropKeyIndex = _qryMain('dropKeyIndex');
+
+    exports.clear =  _qryMain('clear');
+    exports.shutdown =  _qryMain('shutdown');
+    exports.getFeatures = _qryMain('getFeatures');
 
     exports.commit = post();
     exports.rollback = rollback();
-    exports.Tokens = Tokens;
     
     function _setOptions (){
         return function (options){
@@ -87,7 +89,7 @@
     }
 
     function _isGraphReference (val) {
-        return _isString(val) && (val.search(graphRegex) > -1 || val.search(TRegex) > -1);
+        return _isString(val) && (val.search(graphRegex) > -1);
     }
 
     function _isObject(o) {
@@ -166,7 +168,7 @@
                 gremlin.params += isArray ? arguments[0][_i].params || _parseArgs(arguments[0][_i]) : arguments[_i].params || _parseArgs(arguments[_i]);
                 gremlin.params += ",";
             }
-            gremlin.params = gremlin.params.substr(0, gremlin.params.length - 1);
+            gremlin.params = gremlin.params.slice(0, -1);
             gremlin.params += ")";
             return gremlin;
         }
@@ -183,7 +185,7 @@
                 gremlin.params += arguments[0][_i].params;
                 gremlin.params += ",";
             }
-            gremlin.params = gremlin.params.substr(0, gremlin.params.length - 1);
+            gremlin.params = gremlin.params.slice(0, -1);
             gremlin.params += "])";
             return gremlin;
         }
@@ -205,7 +207,7 @@
                 argList += _parseArgs(array[_i]) + ",";
             }
         }
-        argList = argList.substr(0, argList.length - 1);
+        argList = argList.slice(0, -1);
         return '(' + argList + ')' + append;
     }
 
@@ -318,7 +320,6 @@
         iterate: _qryMain('iterate'),
         next: _qryMain('next'),
         toList: _qryMain('toList'),
-        createIndex: _qryMain('createIndex'),
         put: _qryPipes('put'),
 
         getPropertyKeys: _qryMain('getPropertyKeys'),
