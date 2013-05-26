@@ -97,7 +97,7 @@ A good resource to understand the Gremlin API is [GremlinDocs](http://gremlindoc
 
 __N.B.:__ Grex uses the [Q](http://documentup.com/kriskowal/q/) module to return a Promise when making Ajax calls. All requests are invoked with ``get()`` and the callback is captured by ``then(result, error);``. However, this is not the case when performing Create, Update and Deletes of Vertices or Edges. These actions are batched to reduce the number of calls to the server. In order to send these type of requests invok ``g.commit().then(result, error);`` after making your updates to the data.
 
-___All calls are invoked with get()___
+___All calls are invoked with get().___
 ```javascript
 g.V('name', 'marko').out().get().then(function(result){console.log(result)}, function(err){console.log(err)});
 
