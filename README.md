@@ -244,10 +244,6 @@ gRex>     g.removeVertex(200);
 gRex>     g.commit()
 ```
 
-##TODO
-* More around indexing
-* Testing
-
 ## Author
 
 Frank Panetta  - [Follow @entrendipity](https://twitter.com/intent/follow?screen_name=entrendipity)
