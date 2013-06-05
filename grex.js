@@ -381,7 +381,7 @@
                 'path': _pathBase + OPTS.graph + _batchExt,
                 headers: {
                     'Content-Type': 'application/json',
-                    'Content-Length': payload.length
+                    'Content-Length': Buffer.byteLength(payload, 'utf8')
                 },
                 'method': 'POST'
             };
@@ -393,7 +393,7 @@
             }
             var body = '';
             var req = http.request(options, function(res) {
-                res.setEncoding('utf-8');
+                res.setEncoding('utf8');
                 console.log('STATUS: ' + res.statusCode);
                 console.log('HEADERS: ' + JSON.stringify(res.headers));
 
