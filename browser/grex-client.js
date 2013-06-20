@@ -27,13 +27,14 @@
     var OPTS = {
         'host': 'localhost',
         'port': 8182,
-        'graph': 'tinkergraph',
-        'idRegex': false // OrientDB id regex -> /^[0-9]+:[0-9]+$/
+        'graph': 'tinker',
+        'idRegex': /^[0-9]+:[0-9]+$/ //false // OrientDB id regex -> /^[0-9]+:[0-9]+$/
     };
 
     var _pathBase = '/graphs/';
     var _gremlinExt = '/tp/gremlin?script=';
     var _batchExt = '/tp/batch/tx'
+    var _newVertex = '/vertices'
 
     var txArray = [];
     var graphRegex = /^T\.(gt|gte|eq|neq|lte|lt)$|^g\.|^Vertex(?=\.class\b)|^Edge(?=\.class\b)/;
@@ -228,6 +229,8 @@
         txArray = [];
     };
     
+    var idCtr = 0;
+
     function _cud(action, type) {
         return function() {
             var o = {},
@@ -265,6 +268,7 @@
             o._action = action;
             o._type = type;
             push.call(txArray, o);
+            return o;
         }
     }
 
@@ -357,11 +361,37 @@
 
     function post () {
         return function(url, headers) {
-            var url = url || 'http://' + OPTS.host + ':' + OPTS.port + _pathBase + OPTS.graph + _batchExt,
-                data = { tx: txArray };
-                headers = headers || { 'Content-Type':'application/json' };
+            var baseUrl = url || 'http://' + OPTS.host + ':' + OPTS.port + _pathBase + OPTS.graph,
+                data = { tx: txArray }, promises = [];            
+            
+            headers = headers || { 'Content-Type':'application/json' };
 
-            return ajax('POST', url, JSON.stringify(data), headers);
+            for (var i = txArray.length - 1; i >= 0; i--) {
+                if (txArray[i]._type == 'vertex' && txArray[i]._action == 'create' && !('_id' in txArray[i])) {
+                    txArray[i]._action = 'update';
+                    promises.push(newVertex(baseUrl + _newVertex));
+                };                
+            };
+            if(!!promises.length){
+                return Q.all(promises).then(function(result){
+                    for (var j = result.length - 1; j >= 0; j--) {
+                        txArray[j]._id = JSON.parse(result[j]).results._id;
+                    };
+                    for (var k = txArray.length - 1; k >= 0; k--) {
+                        if(txArray[k]._type == 'edge' && txArray[k]._action == 'create'){
+                            if (_isObject(txArray[k]._inV)) {
+                                txArray[k]._inV = txArray[k]._inV._id;
+                            }; 
+                            if (_isObject(txArray[k]._outV)) {
+                                txArray[k]._outV = txArray[k]._outV._id;
+                            };    
+                        }                        
+                    };
+                    return ajax('POST', baseUrl + _batchExt, JSON.stringify(data), headers);
+                });                
+            } else {
+                return ajax('POST', baseUrl + _batchExt, JSON.stringify(data), headers);
+            }
         } 
     }
 
@@ -428,6 +458,7 @@
             if (xhr.readyState === 4) {
                 if (xhr.status === 200) {
                     deferred.resolve(xhr.responseText);
+                    txArray.length = 0;
                 } else {
                     deferred.reject(xhr);
                 }
@@ -438,4 +469,29 @@
         return deferred.promise;
     }
 
+    function newVertex(url) {
+        var deferred = Q.defer();
+        var xhr;
+
+        try {
+            xhr = new_xhr();
+        } catch (e) {
+            deferred.reject(-1);
+            return deferred.promise;
+        }
+
+        xhr.open('POST', url, false);
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    deferred.resolve(xhr.responseText);
+                } else {
+                    deferred.reject(xhr);
+                }
+            }
+        };
+
+        xhr.send();
+        return deferred.promise;
+    }
 });

@@ -350,7 +350,7 @@
                 }
             }
             http.get(options, function(res) {
-                console.log("Response: " + res.statusCode);
+                //console.log("Response: " + res.statusCode);
                 res.setEncoding('utf8');
                 var body = '';
                 res.on('data', function(results) {
@@ -364,7 +364,7 @@
                 deferred.reject("Got error: " + e.message);
             });
             
-            console.log(this.params);
+            //console.log(this.params);
             return deferred.promise;
         }
     }
@@ -394,27 +394,28 @@
             var body = '';
             var req = http.request(options, function(res) {
                 res.setEncoding('utf8');
-                console.log('STATUS: ' + res.statusCode);
-                console.log('HEADERS: ' + JSON.stringify(res.headers));
+                //console.log('STATUS: ' + res.statusCode);
+                //console.log('HEADERS: ' + JSON.stringify(res.headers));
 
-                //Need to check this.
-                if(res.statusCode == 200){
-                    //reset array
-                    txArray = [];
-                }
+                // //Need to check this.
+                // if(res.statusCode == 200){
+                //     //reset array
+                //     txArray = [];
+                // }
                 
                 res.on('data', function (chunk) {
-                    console.log('BODY: ' + chunk);
+                    //console.log('BODY: ' + chunk);
                     body += chunk;
                 });
                 res.on('end', function() {
                     deferred.resolve(JSON.parse(body));
+                    txArray.length = 0;
                 });
             });
 
             req.on('error', function(e) {
               txArray = [];
-              console.log('problem with request: ' + e.message);
+              //console.log('problem with request: ' + e.message);
               deferred.reject("Got error: " + e.message);
             });
 
