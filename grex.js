@@ -14,15 +14,18 @@
     var OPTS = {
         'host': 'localhost',
         'port': 8182,
-        'graph': 'tinkergraph',
-        'idRegex': false // OrientDB id regex -> /^[0-9]+:[0-9]+$/
+        'graph': 'tinker',//'tinkergraph',
+        'idRegex': /^[0-9]+:[0-9]+$///false // OrientDB id regex -> /^[0-9]+:[0-9]+$/
     };
 
     var _pathBase = '/graphs/';
     var _gremlinExt = '/tp/gremlin?script=';
-    var _batchExt = '/tp/batch/tx'
+    var _batchExt = '/tp/batch/tx';
+    var _newVertex = '/vertices';
+
 
     var txArray = [];
+    var newVertices = [];    
     var graphRegex = /^T\.(gt|gte|eq|neq|lte|lt)$|^g\.|^Vertex(?=\.class\b)|^Edge(?=\.class\b)/;
     var closureRegex = /^\{.*\}$/;
 
@@ -235,7 +238,9 @@
                         o._label = arguments[2 + i];
                     } else {
                         if (_isObject(arguments[0])) {
+                            //new Vertex
                             o = arguments[0];
+                            push.call(newVertices, o);
                         } else {
                             if(argLen == 2){
                                 o = arguments[1];
@@ -248,6 +253,7 @@
             o._action = action;
             o._type = type;
             push.call(txArray, o);
+            return o;
         }
     }
 
@@ -307,6 +313,10 @@
         // table //Not implemented
         // tree //Not implemented
 
+        linkBoth: _qryMain('linkBoth'),
+        linkIn: _qryMain('linkIn'),
+        linkOut: _qryMain('linkOut'),
+
         /*** Branch ***/
         copySplit: _qryPipes('copySplit'),
         exhaustMerge: _qryMain('exhaustMerge'),
@@ -350,7 +360,6 @@
                 }
             }
             http.get(options, function(res) {
-                //console.log("Response: " + res.statusCode);
                 res.setEncoding('utf8');
                 var body = '';
                 res.on('data', function(results) {
@@ -364,65 +373,133 @@
                 deferred.reject("Got error: " + e.message);
             });
             
-            //console.log(this.params);
             return deferred.promise;
         }
     }
 
     function post() {
         return function(headers) {
-            var deferred = q.defer();
-            var data = { tx: txArray };
-            var payload = JSON.stringify(data);
-            
-            var options = {
-                'host': OPTS.host,
-                'port': OPTS.port,
-                'path': _pathBase + OPTS.graph + _batchExt,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Content-Length': Buffer.byteLength(payload, 'utf8')
-                },
-                'method': 'POST'
-            };
+            var promises = [];
+            var newVerticesLen = newVertices.length;
+            var txLen = txArray.length;
 
-            for (var h in headers) {
-                if (headers.hasOwnProperty(h)) {
-                    options.headers[h] = headers[h];
-                }
+            if(!!newVerticesLen){
+                for (var i = 0; i < newVerticesLen; i++) {
+                    newVertices[i]._action = 'update';
+                    promises.push(newVertex());
+                };
+                return q.all(promises).then(function(result){
+                    //Update the _id for the created Vertices
+                    var resultLen = result.length;
+                    for (var j = 0; j < resultLen; j++) {
+                        newVertices[j]._id = result[j].results._id;
+                    };
+                    newVertices.length = 0;
+                    //Update any edges that may have referenced the newly created Vertices
+                    for (var k = 0; k < txLen; k++) {
+                        if(txArray[k]._type == 'edge' && txArray[k]._action == 'create'){
+                            if (_isObject(txArray[k]._inV)) {
+                                txArray[k]._inV = txArray[k]._inV._id;
+                            }; 
+                            if (_isObject(txArray[k]._outV)) {
+                                txArray[k]._outV = txArray[k]._outV._id;
+                            };    
+                        }                        
+                    };
+                    return postData(headers);
+                }, function(err){
+                    console.log(err);
+                }); 
+            } else {
+                for (var k = txArray.length - 1; k >= 0; k--) {
+                    if(txArray[k]._type == 'edge' && txArray[k]._action == 'create'){
+                        if (_isObject(txArray[k]._inV)) {
+                            txArray[k]._inV = txArray[k]._inV._id;
+                        }; 
+                        if (_isObject(txArray[k]._outV)) {
+                            txArray[k]._outV = txArray[k]._outV._id;
+                        };    
+                    }                        
+                };
+                return postData(headers);
             }
-            var body = '';
-            var req = http.request(options, function(res) {
-                res.setEncoding('utf8');
-                //console.log('STATUS: ' + res.statusCode);
-                //console.log('HEADERS: ' + JSON.stringify(res.headers));
-
-                // //Need to check this.
-                // if(res.statusCode == 200){
-                //     //reset array
-                //     txArray = [];
-                // }
-                
-                res.on('data', function (chunk) {
-                    //console.log('BODY: ' + chunk);
-                    body += chunk;
-                });
-                res.on('end', function() {
-                    deferred.resolve(JSON.parse(body));
-                    txArray.length = 0;
-                });
-            });
-
-            req.on('error', function(e) {
-              txArray = [];
-              //console.log('problem with request: ' + e.message);
-              deferred.reject("Got error: " + e.message);
-            });
-
-            // write data to request body
-            req.write(payload);
-            req.end();
-            return deferred.promise;
         }
+    }
+
+    function postData(headers){
+        var deferred = q.defer();
+        var data = { tx: txArray };
+        var payload = JSON.stringify(data);
+        var body = '';
+        
+        var options = {
+            'host': OPTS.host,
+            'port': OPTS.port,
+            'path': _pathBase + OPTS.graph + _batchExt,
+            headers: {
+                'Content-Type': 'application/json',
+                'Content-Length': Buffer.byteLength(payload, 'utf8')
+            },
+            'method': 'POST'
+        };
+
+        for (var h in headers) {
+            if (headers.hasOwnProperty(h)) {
+                options.headers[h] = headers[h];
+            }
+        }
+        
+        var req = http.request(options, function(res) {
+            res.setEncoding('utf8');
+            
+            res.on('data', function (chunk) {
+                body += chunk;
+            });
+            res.on('end', function() {
+                deferred.resolve(JSON.parse(body));
+                txArray.length = 0;
+            });
+        });
+
+        req.on('error', function(e) {
+          txArray = [];
+          console.error('problem with request: ' + e.message);
+          deferred.reject("Error: " + e.message);
+        });
+
+        // write data to request body
+        req.write(payload);
+        req.end();
+        return deferred.promise;
+    }
+
+    function newVertex(){
+        var deferred = q.defer();
+        var body = '';
+        var options = {
+            'host': OPTS.host,
+            'port': OPTS.port,
+            'path': _pathBase + OPTS.graph + _newVertex,
+            'method': 'POST'
+        };
+
+        var req = http.request(options, function(res) {
+            res.setEncoding('utf8');
+            
+            res.on('data', function (chunk) {
+                body += chunk;
+            });
+            res.on('end', function() {
+                deferred.resolve(JSON.parse(body));
+            });
+        });
+
+        req.on('error', function(e) {
+          console.error('problem with request: ' + e.message);
+          deferred.reject("Error: " + e.message);
+        });
+
+        req.end();
+        return deferred.promise;
     }
 });
