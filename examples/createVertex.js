@@ -13,9 +13,9 @@ g.commit()
 .then(function(result){
     if (result) {
         if (result.success == false) {
-            console.error("Failed to add vertex.");
+            console.error("Failed to add vertices.");
         } else {
-            console.log("Added new vertex successfully. -> ", result);            
+            console.log("Added new vertices successfully. -> ", result);            
         }
     }
 }, function(err) {

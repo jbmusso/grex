@@ -218,7 +218,8 @@
         return function() {
             var o = {},
                 argLen = arguments.length,
-                i = 0;
+                i = 0,
+                addToTransaction = true;
 
             if (!!argLen) {
                 if(action == 'delete'){
@@ -238,9 +239,10 @@
                         o._label = arguments[2 + i];
                     } else {
                         if (_isObject(arguments[0])) {
-                            //new Vertex
+                            //create new Vertex
                             o = arguments[0];
                             push.call(newVertices, o);
+                            addToTransaction = false;
                         } else {
                             if(argLen == 2){
                                 o = arguments[1];
@@ -249,10 +251,16 @@
                         }
                     }
                 }
+            //Allow for no args to be passed
+            } else if (type == 'vertex') {
+                push.call(newVertices, o);
+                addToTransaction = false;
             }
-            o._action = action;
             o._type = type;
-            push.call(txArray, o);
+            if (addToTransaction) {
+                o._action = action;
+                push.call(txArray, o);    
+            };
             return o;
         }
     }
@@ -309,13 +317,13 @@
         groupCount: _qryMain('groupCount'), //Not Fully Implemented ??
         optional: _qryMain('optional'),
         sideEffect: _qryMain('sideEffect'),
-        // store //Not implemented
-        // table //Not implemented
-        // tree //Not implemented
 
         linkBoth: _qryMain('linkBoth'),
         linkIn: _qryMain('linkIn'),
         linkOut: _qryMain('linkOut'),
+        // store //Not implemented
+        // table //Not implemented
+        // tree //Not implemented
 
         /*** Branch ***/
         copySplit: _qryPipes('copySplit'),
@@ -367,7 +375,7 @@
                 });
 
                 res.on('end', function() {
-                    deferred.resolve(body);
+                    deferred.resolve(JSON.parse(body));
                 });
             }).on('error', function(e) {
                 deferred.reject("Got error: " + e.message);
@@ -385,18 +393,18 @@
 
             if(!!newVerticesLen){
                 for (var i = 0; i < newVerticesLen; i++) {
-                    newVertices[i]._action = 'update';
-                    promises.push(newVertex());
+                    promises.push(postData(_newVertex, JSON.stringify(newVertices[i])));
                 };
                 return q.all(promises).then(function(result){
                     //Update the _id for the created Vertices
+
                     var resultLen = result.length;
                     for (var j = 0; j < resultLen; j++) {
                         newVertices[j]._id = result[j].results._id;
                     };
                     newVertices.length = 0;
                     //Update any edges that may have referenced the newly created Vertices
-                    for (var k = 0; k < txLen; k++) {
+                    for (var k = 0; k < txLen; k++) {                    
                         if(txArray[k]._type == 'edge' && txArray[k]._action == 'create'){
                             if (_isObject(txArray[k]._inV)) {
                                 txArray[k]._inV = txArray[k]._inV._id;
@@ -406,12 +414,12 @@
                             };    
                         }                        
                     };
-                    return postData(headers);
+                    return postData(_batchExt, JSON.stringify({ tx: txArray }), headers, result);
                 }, function(err){
                     console.log(err);
                 }); 
             } else {
-                for (var k = txArray.length - 1; k >= 0; k--) {
+                for (var k = 0; k < txLen; k++) {
                     if(txArray[k]._type == 'edge' && txArray[k]._action == 'create'){
                         if (_isObject(txArray[k]._inV)) {
                             txArray[k]._inV = txArray[k]._inV._id;
@@ -421,27 +429,28 @@
                         };    
                     }                        
                 };
-                return postData(headers);
+                return postData(_batchExt, JSON.stringify({ tx: txArray }), headers);
             }
         }
     }
 
-    function postData(headers){
+    function postData(urlPath, data, headers, newVertices){
         var deferred = q.defer();
-        var data = { tx: txArray };
-        var payload = JSON.stringify(data);
+        var payload = data || '{}';
         var body = '';
+        var o = {};
         
         var options = {
             'host': OPTS.host,
             'port': OPTS.port,
-            'path': _pathBase + OPTS.graph + _batchExt,
+            'path': _pathBase + OPTS.graph,
             headers: {
                 'Content-Type': 'application/json',
                 'Content-Length': Buffer.byteLength(payload, 'utf8')
             },
             'method': 'POST'
         };
+        options.path += urlPath;
 
         for (var h in headers) {
             if (headers.hasOwnProperty(h)) {
@@ -456,8 +465,20 @@
                 body += chunk;
             });
             res.on('end', function() {
-                deferred.resolve(JSON.parse(body));
-                txArray.length = 0;
+                o = JSON.parse(body);
+                delete o.version;
+                delete o.queryTime;
+                delete o.txProcessed;
+                if(newVertices && !!newVertices.length){
+                    o.newVertices = [];
+                    for (var i = 0, l = newVertices.length; i < l; i++) {                            
+                        o.newVertices.push(newVertices[i].results);
+                    };
+                }
+                deferred.resolve(o);
+                if(!!newVertices){
+                    txArray.length = 0;
+                }
             });
         });
 
@@ -473,33 +494,4 @@
         return deferred.promise;
     }
 
-    function newVertex(){
-        var deferred = q.defer();
-        var body = '';
-        var options = {
-            'host': OPTS.host,
-            'port': OPTS.port,
-            'path': _pathBase + OPTS.graph + _newVertex,
-            'method': 'POST'
-        };
-
-        var req = http.request(options, function(res) {
-            res.setEncoding('utf8');
-            
-            res.on('data', function (chunk) {
-                body += chunk;
-            });
-            res.on('end', function() {
-                deferred.resolve(JSON.parse(body));
-            });
-        });
-
-        req.on('error', function(e) {
-          console.error('problem with request: ' + e.message);
-          deferred.reject("Error: " + e.message);
-        });
-
-        req.end();
-        return deferred.promise;
-    }
 });

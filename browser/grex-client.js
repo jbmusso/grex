@@ -236,7 +236,8 @@
         return function() {
             var o = {},
                 argLen = arguments.length,
-                i = 0;
+                i = 0,
+                addToTransaction = true;
 
             if (!!argLen) {
                 if(action == 'delete'){
@@ -259,6 +260,7 @@
                             //create new Vertex
                             o = arguments[0];
                             push.call(newVertices, o);
+                            addToTransaction = false;
                         } else {
                             if(argLen == 2){
                                 o = arguments[1];
@@ -267,10 +269,16 @@
                         }
                     }
                 }
+            //Allow for no args to be passed
+            } else if (type == 'vertex') {
+                push.call(newVertices, o);
+                addToTransaction = false;
             }
-            o._action = action;
             o._type = type;
-            push.call(txArray, o);
+            if (addToTransaction) {
+                o._action = action;
+                push.call(txArray, o);    
+            };
             return o;
         }
     }
@@ -372,21 +380,21 @@
                 data = { tx: txArray }, promises = [];            
             
             headers = headers || { 'Content-Type':'application/json' };
-            //Check for new Vertices and create them separately
             if(!!newVertices.length){
-                for (var i = newVertices.length - 1; i >= 0; i--) {
-                    newVertices[i]._action = 'update';
-                    promises.push(newVertex(baseUrl + _newVertex));
+                //create vertices with no id specified
+                for (var i = 0, l = newVertices.length; i < l; i++) {
+                    promises.push(ajax('POST', baseUrl + _newVertex, JSON.stringify(newVertices[i]), headers));
                 };
 
                 return Q.all(promises).then(function(result){
                     //Update the _id for the created Vertices
-                    for (var j = result.length - 1; j >= 0; j--) {
-                        newVertices[j]._id = JSON.parse(result[j]).results._id;
+                    for (var j = 0, l2 = result.length; j < l2; j++) {
+                        newVertices[j]._id = result[j].results._id;
                     };
                     newVertices.length = 0;
+                    
                     //Update any edges that may have referenced the newly created Vertices
-                    for (var k = txArray.length - 1; k >= 0; k--) {
+                    for (var k = 0, l3 = txArray.length; k < l3; k++) {
                         if(txArray[k]._type == 'edge' && txArray[k]._action == 'create'){
                             if (_isObject(txArray[k]._inV)) {
                                 txArray[k]._inV = txArray[k]._inV._id;
@@ -396,12 +404,12 @@
                             };    
                         }                        
                     };
-                    return ajax('POST', baseUrl + _batchExt, JSON.stringify(data), headers);
+                    return ajax('POST', baseUrl + _batchExt, JSON.stringify(data), headers, result);
                 }, function(err){
                     console.log(err);
                 });                
             } else {
-                for (var k = txArray.length - 1; k >= 0; k--) {
+                for (var k = 0, l3 = txArray.length; k < l3; k++) {
                     if(txArray[k]._type == 'edge' && txArray[k]._action == 'create'){
                         if (_isObject(txArray[k]._inV)) {
                             txArray[k]._inV = txArray[k]._inV._id;
@@ -449,12 +457,12 @@
         return xhr;
     }
 
-    function ajax(method, url, data, headers) {
+    function ajax(method, url, data, headers, newVertices) {
         var deferred = Q.defer();
-        var xhr, payload;
+        var xhr, payload, o = {};
         data = data || {};
         headers = headers || {};
-
+        
         try {
             xhr = new_xhr();
         } catch (e) {
@@ -468,8 +476,7 @@
             payload = null;
         }
 
-        //Need to figure out how to make this async
-        xhr.open(method, url, false);
+        xhr.open(method, url, true);
         for (var h in headers) {
             if (headers.hasOwnProperty(h)) {
                 xhr.setRequestHeader(h, headers[h]);
@@ -479,8 +486,20 @@
         xhr.onreadystatechange = function() {
             if (xhr.readyState === 4) {
                 if (xhr.status === 200) {
-                    deferred.resolve(xhr.responseText);
-                    txArray.length = 0;
+                    o = JSON.parse(xhr.responseText);
+                    delete o.version;
+                    delete o.queryTime;
+                    delete o.txProcessed;
+                    if(newVertices && !!newVertices.length){
+                        o.newVertices = [];
+                        for (var i = 0, l = newVertices.length; i < l; i++) {                            
+                            o.newVertices.push(newVertices[i].results);
+                        };
+                    }
+                    deferred.resolve(o);
+                    if(!!newVertices){
+                        txArray.length = 0;
+                    }
                 } else {
                     deferred.reject(xhr);
                 }
@@ -491,31 +510,31 @@
         return deferred.promise;
     }
 
-    function newVertex(url) {
-        var deferred = Q.defer();
-        var xhr;
+    // function newVertex(url, data) {
+    //     var deferred = Q.defer();
+    //     var xhr;
+    //     data = data || {};
 
-        try {
-            xhr = new_xhr();
-        } catch (e) {
-            deferred.reject(-1);
-            return deferred.promise;
-        }
+    //     try {
+    //         xhr = new_xhr();
+    //     } catch (e) {
+    //         deferred.reject(-1);
+    //         return deferred.promise;
+    //     }
 
-        xhr.open('POST', url, true);
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState === 4) {
-                if (xhr.status === 200) {
-                    console.log(xhr.responseText);
-                    deferred.resolve(xhr.responseText);
-                } else {
-                    console.log(xhr.responseText)
-                    deferred.reject(xhr);
-                }
-            }
-        };
+    //     xhr.open('POST', url, true);
+    //     xhr.setRequestHeader('Content-Type', 'application/json');
+    //     xhr.onreadystatechange = function() {
+    //         if (xhr.readyState === 4) {
+    //             if (xhr.status === 200) {
+    //                 deferred.resolve(xhr.responseText);
+    //             } else {
+    //                 deferred.reject(xhr);
+    //             }
+    //         }
+    //     };
 
-        xhr.send();
-        return deferred.promise;
-    }
+    //     xhr.send(_encode(data));
+    //     return deferred.promise;
+    // }
 });
