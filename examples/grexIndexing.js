@@ -8,7 +8,6 @@ g.commit()
             console.log("Failed to add vertex for", y);
         } else {
             console.log("Added a vertex successfully for", y);
-            // Not working yet, no 'grex' method to process this
             g.createIndex("actor", "Vertex.class").get()
             .then(function(result){
                 if (result) {

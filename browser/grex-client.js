@@ -33,10 +33,11 @@
 
     var _pathBase = '/graphs/';
     var _gremlinExt = '/tp/gremlin?script=';
-    var _batchExt = '/tp/batch/tx'
-    var _newVertex = '/vertices'
+    var _batchExt = '/tp/batch/tx';
+    var _newVertex = '/vertices';
 
     var txArray = [];
+    var newVertices = [];
     var graphRegex = /^T\.(gt|gte|eq|neq|lte|lt)$|^g\.|^Vertex(?=\.class\b)|^Edge(?=\.class\b)/;
     var closureRegex = /^\{.*\}$/;
 
@@ -255,7 +256,9 @@
                         o._label = arguments[2 + i];
                     } else {
                         if (_isObject(arguments[0])) {
+                            //create new Vertex
                             o = arguments[0];
+                            push.call(newVertices, o);
                         } else {
                             if(argLen == 2){
                                 o = arguments[1];
@@ -320,6 +323,10 @@
         groupCount: _qryMain('groupCount'), //Not Fully Implemented ??
         optional: _qryMain('optional'),
         sideEffect: _qryMain('sideEffect'),
+
+        linkBoth: _qryMain('linkBoth'),
+        linkIn: _qryMain('linkIn'),
+        linkOut: _qryMain('linkOut'),
         // store //Not implemented
         // table //Not implemented
         // tree //Not implemented
@@ -365,18 +372,20 @@
                 data = { tx: txArray }, promises = [];            
             
             headers = headers || { 'Content-Type':'application/json' };
-
-            for (var i = txArray.length - 1; i >= 0; i--) {
-                if (txArray[i]._type == 'vertex' && txArray[i]._action == 'create' && !('_id' in txArray[i])) {
-                    txArray[i]._action = 'update';
+            //Check for new Vertices and create them separately
+            if(!!newVertices.length){
+                for (var i = newVertices.length - 1; i >= 0; i--) {
+                    newVertices[i]._action = 'update';
                     promises.push(newVertex(baseUrl + _newVertex));
-                };                
-            };
-            if(!!promises.length){
+                };
+
                 return Q.all(promises).then(function(result){
+                    //Update the _id for the created Vertices
                     for (var j = result.length - 1; j >= 0; j--) {
-                        txArray[j]._id = JSON.parse(result[j]).results._id;
+                        newVertices[j]._id = JSON.parse(result[j]).results._id;
                     };
+                    newVertices.length = 0;
+                    //Update any edges that may have referenced the newly created Vertices
                     for (var k = txArray.length - 1; k >= 0; k--) {
                         if(txArray[k]._type == 'edge' && txArray[k]._action == 'create'){
                             if (_isObject(txArray[k]._inV)) {
@@ -388,8 +397,20 @@
                         }                        
                     };
                     return ajax('POST', baseUrl + _batchExt, JSON.stringify(data), headers);
+                }, function(err){
+                    console.log(err);
                 });                
             } else {
+                for (var k = txArray.length - 1; k >= 0; k--) {
+                    if(txArray[k]._type == 'edge' && txArray[k]._action == 'create'){
+                        if (_isObject(txArray[k]._inV)) {
+                            txArray[k]._inV = txArray[k]._inV._id;
+                        }; 
+                        if (_isObject(txArray[k]._outV)) {
+                            txArray[k]._outV = txArray[k]._outV._id;
+                        };    
+                    }                        
+                };
                 return ajax('POST', baseUrl + _batchExt, JSON.stringify(data), headers);
             }
         } 
@@ -447,7 +468,8 @@
             payload = null;
         }
 
-        xhr.open(method, url, true);
+        //Need to figure out how to make this async
+        xhr.open(method, url, false);
         for (var h in headers) {
             if (headers.hasOwnProperty(h)) {
                 xhr.setRequestHeader(h, headers[h]);
@@ -480,12 +502,14 @@
             return deferred.promise;
         }
 
-        xhr.open('POST', url, false);
+        xhr.open('POST', url, true);
         xhr.onreadystatechange = function() {
             if (xhr.readyState === 4) {
                 if (xhr.status === 200) {
+                    console.log(xhr.responseText);
                     deferred.resolve(xhr.responseText);
                 } else {
+                    console.log(xhr.responseText)
                     deferred.reject(xhr);
                 }
             }
