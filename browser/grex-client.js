@@ -27,8 +27,8 @@
     var OPTS = {
         'host': 'localhost',
         'port': 8182,
-        'graph': 'tinker',
-        'idRegex': /^[0-9]+:[0-9]+$/ //false // OrientDB id regex -> /^[0-9]+:[0-9]+$/
+        'graph': 'tinkergraph',
+        'idRegex': false // OrientDB id regex -> /^[0-9]+:[0-9]+$/
     };
 
     var _pathBase = '/graphs/';
@@ -509,32 +509,4 @@
         xhr.send(payload);
         return deferred.promise;
     }
-
-    // function newVertex(url, data) {
-    //     var deferred = Q.defer();
-    //     var xhr;
-    //     data = data || {};
-
-    //     try {
-    //         xhr = new_xhr();
-    //     } catch (e) {
-    //         deferred.reject(-1);
-    //         return deferred.promise;
-    //     }
-
-    //     xhr.open('POST', url, true);
-    //     xhr.setRequestHeader('Content-Type', 'application/json');
-    //     xhr.onreadystatechange = function() {
-    //         if (xhr.readyState === 4) {
-    //             if (xhr.status === 200) {
-    //                 deferred.resolve(xhr.responseText);
-    //             } else {
-    //                 deferred.reject(xhr);
-    //             }
-    //         }
-    //     };
-
-    //     xhr.send(_encode(data));
-    //     return deferred.promise;
-    // }
 });

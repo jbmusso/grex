@@ -14,8 +14,8 @@
     var OPTS = {
         'host': 'localhost',
         'port': 8182,
-        'graph': 'tinker',//'tinkergraph',
-        'idRegex': /^[0-9]+:[0-9]+$///false // OrientDB id regex -> /^[0-9]+:[0-9]+$/
+        'graph': 'tinkergraph',
+        'idRegex': false // OrientDB id regex -> /^[0-9]+:[0-9]+$/
     };
 
     var _pathBase = '/graphs/';
