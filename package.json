@@ -10,7 +10,7 @@
     "url": "https://github.com/entrendipity/grex.git"
   },
   "dependencies": {
-    "q": ">=0.8.0"
+    "q": "0.8.x"
   },
   "license": "MIT",
   "engines": {
