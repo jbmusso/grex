@@ -29,7 +29,7 @@
     var graphRegex = /^T\.(gt|gte|eq|neq|lte|lt)$|^g\.|^Vertex(?=\.class\b)|^Edge(?=\.class\b)/;
     var closureRegex = /^\{.*\}$/;
 
-    function Grex(qryString) {
+    function gRex(qryString) {
         if(!!qryString){
             this.params = qryString;
         } else {
@@ -131,7 +131,7 @@
                 args = _isArray(arguments[0]) ? arguments[0] : arguments,
                 appendArg = '';
 
-            gremlin = reset ? new Grex() : new Grex(this.params);
+            gremlin = reset ? new gRex() : new gRex(this.params);
                      
             //cater for idx param 2
             if(method == 'idx' && args.length > 1){
@@ -152,7 +152,7 @@
     //Do not pass in method name, just string arg
     function _qryIndex(){
         return function(arg) {
-            var gremlin = new Grex(this.params);
+            var gremlin = new gRex(this.params);
             gremlin.params += '['+ arg.toString() + ']';
             return gremlin;
         }
@@ -161,7 +161,7 @@
     //and | or | put  => g.v(1).outE().or(g._().has('id', 'T.eq', 9), g._().has('weight', 'T.lt', '0.6f'))
     function _qryPipes(method){
         return function() {
-            var gremlin = new Grex(this.params),
+            var gremlin = new gRex(this.params),
                 args = [],
                 isArray = _isArray(arguments[0]),
                 argsLen = isArray ? arguments[0].length : arguments.length;
@@ -180,7 +180,7 @@
     //retain & except => g.V().retain([g.v(1), g.v(2), g.v(3)])
     function _qryCollection(method){
         return function() {
-            var gremlin = new Grex(this.params),
+            var gremlin = new gRex(this.params),
                 args = [];
 
             gremlin.params += "." + method + "(["
@@ -269,7 +269,7 @@
         txArray = [];
     };
 
-    Grex.prototype = {
+    gRex.prototype = {
         
         /*** Transform ***/
         both: _qryMain('both'),
