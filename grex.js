@@ -370,8 +370,6 @@
             'method': 'GET'
         };
 
-        console.log(this.params);
-
         http.get(options, function(res) {
             res.setEncoding('utf8');
             var body = '';
