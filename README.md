@@ -244,7 +244,7 @@ gRex>     g.removeVertex(200);
 gRex>     g.commit()
 ```
 
-__Example 13: Create with no id__
+__Example 13: Create with database generated id's__
 
 ```
 var v1, v2;
