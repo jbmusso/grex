@@ -53,14 +53,14 @@ gRex tries to implement Gremlin syntax as closely as possible. However, there ar
 * All method calls require brackets __()__, even if there are no arguments.
 * __Closures__ do not translate to javascript. Closures need to passed in as one string argument to gRex methods. 
 
-    ```e.g.
+    ```
     g.v(1).out().gather("{it.size()}");
 
     g.v(1).out().ifThenElse("{it.name=='josh'}{it.age}{it.name}");
     ```
 * __Comparators__ and __Float__'s are not native javascript Types so need to be passed in as a string to gRex methods. Floats need to be suffixed with a 'f'.
 
-    ```e.g.
+    ```
     g.v(1).outE().has("weight", "T.gte", "0.5f").property("weight")
     ```
 * Certain methods cannot be implemented. Such as ``aggregate``, ``store``, ``table``, ``tree`` and ``fill``. These methods take a local object and populate it with data, which cannot be done in this environment.
