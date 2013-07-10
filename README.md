@@ -25,11 +25,11 @@ A tool for making and composing asynchronous promises in JavaScript.
 
 gRex can be loaded as:
 
--   a ``<script>`` tag in the browser (creating a ``g`` global variable)
+-   a ``<script>`` tag in the browser (creating a ``g`` global variable). Files are located in the browser directory.
 
     ```
      <script type="text/javascript" src="q.min.js"></script>    
-     <script type="text/javascript" src="grex-client.js"></script>
+     <script type="text/javascript" src="grex.min.js"></script>
     ```
 
 -   a Node.js and CommonJS module available from NPM as the ``grex`` package
