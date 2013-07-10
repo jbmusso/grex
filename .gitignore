@@ -2,3 +2,5 @@
 .DS_Store
 
 gRexTestServer.js
+
+npm-debug.log
