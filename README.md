@@ -226,7 +226,7 @@ gremlin>  g.dropIndex("my-index", Vertex.class)
 gRex>     g.dropIndex("my-index", "Vertex.class")
 ```
 
-__Example 12: Create, Update, Delete - use g.commit()__
+__Example 12: Create, Update, Delete__
 
 ```
 gRex>     g.addVertex(100, {k1:'v1', 'k2':'v2', k3:'v3'});
@@ -242,6 +242,43 @@ gRex>     g.removeVertex(100, ['k2', 'k3']);
 gRex>     g.removeVertex(200);
 
 gRex>     g.commit()
+```
+
+__Example 12: Create with no id__
+
+```
+var t1, t2;
+
+t1 = g.addVertex({name:'Test1a'});
+t2 = g.addVertex({name:'Test2a'});
+g.addEdge(t1, t2, 'aLabel', {name:"ALabel"})
+
+t1 = g.addVertex({name:'Test1b'});
+t2 = g.addVertex({name:'Test2b'});
+g.addEdge(t2, t1, 'aLabel', {name:"BLabel"})
+
+g.commit().then(function(result){
+    if (result) {
+        if (result.success == false) {
+            console.error("Failed to add vertices.");
+        } else {
+            console.log("Added new vertices successfully. -> ", result);            
+        }
+    }
+}, function(err) {
+    console.error(err)
+}); 
+
+This will return a JSON object with an array called newVertices.
+
+eg. 
+{ success: true,
+  newVertices: 
+   [ { name: 'Test1a', _id: '#8:334', _type: 'vertex' },
+     { name: 'Test2a', _id: '#8:336', _type: 'vertex' },
+     { name: 'Test1b', _id: '#8:335', _type: 'vertex' },
+     { name: 'Test2b', _id: '#8:337', _type: 'vertex' } ] 
+}
 ```
 
 ## Author
