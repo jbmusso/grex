@@ -20,13 +20,16 @@
 
     var _pathBase = '/graphs/';
     var _gremlinExt = '/tp/gremlin?script=';
-    var _batchExt = '/tp/batch/tx'
+    var _batchExt = '/tp/batch/tx';
+    var _newVertex = '/vertices';
+
 
     var txArray = [];
+    var newVertices = [];    
     var graphRegex = /^T\.(gt|gte|eq|neq|lte|lt)$|^g\.|^Vertex(?=\.class\b)|^Edge(?=\.class\b)/;
     var closureRegex = /^\{.*\}$/;
 
-    function Grex(qryString) {
+    function gRex(qryString) {
         if(!!qryString){
             this.params = qryString;
         } else {
@@ -71,7 +74,7 @@
     function _setOptions (){
         return function (options){
             if(!!options){
-                for (var k in OPTS){
+                for (var k in options){
                     if(options.hasOwnProperty(k)){
                         OPTS[k] = options[k];
                     }
@@ -81,7 +84,7 @@
     }
 
     function _isIdString(id) {
-        return !!OPTS.idRegex && _isString(id) && id.search(OPTS.idRegex) > -1;
+        return !!OPTS.idRegex && _isString(id) && OPTS.idRegex.test(id);
     }
 
     function _isString(o) {
@@ -89,7 +92,7 @@
     }
 
     function _isGraphReference (val) {
-        return _isString(val) && (val.search(graphRegex) > -1);
+        return _isString(val) && graphRegex.test(val);
     }
 
     function _isObject(o) {
@@ -97,7 +100,7 @@
     }
 
     function _isClosure(val) {
-        return _isString(val) && val.search(closureRegex) > -1;   
+        return _isString(val) && closureRegex.test(val);   
     }
 
     function _isArray(o) {
@@ -128,7 +131,7 @@
                 args = _isArray(arguments[0]) ? arguments[0] : arguments,
                 appendArg = '';
 
-            gremlin = reset ? new Grex() : new Grex(this.params);
+            gremlin = reset ? new gRex() : new gRex(this.params);
                      
             //cater for idx param 2
             if(method == 'idx' && args.length > 1){
@@ -149,7 +152,7 @@
     //Do not pass in method name, just string arg
     function _qryIndex(){
         return function(arg) {
-            var gremlin = new Grex(this.params);
+            var gremlin = new gRex(this.params);
             gremlin.params += '['+ arg.toString() + ']';
             return gremlin;
         }
@@ -158,7 +161,7 @@
     //and | or | put  => g.v(1).outE().or(g._().has('id', 'T.eq', 9), g._().has('weight', 'T.lt', '0.6f'))
     function _qryPipes(method){
         return function() {
-            var gremlin = new Grex(this.params),
+            var gremlin = new gRex(this.params),
                 args = [],
                 isArray = _isArray(arguments[0]),
                 argsLen = isArray ? arguments[0].length : arguments.length;
@@ -177,7 +180,7 @@
     //retain & except => g.V().retain([g.v(1), g.v(2), g.v(3)])
     function _qryCollection(method){
         return function() {
-            var gremlin = new Grex(this.params),
+            var gremlin = new gRex(this.params),
                 args = [];
 
             gremlin.params += "." + method + "(["
@@ -215,7 +218,8 @@
         return function() {
             var o = {},
                 argLen = arguments.length,
-                i = 0;
+                i = 0,
+                addToTransaction = true;
 
             if (!!argLen) {
                 if(action == 'delete'){
@@ -235,7 +239,10 @@
                         o._label = arguments[2 + i];
                     } else {
                         if (_isObject(arguments[0])) {
+                            //create new Vertex
                             o = arguments[0];
+                            push.call(newVertices, o);
+                            addToTransaction = false;
                         } else {
                             if(argLen == 2){
                                 o = arguments[1];
@@ -244,10 +251,17 @@
                         }
                     }
                 }
+            //Allow for no args to be passed
+            } else if (type == 'vertex') {
+                push.call(newVertices, o);
+                addToTransaction = false;
             }
-            o._action = action;
             o._type = type;
-            push.call(txArray, o);
+            if (addToTransaction) {
+                o._action = action;
+                push.call(txArray, o);    
+            };
+            return o;
         }
     }
 
@@ -255,7 +269,7 @@
         txArray = [];
     };
 
-    Grex.prototype = {
+    gRex.prototype = {
         
         /*** Transform ***/
         both: _qryMain('both'),
@@ -303,6 +317,10 @@
         groupCount: _qryMain('groupCount'), //Not Fully Implemented ??
         optional: _qryMain('optional'),
         sideEffect: _qryMain('sideEffect'),
+
+        linkBoth: _qryMain('linkBoth'),
+        linkIn: _qryMain('linkIn'),
+        linkOut: _qryMain('linkOut'),
         // store //Not implemented
         // table //Not implemented
         // tree //Not implemented
@@ -327,101 +345,155 @@
         getProperty: _qryMain('getProperty'),
 
         /*** http ***/
+        then: get(),
+
+        //deprecated
         get: get()
     }
 
     function get() {
-        return function(headers) {
-            var deferred = q.defer();
-
-            var options = {
-                'host': OPTS.host,
-                'port': OPTS.port,
-                'path': _pathBase + OPTS.graph + _gremlinExt + encodeURIComponent(this.params),
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                'method': 'GET'
-            };
-
-            for (var h in headers) {
-                if (headers.hasOwnProperty(h)) {
-                    options.headers[h] = headers[h];
-                }
-            }
-            http.get(options, function(res) {
-                console.log("Response: " + res.statusCode);
-                res.setEncoding('utf8');
-                var body = '';
-                res.on('data', function(results) {
-                    body += results + "\n";
-                });
-
-                res.on('end', function() {
-                    deferred.resolve(body);
-                });
-            }).on('error', function(e) {
-                deferred.reject("Got error: " + e.message);
-            });
-            
-            console.log(this.params);
-            return deferred.promise;
+        return function(success, error){
+            return getData.call(this).then(success, error);
         }
+    }
+
+    function getData() {
+        var deferred = q.defer();
+
+        var options = {
+            'host': OPTS.host,
+            'port': OPTS.port,
+            'path': _pathBase + OPTS.graph + _gremlinExt + encodeURIComponent(this.params),
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            'method': 'GET'
+        };
+
+        http.get(options, function(res) {
+            res.setEncoding('utf8');
+            var body = '';
+            res.on('data', function(results) {
+                body += results + "\n";
+            });
+
+            res.on('end', function() {
+                deferred.resolve(JSON.parse(body));
+            });
+        }).on('error', function(e) {
+            deferred.reject("Got error: " + e.message);
+        });
+        
+        return deferred.promise;
     }
 
     function post() {
         return function(headers) {
-            var deferred = q.defer();
-            var data = { tx: txArray };
-            var payload = JSON.stringify(data);
-            
-            var options = {
-                'host': OPTS.host,
-                'port': OPTS.port,
-                'path': _pathBase + OPTS.graph + _batchExt,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Content-Length': Buffer.byteLength(payload, 'utf8')
-                },
-                'method': 'POST'
-            };
+            var promises = [];
+            var newVerticesLen = newVertices.length;
+            var txLen = txArray.length;
 
-            for (var h in headers) {
-                if (headers.hasOwnProperty(h)) {
-                    options.headers[h] = headers[h];
-                }
+            if(!!newVerticesLen){
+                for (var i = 0; i < newVerticesLen; i++) {
+                    promises.push(postData(_newVertex, JSON.stringify(newVertices[i])));
+                };
+                return q.all(promises).then(function(result){
+                    //Update the _id for the created Vertices
+
+                    var resultLen = result.length;
+                    for (var j = 0; j < resultLen; j++) {
+                        newVertices[j]._id = result[j].results._id;
+                    };
+                    newVertices.length = 0;
+                    //Update any edges that may have referenced the newly created Vertices
+                    for (var k = 0; k < txLen; k++) {                    
+                        if(txArray[k]._type == 'edge' && txArray[k]._action == 'create'){
+                            if (_isObject(txArray[k]._inV)) {
+                                txArray[k]._inV = txArray[k]._inV._id;
+                            }; 
+                            if (_isObject(txArray[k]._outV)) {
+                                txArray[k]._outV = txArray[k]._outV._id;
+                            };    
+                        }                        
+                    };
+                    return postData(_batchExt, JSON.stringify({ tx: txArray }), headers, result);
+                }, function(err){
+                    console.log(err);
+                }); 
+            } else {
+                for (var k = 0; k < txLen; k++) {
+                    if(txArray[k]._type == 'edge' && txArray[k]._action == 'create'){
+                        if (_isObject(txArray[k]._inV)) {
+                            txArray[k]._inV = txArray[k]._inV._id;
+                        }; 
+                        if (_isObject(txArray[k]._outV)) {
+                            txArray[k]._outV = txArray[k]._outV._id;
+                        };    
+                    }                        
+                };
+                return postData(_batchExt, JSON.stringify({ tx: txArray }), headers);
             }
-            var body = '';
-            var req = http.request(options, function(res) {
-                res.setEncoding('utf8');
-                console.log('STATUS: ' + res.statusCode);
-                console.log('HEADERS: ' + JSON.stringify(res.headers));
-
-                //Need to check this.
-                if(res.statusCode == 200){
-                    //reset array
-                    txArray = [];
-                }
-                
-                res.on('data', function (chunk) {
-                    console.log('BODY: ' + chunk);
-                    body += chunk;
-                });
-                res.on('end', function() {
-                    deferred.resolve(JSON.parse(body));
-                });
-            });
-
-            req.on('error', function(e) {
-              txArray = [];
-              console.log('problem with request: ' + e.message);
-              deferred.reject("Got error: " + e.message);
-            });
-
-            // write data to request body
-            req.write(payload);
-            req.end();
-            return deferred.promise;
         }
     }
+
+    function postData(urlPath, data, headers, newVertices){
+        var deferred = q.defer();
+        var payload = data || '{}';
+        var body = '';
+        var o = {};
+        
+        var options = {
+            'host': OPTS.host,
+            'port': OPTS.port,
+            'path': _pathBase + OPTS.graph,
+            headers: {
+                'Content-Type': 'application/json',
+                'Content-Length': Buffer.byteLength(payload, 'utf8')
+            },
+            'method': 'POST'
+        };
+        options.path += urlPath;
+
+        for (var h in headers) {
+            if (headers.hasOwnProperty(h)) {
+                options.headers[h] = headers[h];
+            }
+        }
+        
+        var req = http.request(options, function(res) {
+            res.setEncoding('utf8');
+            
+            res.on('data', function (chunk) {
+                body += chunk;
+            });
+            res.on('end', function() {
+                o = JSON.parse(body);
+                delete o.version;
+                delete o.queryTime;
+                delete o.txProcessed;
+                if(newVertices && !!newVertices.length){
+                    o.newVertices = [];
+                    for (var i = 0, l = newVertices.length; i < l; i++) {                            
+                        o.newVertices.push(newVertices[i].results);
+                    };
+                }
+                deferred.resolve(o);
+                if(!!newVertices){
+                    txArray.length = 0;
+                }
+            });
+        });
+
+        req.on('error', function(e) {
+          txArray = [];
+          console.error('problem with request: ' + e.message);
+          deferred.reject("Error: " + e.message);
+        });
+
+        // write data to request body
+        req.write(payload);
+        req.end();
+        return deferred.promise;
+    }
+
 });

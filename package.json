@@ -1,7 +1,7 @@
 {
   "name": "grex",
   "description": "Client for Rexster Graph Server",
-  "version": "0.1.8a",
+  "version": "0.1.9a",
   "keywords": ["graph", "database", "tinkerpop", "rexster", "gremlin", "blueprints"],
   "homepage": "https://github.com/entrendipity/grex",
   "authors": ["Frank Panetta <frank.panetta@entrendipity.com.au>"],
@@ -10,7 +10,7 @@
     "url": "https://github.com/entrendipity/grex.git"
   },
   "dependencies": {
-    "q": ">=0.8.0"
+    "q": "0.9.x"
   },
   "license": "MIT",
   "engines": {

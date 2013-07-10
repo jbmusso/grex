@@ -33,13 +33,15 @@
 
     var _pathBase = '/graphs/';
     var _gremlinExt = '/tp/gremlin?script=';
-    var _batchExt = '/tp/batch/tx'
+    var _batchExt = '/tp/batch/tx';
+    var _newVertex = '/vertices';
 
     var txArray = [];
+    var newVertices = [];
     var graphRegex = /^T\.(gt|gte|eq|neq|lte|lt)$|^g\.|^Vertex(?=\.class\b)|^Edge(?=\.class\b)/;
     var closureRegex = /^\{.*\}$/;
 
-    function Grex(qryString) {
+    function gRex(qryString) {
         if(!!qryString){
             this.params = qryString;
         } else {
@@ -84,7 +86,7 @@
     function _setOptions (){
         return function (options){
             if(!!options){
-                for (var k in OPTS){
+                for (var k in options){
                     if(options.hasOwnProperty(k)){
                         OPTS[k] = options[k];
                     }
@@ -94,7 +96,7 @@
     }
 
     function _isIdString(id) {
-        return !!OPTS.idRegex && _isString(id) && id.search(OPTS.idRegex) > -1;
+        return !!OPTS.idRegex && _isString(id) && OPTS.idRegex.test(id);
     }
 
     function _isString(o) {
@@ -102,7 +104,7 @@
     }
 
     function _isGraphReference (val) {
-        return _isString(val) && (val.search(graphRegex) > -1);
+        return _isString(val) && graphRegex.test(val);
     }
 
     function _isObject(o) {
@@ -110,7 +112,7 @@
     }
 
     function _isClosure(val) {
-        return _isString(val) && val.search(closureRegex) > -1;   
+        return _isString(val) && closureRegex.test(val);   
     }
 
     function _isArray(o) {
@@ -141,7 +143,7 @@
                 args = _isArray(arguments[0]) ? arguments[0] : arguments,
                 appendArg = '';
 
-            gremlin = reset ? new Grex() : new Grex(this.params);
+            gremlin = reset ? new gRex() : new gRex(this.params);
                      
             //cater for idx param 2
             if(method == 'idx' && args.length > 1){
@@ -162,7 +164,7 @@
     //Do not pass in method name, just string arg
     function _qryIndex(){
         return function(arg) {
-            var gremlin = new Grex(this.params);
+            var gremlin = new gRex(this.params);
             gremlin.params += '['+ arg.toString() + ']';
             return gremlin;
         }
@@ -171,7 +173,7 @@
     //and | or | put  => g.v(1).outE().or(g._().has('id', 'T.eq', 9), g._().has('weight', 'T.lt', '0.6f'))
     function _qryPipes(method){
         return function() {
-            var gremlin = new Grex(this.params),
+            var gremlin = new gRex(this.params),
                 args = [],
                 isArray = _isArray(arguments[0]),
                 argsLen = isArray ? arguments[0].length : arguments.length;
@@ -190,7 +192,7 @@
     //retain & except => g.V().retain([g.v(1), g.v(2), g.v(3)])
     function _qryCollection(method){
         return function() {
-            var gremlin = new Grex(this.params),
+            var gremlin = new gRex(this.params),
                 args = [];
 
             gremlin.params += "." + method + "(["
@@ -228,11 +230,14 @@
         txArray = [];
     };
     
+    var idCtr = 0;
+
     function _cud(action, type) {
         return function() {
             var o = {},
                 argLen = arguments.length,
-                i = 0;
+                i = 0,
+                addToTransaction = true;
 
             if (!!argLen) {
                 if(action == 'delete'){
@@ -252,7 +257,10 @@
                         o._label = arguments[2 + i];
                     } else {
                         if (_isObject(arguments[0])) {
+                            //create new Vertex
                             o = arguments[0];
+                            push.call(newVertices, o);
+                            addToTransaction = false;
                         } else {
                             if(argLen == 2){
                                 o = arguments[1];
@@ -261,14 +269,21 @@
                         }
                     }
                 }
+            //Allow for no args to be passed
+            } else if (type == 'vertex') {
+                push.call(newVertices, o);
+                addToTransaction = false;
             }
-            o._action = action;
             o._type = type;
-            push.call(txArray, o);
+            if (addToTransaction) {
+                o._action = action;
+                push.call(txArray, o);    
+            };
+            return o;
         }
     }
 
-    Grex.prototype = {
+    gRex.prototype = {
         
         /*** Transform ***/
         both: _qryMain('both'),
@@ -316,6 +331,10 @@
         groupCount: _qryMain('groupCount'), //Not Fully Implemented ??
         optional: _qryMain('optional'),
         sideEffect: _qryMain('sideEffect'),
+
+        linkBoth: _qryMain('linkBoth'),
+        linkIn: _qryMain('linkIn'),
+        linkOut: _qryMain('linkOut'),
         // store //Not implemented
         // table //Not implemented
         // tree //Not implemented
@@ -340,6 +359,9 @@
         getProperty: _qryMain('getProperty'),
 
         /*** http ***/
+        then: get(),
+
+        //deprecated
         get: get()
     }
 
@@ -347,21 +369,61 @@
      * AJAX
      */
     function get () {
-        return function(url, headers) {
-            var url = url || 'http://' + OPTS.host + ':' + OPTS.port + _pathBase + OPTS.graph + _gremlinExt;
-                headers = headers || { 'Content-Type':'application/x-www-form-urlencoded' };
+        return function(success, error) {
+            var url = 'http://' + OPTS.host + ':' + OPTS.port + _pathBase + OPTS.graph + _gremlinExt;
+                headers = { 'Content-Type':'application/x-www-form-urlencoded' };
             
-            return ajax('GET', url, this.params, headers);  
+            return ajax('GET', url, this.params, headers).then(success, error);  
         } 
     }
 
     function post () {
         return function(url, headers) {
-            var url = url || 'http://' + OPTS.host + ':' + OPTS.port + _pathBase + OPTS.graph + _batchExt,
-                data = { tx: txArray };
-                headers = headers || { 'Content-Type':'application/json' };
+            var baseUrl = url || 'http://' + OPTS.host + ':' + OPTS.port + _pathBase + OPTS.graph,
+                data = { tx: txArray }, promises = [];            
+            
+            headers = headers || { 'Content-Type':'application/json' };
+            if(!!newVertices.length){
+                //create vertices with no id specified
+                for (var i = 0, l = newVertices.length; i < l; i++) {
+                    promises.push(ajax('POST', baseUrl + _newVertex, JSON.stringify(newVertices[i]), headers));
+                };
 
-            return ajax('POST', url, JSON.stringify(data), headers);
+                return Q.all(promises).then(function(result){
+                    //Update the _id for the created Vertices
+                    for (var j = 0, l2 = result.length; j < l2; j++) {
+                        newVertices[j]._id = result[j].results._id;
+                    };
+                    newVertices.length = 0;
+                    
+                    //Update any edges that may have referenced the newly created Vertices
+                    for (var k = 0, l3 = txArray.length; k < l3; k++) {
+                        if(txArray[k]._type == 'edge' && txArray[k]._action == 'create'){
+                            if (_isObject(txArray[k]._inV)) {
+                                txArray[k]._inV = txArray[k]._inV._id;
+                            }; 
+                            if (_isObject(txArray[k]._outV)) {
+                                txArray[k]._outV = txArray[k]._outV._id;
+                            };    
+                        }                        
+                    };
+                    return ajax('POST', baseUrl + _batchExt, JSON.stringify(data), headers, result);
+                }, function(err){
+                    console.log(err);
+                });                
+            } else {
+                for (var k = 0, l3 = txArray.length; k < l3; k++) {
+                    if(txArray[k]._type == 'edge' && txArray[k]._action == 'create'){
+                        if (_isObject(txArray[k]._inV)) {
+                            txArray[k]._inV = txArray[k]._inV._id;
+                        }; 
+                        if (_isObject(txArray[k]._outV)) {
+                            txArray[k]._outV = txArray[k]._outV._id;
+                        };    
+                    }                        
+                };
+                return ajax('POST', baseUrl + _batchExt, JSON.stringify(data), headers);
+            }
         } 
     }
 
@@ -398,12 +460,12 @@
         return xhr;
     }
 
-    function ajax(method, url, data, headers) {
+    function ajax(method, url, data, headers, newVertices) {
         var deferred = Q.defer();
-        var xhr, payload;
+        var xhr, payload, o = {};
         data = data || {};
         headers = headers || {};
-
+        
         try {
             xhr = new_xhr();
         } catch (e) {
@@ -427,7 +489,20 @@
         xhr.onreadystatechange = function() {
             if (xhr.readyState === 4) {
                 if (xhr.status === 200) {
-                    deferred.resolve(xhr.responseText);
+                    o = JSON.parse(xhr.responseText);
+                    delete o.version;
+                    delete o.queryTime;
+                    delete o.txProcessed;
+                    if(newVertices && !!newVertices.length){
+                        o.newVertices = [];
+                        for (var i = 0, l = newVertices.length; i < l; i++) {                            
+                            o.newVertices.push(newVertices[i].results);
+                        };
+                    }
+                    deferred.resolve(o);
+                    if(!!newVertices){
+                        txArray.length = 0;
+                    }
                 } else {
                     deferred.reject(xhr);
                 }
@@ -437,5 +512,4 @@
         xhr.send(payload);
         return deferred.promise;
     }
-
 });
