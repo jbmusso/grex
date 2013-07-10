@@ -86,7 +86,7 @@
     function _setOptions (){
         return function (options){
             if(!!options){
-                for (var k in OPTS){
+                for (var k in options){
                     if(options.hasOwnProperty(k)){
                         OPTS[k] = options[k];
                     }
@@ -96,7 +96,7 @@
     }
 
     function _isIdString(id) {
-        return !!OPTS.idRegex && _isString(id) && id.search(OPTS.idRegex) > -1;
+        return !!OPTS.idRegex && _isString(id) && OPTS.idRegex.test(id);
     }
 
     function _isString(o) {
@@ -104,7 +104,7 @@
     }
 
     function _isGraphReference (val) {
-        return _isString(val) && (val.search(graphRegex) > -1);
+        return _isString(val) && graphRegex.test(val);
     }
 
     function _isObject(o) {
@@ -112,7 +112,7 @@
     }
 
     function _isClosure(val) {
-        return _isString(val) && val.search(closureRegex) > -1;   
+        return _isString(val) && closureRegex.test(val);   
     }
 
     function _isArray(o) {
