@@ -87,7 +87,7 @@ Graph database name
 
 This can remain as false, if IDs are number. If IDs are not numbers (i.e. alpha-numeric or string), but still pass parseFloat() test, then idRegex must be set. This property will enable gRex to distinguish between an ID and a float expression.
 
-```e.g.
+```
 g.setOptions({ host: 'myDomain', graph: 'myOrientdb', idRegex: /^[0-9]+:[0-9]+$/ });
 ```
 
@@ -98,7 +98,7 @@ A good resource to understand the Gremlin API is [GremlinDocs](http://gremlindoc
 __N.B.:__ gRex uses the [Q](http://documentup.com/kriskowal/q/) module to return a Promise when making Ajax calls. All requests are invoked with ``then()`` and the callback is captured by ``then(result, error);``. However, this is not the case when performing Create, Update and Deletes of Vertices or Edges. These actions are batched to reduce the number of calls to the server. In order to send these type of requests invoke ``g.commit().then(result, error);`` after making your updates to the data. See examples below.
 
 __Calls invoked with then()__
-```javascript
+```
 g.V('name', 'marko').out().then(function(result){console.log(result)}, function(err){console.log(err)});
 
 g.createIndex('my-index', 'Vertex.class').then(function(result){console.log(result)}, function(err){console.log(err)});
