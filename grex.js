@@ -345,44 +345,48 @@
         getProperty: _qryMain('getProperty'),
 
         /*** http ***/
+        then: get(),
+
+        //deprecated
         get: get()
     }
 
     function get() {
-        return function(headers) {
-            var deferred = q.defer();
-
-            var options = {
-                'host': OPTS.host,
-                'port': OPTS.port,
-                'path': _pathBase + OPTS.graph + _gremlinExt + encodeURIComponent(this.params),
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                'method': 'GET'
-            };
-
-            for (var h in headers) {
-                if (headers.hasOwnProperty(h)) {
-                    options.headers[h] = headers[h];
-                }
-            }
-            http.get(options, function(res) {
-                res.setEncoding('utf8');
-                var body = '';
-                res.on('data', function(results) {
-                    body += results + "\n";
-                });
-
-                res.on('end', function() {
-                    deferred.resolve(JSON.parse(body));
-                });
-            }).on('error', function(e) {
-                deferred.reject("Got error: " + e.message);
-            });
-            
-            return deferred.promise;
+        return function(success, error){
+            return getData.call(this).then(success, error);
         }
+    }
+
+    function getData() {
+        var deferred = q.defer();
+
+        var options = {
+            'host': OPTS.host,
+            'port': OPTS.port,
+            'path': _pathBase + OPTS.graph + _gremlinExt + encodeURIComponent(this.params),
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            'method': 'GET'
+        };
+
+        console.log(this.params);
+
+        http.get(options, function(res) {
+            res.setEncoding('utf8');
+            var body = '';
+            res.on('data', function(results) {
+                body += results + "\n";
+            });
+
+            res.on('end', function() {
+                deferred.resolve(JSON.parse(body));
+            });
+        }).on('error', function(e) {
+            deferred.reject("Got error: " + e.message);
+        });
+        
+        return deferred.promise;
     }
 
     function post() {

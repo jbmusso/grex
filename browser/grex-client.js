@@ -359,6 +359,9 @@
         getProperty: _qryMain('getProperty'),
 
         /*** http ***/
+        then: get(),
+
+        //deprecated
         get: get()
     }
 
@@ -366,11 +369,11 @@
      * AJAX
      */
     function get () {
-        return function(url, headers) {
-            var url = url || 'http://' + OPTS.host + ':' + OPTS.port + _pathBase + OPTS.graph + _gremlinExt;
-                headers = headers || { 'Content-Type':'application/x-www-form-urlencoded' };
+        return function(success, error) {
+            var url = 'http://' + OPTS.host + ':' + OPTS.port + _pathBase + OPTS.graph + _gremlinExt;
+                headers = { 'Content-Type':'application/x-www-form-urlencoded' };
             
-            return ajax('GET', url, this.params, headers);  
+            return ajax('GET', url, this.params, headers).then(success, error);  
         } 
     }
 
