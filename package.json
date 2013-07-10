@@ -2,7 +2,7 @@
   "name": "grex",
   "description": "Client for Rexster Graph Server",
   "version": "0.1.10",
-  "keywords": ["graph", "database", "tinkerpop", "rexster", "gremlin", "blueprints"],
+  "keywords": ["database", "graph", "tinkerpop", "rexster", "gremlin", "blueprints"],
   "homepage": "https://github.com/entrendipity/grex",
   "authors": ["Frank Panetta <frank.panetta@entrendipity.com.au>"],
   "repository": {
