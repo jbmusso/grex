@@ -95,7 +95,7 @@ g.setOptions({ host: 'myDomain', graph: 'myOrientdb', idRegex: /^[0-9]+:[0-9]+$/
 
 A good resource to understand the Gremlin API is [GremlinDocs](http://gremlindocs.com/). Below are examples of gremlin and it's equivalent gRex syntax.
 
-__N.B.:__ gRex uses the [Q](http://documentup.com/kriskowal/q/) module to return a Promise when making Ajax calls. All requests are invoked with ``then()`` and the callback is captured by ``then(result, error);``. However, this is not the case when performing Create, Update and Deletes of Vertices or Edges. These actions are batched to reduce the number of calls to the server. In order to send these type of requests a Transaction nees to be created, for example ``var trxn = g.begin()``. You then add vertices and make updates against this object. Invoke ``trxn.commit().then(result, error);`` after making your updates to the data. See examples below.
+__N.B.:__ gRex uses the [Q](http://documentup.com/kriskowal/q/) module to return a Promise when making Ajax calls. All requests are invoked with ``then()`` and the callback is captured by ``then(result, error);``. However, this is not the case when performing Create, Update and Deletes of Vertices or Edges. These actions are batched to reduce the number of calls to the server. In order to send these type of requests a Transaction is created by calling ``var trxn = g.begin();``. Updates are made against this object. Once all updates are done invoke ``trxn.commit().then(result, error);`` to commit your changes. See examples below.
 
 __Calls invoked with then()__
 ```
@@ -106,19 +106,21 @@ g.createIndex('my-index', 'Vertex.class').then(function(result){console.log(resu
 
 __Creating, updating or deleting Vetices or Edges. Use commit() to commit all changes.__
 ```
-gRex>     g.addVertex(100, {k1:'v1', 'k2':'v2', k3:'v3'});
+gRex>     var trxn = g.begin();
 
-gRex>     g.addVertex(200, {k1:'v1', 'k2':'v2', k3:'v3'});
+gRex>     trxn.addVertex(100, {k1:'v1', 'k2':'v2', k3:'v3'});
 
-gRex>     g.addEdge(300,100,200,'pal',{weight:'0.75f'})
+gRex>     trxn.addVertex(200, {k1:'v1', 'k2':'v2', k3:'v3'});
 
-gRex>     g.updateVertex(100, {k2: 'v4'});
+gRex>     trxn.addEdge(300,100,200,'pal',{weight:'0.75f'})
 
-gRex>     g.removeVertex(100, ['k2', 'k3']);
+gRex>     trxn.updateVertex(100, {k2: 'v4'});
 
-gRex>     g.removeVertex(200);
+gRex>     trxn.removeVertex(100, ['k2', 'k3']);
 
-gRex>     g.commit().then(function(result){console.log(result)}, function(err){console.log(err)});
+gRex>     trxn.removeVertex(200);
+
+gRex>     trxn.commit().then(function(result){console.log(result)}, function(err){console.log(err)});
 ```
 
 
