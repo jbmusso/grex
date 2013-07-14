@@ -30,27 +30,37 @@
         'graph': 'tinkergraph',
         'idRegex': false // OrientDB id regex -> /^[0-9]+:[0-9]+$/
     };
+    //var txArray = [];
+    //var newVertices = [];
 
     var _pathBase = '/graphs/';
     var _gremlinExt = '/tp/gremlin?script=';
     var _batchExt = '/tp/batch/tx';
     var _newVertex = '/vertices';
 
-    var txArray = [];
-    var newVertices = [];
     var graphRegex = /^T\.(gt|gte|eq|neq|lte|lt)$|^g\.|^Vertex(?=\.class\b)|^Edge(?=\.class\b)/;
     var closureRegex = /^\{.*\}$/;
 
     function gRex(qryString) {
-        if(!!qryString){
-            this.params = qryString;
-        } else {
-            this.params = 'g';    
+        // if(!!qryString){
+        //     this.params = qryString;
+        // } else {
+        //     this.params = 'g';
+        this.txArray = [];
+        this.newVertices = [];
+
+        //default options
+        this.OPTS = {
+            'host': 'localhost',
+            'port': 8182,
+            'graph': 'tinkergraph',
+            'idRegex': false // OrientDB id regex -> /^[0-9]+:[0-9]+$/
         };
+        //};
 
     }
 
-    exports.setOptions= _setOptions();
+    exports.setOptions = _setOptions();
     exports._ = _qryMain('_', true);
     exports.E = _qryMain('E', true); 
     exports.V =  _qryMain('V', true); 
@@ -85,10 +95,11 @@
 
     function _setOptions (){
         return function (options){
+            self = this;
             if(!!options){
                 for (var k in options){
                     if(options.hasOwnProperty(k)){
-                        OPTS[k] = options[k];
+                        self.OPTS[k] = options[k];
                     }
                 }
             }
@@ -137,13 +148,26 @@
         return val;
     }
 
+    function _addNewVertex(vertex){
+        push.call(this.newVertices, vertex);
+    }
+
+    function _addTrxnItem(item){
+        push.call(this.txArray, item);
+    }
+
+    function _concatParams(qryString){
+        this.params = qryString;
+        return this;
+    }
+
     function _qryMain(method, reset){
         return function(){
             var gremlin,
                 args = _isArray(arguments[0]) ? arguments[0] : arguments,
                 appendArg = '';
 
-            gremlin = reset ? new gRex() : new gRex(this.params);
+            gremlin = reset ? new gRex() : _concatParams.call(this, this.params);
                      
             //cater for idx param 2
             if(method == 'idx' && args.length > 1){
@@ -227,11 +251,9 @@
     }
     
     function rollback(){
-        txArray = [];
+        this.txArray = [];
     };
     
-    var idCtr = 0;
-
     function _cud(action, type) {
         return function() {
             var o = {},
@@ -271,13 +293,15 @@
                 }
             //Allow for no args to be passed
             } else if (type == 'vertex') {
-                push.call(newVertices, o);
+                ////push.call(newVertices, o);
+                _addNewVertex(o);
                 addToTransaction = false;
             }
             o._type = type;
             if (addToTransaction) {
                 o._action = action;
-                push.call(txArray, o);    
+                _addTrxnItem.call(this, o);
+                //////////
             };
             return o;
         }
