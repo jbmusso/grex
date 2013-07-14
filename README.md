@@ -95,7 +95,7 @@ g.setOptions({ host: 'myDomain', graph: 'myOrientdb', idRegex: /^[0-9]+:[0-9]+$/
 
 A good resource to understand the Gremlin API is [GremlinDocs](http://gremlindocs.com/). Below are examples of gremlin and it's equivalent gRex syntax.
 
-__N.B.:__ gRex uses the [Q](http://documentup.com/kriskowal/q/) module to return a Promise when making Ajax calls. All requests are invoked with ``then()`` and the callback is captured by ``then(result, error);``. However, this is not the case when performing Create, Update and Deletes of Vertices or Edges. These actions are batched to reduce the number of calls to the server. In order to send these type of requests invoke ``g.commit().then(result, error);`` after making your updates to the data. See examples below.
+__N.B.:__ gRex uses the [Q](http://documentup.com/kriskowal/q/) module to return a Promise when making Ajax calls. All requests are invoked with ``then()`` and the callback is captured by ``then(result, error);``. However, this is not the case when performing Create, Update and Deletes of Vertices or Edges. These actions are batched to reduce the number of calls to the server. In order to send these type of requests a Transaction nees to be created, for example ``var trxn = g.begin()``. You then add vertices and make updates against this object. Invoke ``trxn.commit().then(result, error);`` after making your updates to the data. See examples below.
 
 __Calls invoked with then()__
 ```
@@ -104,7 +104,7 @@ g.V('name', 'marko').out().then(function(result){console.log(result)}, function(
 g.createIndex('my-index', 'Vertex.class').then(function(result){console.log(result)}, function(err){console.log(err)});
 ```
 
-__Creating, updating or deleting Vetices or Edges. Use g.commit() to commit all changes.__
+__Creating, updating or deleting Vetices or Edges. Use commit() to commit all changes.__
 ```
 gRex>     g.addVertex(100, {k1:'v1', 'k2':'v2', k3:'v3'});
 
@@ -229,35 +229,38 @@ gRex>     g.dropIndex("my-index", "Vertex.class")
 __Example 12: Create, Update, Delete__
 
 ```
-gRex>     g.addVertex(100, {k1:'v1', 'k2':'v2', k3:'v3'});
+gRex>     var trxn = g.begin();
 
-gRex>     g.addVertex(200, {k1:'v1', 'k2':'v2', k3:'v3'});
+gRex>     trxn.addVertex(100, {k1:'v1', 'k2':'v2', k3:'v3'});
 
-gRex>     g.addEdge(300,100,200,'pal',{weight:'0.75f'})
+gRex>     trxn.addVertex(200, {k1:'v1', 'k2':'v2', k3:'v3'});
 
-gRex>     g.updateVertex(100, {k2: 'v4'});
+gRex>     trxn.addEdge(300,100,200,'pal',{weight:'0.75f'})
 
-gRex>     g.removeVertex(100, ['k2', 'k3']);
+gRex>     trxn.updateVertex(100, {k2: 'v4'});
 
-gRex>     g.removeVertex(200);
+gRex>     trxn.removeVertex(100, ['k2', 'k3']);
 
-gRex>     g.commit()
+gRex>     trxn.removeVertex(200);
+
+gRex>     trxn.commit()
 ```
 
 __Example 13: Create with database generated id's__
 
 ```
+var trxn = g.begin();
 var v1, v2;
 
-v1 = g.addVertex({name:'Frank'});
-v2 = g.addVertex({name:'Luca'});
-g.addEdge(v1, v2, 'knows', {since:"2003/06/01"})
+v1 = trxn.addVertex({name:'Frank'});
+v2 = trxn.addVertex({name:'Luca'});
+trxn.addEdge(v1, v2, 'knows', {since:"2003/06/01"})
 
-v1 = g.addVertex({name:'Stephen'});
-v2 = g.addVertex({name:'James'});
-g.addEdge(v2, v1, 'knows', {since:"2000/01/01"})
+v1 = trxn.addVertex({name:'Stephen'});
+v2 = trxn.addVertex({name:'James'});
+trxn.addEdge(v2, v1, 'knows', {since:"2000/01/01"})
 
-g.commit().then(function(result){
+trxn.commit().then(function(result){
     if (result) {
         if (result.success == false) {
             console.error("Failed to add vertices.");
