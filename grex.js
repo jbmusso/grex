@@ -46,6 +46,15 @@ exports.getIndex =  _qryMain('getIndex');
 exports.dropIndex = _qryMain('dropIndex');
 exports.dropKeyIndex = _qryMain('dropKeyIndex');
 
+//CUD
+// exports.addVertex = _cud('create', 'vertex');
+// exports.addEdge = _cud('create', 'edge');
+// exports.removeVertex = _cud('delete', 'vertex');
+// exports.removeEdge = _cud('delete', 'edge');
+// exports.updateVertex = _cud('update', 'vertex');
+// exports.updateEdge = _cud('update', 'edge');
+
+
 exports.clear =  _qryMain('clear');
 exports.shutdown =  _qryMain('shutdown');
 exports.getFeatures = _qryMain('getFeatures');
