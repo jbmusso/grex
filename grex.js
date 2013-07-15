@@ -1,16 +1,26 @@
+"use strict"
 var q = require('q');
 var http = require('http');
 
 var toString = Object.prototype.toString,
     push = Array.prototype.push;
     
+// //default options
+// var OPTS = {
+//     'host': 'localhost',
+//     'port': 8182,
+//     'graph': 'tinkergraph',
+//     'idRegex': false // OrientDB id regex -> /^[0-9]+:[0-9]+$/
+// };
+
 //default options
 var OPTS = {
     'host': 'localhost',
     'port': 8182,
-    'graph': 'tinkergraph',
-    'idRegex': false // OrientDB id regex -> /^[0-9]+:[0-9]+$/
+    'graph': 'tinkerTest',
+    'idRegex': /^[0-9]+:[0-9]+$/
 };
+
 var _pathBase = '/graphs/';
 var _gremlinExt = '/tp/gremlin?script=';
 var _batchExt = '/tp/batch/tx';
@@ -280,6 +290,11 @@ function _begin(){
 function _rollback(){
     return function(){
         this.txArray = [];
+        this.newVertices = [];
+        //Maybe this needs to return a promise???
+        //need to create a trxn to delete newly created Vertices if any.
+        //use bool to determine whether to keep or delete the newly created vertices
+        //Only needs to return a promise if trxn req'd to delete
     }
 };
 
@@ -387,12 +402,16 @@ function _getData() {
     http.get(options, function(res) {
         res.setEncoding('utf8');
         var body = '';
+        var o = {};
         res.on('data', function(results) {
             body += results + "\n";
         });
 
         res.on('end', function() {
-            deferred.resolve(JSON.parse(body));
+            o = JSON.parse(body);
+            delete o.version;
+            delete o.queryTime;
+            deferred.resolve(o);
         });
     }).on('error', function(e) {
         deferred.reject("Got error: " + e.message);
@@ -406,54 +425,55 @@ function _post() {
         var promises = [];
         var newVerticesLen = this.newVertices.length;
         var txLen = this.txArray.length;
+        var self = this;
 
         if(!!newVerticesLen){
             for (var i = 0; i < newVerticesLen; i++) {
-                promises.push(postData(_newVertex, JSON.stringify(this.newVertices[i])));
+                promises.push(postData(_newVertex, this.newVertices[i]));
             };
             return q.all(promises).then(function(result){
                 //Update the _id for the created Vertices
+                //this filters through the object reference
                 var resultLen = result.length;
                 for (var j = 0; j < resultLen; j++) {
-                    this.newVertices[j]._id = result[j].results._id;
+                    self.newVertices[j]._id = result[j].results._id;
                 };
-                this.newVertices.length = 0;
+                // self.newVertices.length = 0;
                 //Update any edges that may have referenced the newly created Vertices
                 for (var k = 0; k < txLen; k++) {                    
-                    if(this.txArray[k]._type == 'edge' && this.txArray[k]._action == 'create'){
-                        if (_isObject(this.txArray[k]._inV)) {
-                            this.txArray[k]._inV = this.txArray[k]._inV._id;
+                    if(self.txArray[k]._type == 'edge' && self.txArray[k]._action == 'create'){
+                        if (_isObject(self.txArray[k]._inV)) {
+                            self.txArray[k]._inV = self.txArray[k]._inV._id;
                         }; 
-                        if (_isObject(this.txArray[k]._outV)) {
-                            this.txArray[k]._outV = this.txArray[k]._outV._id;
+                        if (_isObject(self.txArray[k]._outV)) {
+                            self.txArray[k]._outV = self.txArray[k]._outV._id;
                         };    
                     }                        
                 };
-                return postData(_batchExt, JSON.stringify({ tx: this.txArray }), headers, result);
+                return postData.call(self, _batchExt, { tx: self.txArray }, headers, self.newVertices);
             }, function(err){
                 console.log(err);
             }); 
         } else {
             for (var k = 0; k < txLen; k++) {
-                if(this.txArray[k]._type == 'edge' && this.txArray[k]._action == 'create'){
-                    if (_isObject(this.txArray[k]._inV)) {
-                        this.txArray[k]._inV = this.txArray[k]._inV._id;
+                if(self.txArray[k]._type == 'edge' && self.txArray[k]._action == 'create'){
+                    if (_isObject(self.txArray[k]._inV)) {
+                        self.txArray[k]._inV = self.txArray[k]._inV._id;
                     }; 
                     if (_isObject(this.txArray[k]._outV)) {
-                        this.txArray[k]._outV = this.txArray[k]._outV._id;
+                        self.txArray[k]._outV = self.txArray[k]._outV._id;
                     };    
                 }                        
             };
-            return postData(_batchExt, JSON.stringify({ tx: this.txArray }), headers);
+            return postData(_batchExt, { tx: self.txArray }, headers);
         }
     }
 }
 
 function postData(urlPath, data, headers, newVertices){
     var deferred = q.defer();
-    var payload = data || '{}';
-    var body = '';
-    var o = {};
+    var payload = JSON.stringify(data) || '{}';
+    var self = this;
     
     var options = {
         'host': OPTS.host,
@@ -474,8 +494,10 @@ function postData(urlPath, data, headers, newVertices){
     }
     
     var req = http.request(options, function(res) {
+        var body = '';
+        var o = {};
         res.setEncoding('utf8');
-        
+
         res.on('data', function (chunk) {
             body += chunk;
         });
@@ -486,19 +508,17 @@ function postData(urlPath, data, headers, newVertices){
             delete o.txProcessed;
             if(newVertices && !!newVertices.length){
                 o.newVertices = [];
-                for (var i = 0, l = newVertices.length; i < l; i++) {                            
-                    o.newVertices.push(newVertices[i].results);
-                };
+                push.apply(o.newVertices, newVertices);
+                newVertices.length = 0;
+            }
+            if('tx' in data){
+                data.tx.length = 0;
             }
             deferred.resolve(o);
-            if(!!newVertices){
-                this.txArray.length = 0;
-            }
         });
     });
 
     req.on('error', function(e) {
-      this.txArray = [];
       console.error('problem with request: ' + e.message);
       deferred.reject("Error: " + e.message);
     });

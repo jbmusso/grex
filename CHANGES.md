@@ -4,6 +4,7 @@
  - New Transaction process for CUD. Must create transaction object and invoke cud methods.
  - Option not use Transaction to do CUD (ie No need for commit()). eg. g.addVertex().then(); Batch kibble not required
  - Client version initialised with var g = require('grex');
+ - Removed version and querytime from returned results
 
 ## 0.1.10
 
