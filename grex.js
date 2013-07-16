@@ -277,8 +277,7 @@ Trxn.prototype = {
     removeEdge: _cud('delete', 'edge'),
     updateVertex: _cud('update', 'vertex'),
     updateEdge: _cud('update', 'edge'),
-    commit: _post(),
-    rollback: _rollback()
+    commit: _post()
 };
 
 function _begin(){
@@ -287,16 +286,49 @@ function _begin(){
     }
 }
 
-function _rollback(){
-    return function(){
-        this.txArray = [];
-        this.newVertices = [];
-        //Maybe this needs to return a promise???
-        //need to create a trxn to delete newly created Vertices if any.
-        //use bool to determine whether to keep or delete the newly created vertices
-        //Only needs to return a promise if trxn req'd to delete
+//returns an error Object
+function _rollbackVertices(){
+    var self = this;
+    var errObj = { success: false, message : "" };
+    //In Error because couldn't create new Vertices. Therefore,
+    //roll back all other transactions
+    console.error('problem with Transaction');
+    self.txArray.length = 0;
+    for (var i = self.newVertices.length - 1; i >= 0; i--) {
+        //check if any vertices were created and create a Transaction
+        //to delete them from the database
+        if('_id' in self.newVertices[i]){
+            self.removeVertex(self.newVertices[i]._id);
+        }
+    };
+    //This indicates that nothing was able to be created as there
+    //is no need to create a tranasction to delete the any vertices as there
+    //were no new vertices successfully created as part of this Transaction
+    self.newVertices.length = 0;
+    if(!self.txArray.length){
+        return q.fcall(function () {
+            return errObj.message = "Could not complete transaction. Transaction has been rolled back.";
+        });
     }
-};
+
+    //There were some vertices created which now need to be deleted from
+    //the database. On success throw error to indicate transaction was
+    //unsuccessful. On fail throw error to indicate that transaction was
+    //unsuccessful and that the new vertices created were unable to be removed
+    //from the database and need to be handled manually.
+    return postData.call(self, _batchExt, { tx: self.txArray })
+        .then(function(success){
+            return errObj.message = "Could not complete transaction. Transaction has been rolled back.";
+        }, function(fail){
+            errObj.message =  "Could not complete transaction. Unable to roll back newly created vertices.";
+            //errObj.ids = [];
+            errObj.ids = self.txArray.map(function(item){
+                return item._id;
+            });
+            self.txArray.length = 0;
+            return errObj;
+        }); 
+}
 
 gRex.prototype = {
     
@@ -376,8 +408,6 @@ gRex.prototype = {
     /*** http ***/
     then: _get(),
 
-    //deprecated
-    get: _get()
 }
 
 function _get() {
@@ -414,31 +444,46 @@ function _getData() {
             deferred.resolve(o);
         });
     }).on('error', function(e) {
-        deferred.reject("Got error: " + e.message);
+        deferred.reject(e);
     });
     
     return deferred.promise;
 }
 
 function _post() {
-    return function(headers) {
-        var promises = [];
-        var newVerticesLen = this.newVertices.length;
-        var txLen = this.txArray.length;
+    return function() {
         var self = this;
+        var promises = [];
+        var newVerticesLen = self.newVertices.length;
+        var txLen = this.txArray.length;
 
         if(!!newVerticesLen){
             for (var i = 0; i < newVerticesLen; i++) {
-                promises.push(postData(_newVertex, this.newVertices[i]));
+                //Need to see why no creating promised
+                //just changed 
+                promises.push(postData.call(self, _newVertex, self.newVertices[i]));
             };
             return q.all(promises).then(function(result){
+                var inError = false;
                 //Update the _id for the created Vertices
                 //this filters through the object reference
                 var resultLen = result.length;
                 for (var j = 0; j < resultLen; j++) {
-                    self.newVertices[j]._id = result[j].results._id;
+                    if('results' in result[j] && '_id' in result[j].results){
+                        self.newVertices[j]._id = result[j].results._id;
+                    } else {
+                        inError = true;
+                    }
                 };
-                // self.newVertices.length = 0;
+
+                if(inError){
+                    return _rollbackVertices.call(self)
+                        .then(function(result){
+                            throw result;
+                        },function(error){
+                            throw error;
+                        });
+                } 
                 //Update any edges that may have referenced the newly created Vertices
                 for (var k = 0; k < txLen; k++) {                    
                     if(self.txArray[k]._type == 'edge' && self.txArray[k]._action == 'create'){
@@ -450,7 +495,7 @@ function _post() {
                         };    
                     }                        
                 };
-                return postData.call(self, _batchExt, { tx: self.txArray }, headers, self.newVertices);
+                return postData.call(self, _batchExt, { tx: self.txArray });
             }, function(err){
                 console.log(err);
             }); 
@@ -465,15 +510,15 @@ function _post() {
                     };    
                 }                        
             };
-            return postData(_batchExt, { tx: self.txArray }, headers);
+            return postData.call(self, _batchExt, { tx: self.txArray });
         }
     }
 }
 
-function postData(urlPath, data, headers, newVertices){
+function postData(urlPath, data){
+    var self = this;
     var deferred = q.defer();
     var payload = JSON.stringify(data) || '{}';
-    var self = this;
     
     var options = {
         'host': OPTS.host,
@@ -486,12 +531,6 @@ function postData(urlPath, data, headers, newVertices){
         'method': 'POST'
     };
     options.path += urlPath;
-
-    for (var h in headers) {
-        if (headers.hasOwnProperty(h)) {
-            options.headers[h] = headers[h];
-        }
-    }
     
     var req = http.request(options, function(res) {
         var body = '';
@@ -503,24 +542,42 @@ function postData(urlPath, data, headers, newVertices){
         });
         res.on('end', function() {
             o = JSON.parse(body);
-            delete o.version;
-            delete o.queryTime;
-            delete o.txProcessed;
-            if(newVertices && !!newVertices.length){
-                o.newVertices = [];
-                push.apply(o.newVertices, newVertices);
-                newVertices.length = 0;
+            if('success' in o && o.success == false){
+                //send error info with reject
+                if(self.newVertices && !!self.newVertices.length){
+                    //This indicates that all new Vertices were created but failed to
+                    //complete the rest of the tranasction so the new Vertices need deleted
+                    _rollbackVertices.call(self)
+                        .then(function(result){
+                            deferred.reject(result);
+                        },function(error){
+                            deferred.reject(error);
+                        });
+                } else {
+                    deferred.reject(o);
+                }
+            } else {
+                delete o.version;
+                delete o.queryTime;
+                delete o.txProcessed;
+                //This occurs after newVertices have been created
+                //and passed in to postData
+                if(!('results' in o) && self.newVertices && !!self.newVertices.length){
+                    o.newVertices = [];
+                    push.apply(o.newVertices, self.newVertices);
+                    self.newVertices.length = 0;
+                }
+                if('tx' in data){
+                    data.tx.length = 0;
+                }
+                deferred.resolve(o);
             }
-            if('tx' in data){
-                data.tx.length = 0;
-            }
-            deferred.resolve(o);
         });
     });
 
     req.on('error', function(e) {
-      console.error('problem with request: ' + e.message);
-      deferred.reject("Error: " + e.message);
+        console.error('problem with request: ' + e.message);
+        deferred.reject(e);
     });
 
     // write data to request body
