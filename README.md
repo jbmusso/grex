@@ -263,13 +263,7 @@ v2 = trxn.addVertex({name:'James'});
 trxn.addEdge(v2, v1, 'knows', {since:"2000/01/01"})
 
 trxn.commit().then(function(result){
-    if (result) {
-        if (result.success == false) {
-            console.error("Failed to add vertices.");
-        } else {
-            console.log("New vertices -> ", result);            
-        }
-    }
+    console.log("New vertices -> ", result);            
 }, function(err) {
     console.error(err)
 }); 
