@@ -202,6 +202,8 @@ function _args(array) {
     for (var _i = 0, l = array.length; _i < l; _i++) {
         if(_isClosure(array[_i])){
             append += array[_i];
+        } else if (_isObject(array[_i]) && array[_i].hasOwnProperty('verbatim')) {
+            argList += array[_i].verbatim + ","; 
         } else if (_isObject(array[_i]) && !(array[_i].hasOwnProperty('params') && _isGraphReference(array[_i].params))) {
             jsonString = JSON.stringify(array[_i]);
             jsonString = jsonString.replace('{', '[');
@@ -250,6 +252,9 @@ function _cud(action, type) {
                         o._id = arguments[0];
                     }
                 }
+            }
+            if (action == 'update') {
+              o = _docWithTypes(o);
             }
         //Allow for no args to be passed
         } else if (type == 'vertex') {
@@ -328,6 +333,81 @@ function _rollbackVertices(){
             self.txArray.length = 0;
             return errObj;
         }); 
+}
+
+//function converts json document to a stringed version with types
+function _docWithTypes(doc, offRoot) {
+  if (doc === undefined)
+    return doc;
+  if (doc === null) {
+    if (offRoot)
+      return "(null,null)";
+    return doc;
+  }
+  try {
+    var d = {};
+    var self = this;
+    if (Array.isArray(doc)) {
+      var out = offRoot ? ['(list,('] : [];
+      var len = doc.length;
+      for (var i = 0; i < len; i++) {
+        var item = doc[i];
+        out.push(_docWithTypes(item, true));
+        if (offRoot)
+          out.push(',');
+      }
+      if (offRoot)
+        out.splice(out.length - 1, 1, '))');
+      d = out.join('');
+    } else if (typeof doc === 'object') {
+      if (doc.constructor === Date) {
+        d = '(long,' + doc.getTime().toString() + ')';
+      } else {
+        var out = offRoot ? [] : null;
+        var keys = Object.keys(doc);
+        var len = keys.length;
+        for (var i = 0; i < len; i++) {
+          var e = keys[i];
+          if (/^_id$|^_type$|^_action$/.test(e) && !offRoot) {
+            d[e] = doc[e];
+          } else {
+            var v = doc[e];
+            if (offRoot) {
+              out.push(i + '=' + self.docWithTypes(v, true));
+            } else {
+              d[e] = _docWithTypes(v, true);
+            }
+          }
+        }
+        if (offRoot)
+          d[e] = '(map,(' + out.join(',') + '))';
+      }
+    } else {
+      if (doc instanceof Boolean || typeof doc === 'boolean') {
+        d = doc ? "(b,true)" : "(b,false)";
+      } else if (doc instanceof String || typeof doc === 'string') {
+        d = doc.toString();
+      } else if (doc instanceof Number || typeof doc === 'number') {
+        try {
+          d = '(l,' + parseInt(doc) + ')';
+        }
+        catch (ee) {
+          try {
+            d = '(d,' + parseFloat(doc) + ')';
+          }
+          catch (ee2) {
+            d = doc.toString();
+          }
+        }
+      } else {
+        d = doc.toString();
+      }
+    }
+    return d;
+  }
+  catch (e) {
+    console.log(doc, e);
+  }
 }
 
 gRex.prototype = {
