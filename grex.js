@@ -321,7 +321,6 @@ function _rollbackVertices(){
             return errObj.message = "Could not complete transaction. Transaction has been rolled back.";
         }, function(fail){
             errObj.message =  "Could not complete transaction. Unable to roll back newly created vertices.";
-            //errObj.ids = [];
             errObj.ids = self.txArray.map(function(item){
                 return item._id;
             });
@@ -430,11 +429,10 @@ function _getData() {
     };
 
     http.get(options, function(res) {
-        res.setEncoding('utf8');
         var body = '';
         var o = {};
         res.on('data', function(results) {
-            body += results + "\n";
+            body += results;
         });
 
         res.on('end', function() {
@@ -535,8 +533,7 @@ function postData(urlPath, data){
     var req = http.request(options, function(res) {
         var body = '';
         var o = {};
-        res.setEncoding('utf8');
-
+        
         res.on('data', function (chunk) {
             body += chunk;
         });

@@ -21,14 +21,13 @@ Add an ``allow`` tag to the database extensions configuration in the rexster.xml
 
 A tool for making and composing asynchronous promises in JavaScript.
 
-## Installation
+## Usage
 
 gRex can be loaded as:
 
--   a ``<script>`` tag in the browser (creating a ``g`` global variable). Files are located in the browser directory.
+-   a ``<script>`` tag in the browser. Files are located in the browser directory.
 
     ```
-     <script type="text/javascript" src="q.min.js"></script>    
      <script type="text/javascript" src="grex.min.js"></script>
     ```
 
@@ -51,7 +50,7 @@ gRex can be loaded as:
 gRex tries to implement Gremlin syntax as closely as possible. However, there are some differences.
 
 * All method calls require brackets __()__, even if there are no arguments.
-* __Closures__ do not translate to javascript. Closures need to passed in as one string argument to gRex methods. 
+* __Closures__ do not translate to javascript. Closures need to passed in as a string argument to gRex methods. 
 
     ```
     g.v(1).out().gather("{it.size()}");
@@ -63,9 +62,11 @@ gRex tries to implement Gremlin syntax as closely as possible. However, there ar
     ```
     g.v(1).outE().has("weight", "T.gte", "0.5f").property("weight")
     ```
-* Certain methods cannot be implemented. Such as ``aggregate``, ``store``, ``table``, ``tree`` and ``fill``. These methods take a local object and populate it with data, which cannot be done in this environment.
+* Certain methods cannot be implemented. Such as ``aggregate``, ``store``, ``table``, ``tree`` and ``fill``. These methods require a local object to populate with data, which cannot be done in this environment.
 
 ## Getting Started
+
+A good resource to understand the Gremlin API is [GremlinDocs](http://gremlindocs.com/). Below are examples of gremlin and it's equivalent gRex syntax.
 
 ###Options
 
@@ -91,11 +92,7 @@ This can remain as false, if IDs are number. If IDs are not numbers (i.e. alpha-
 g.setOptions({ host: 'myDomain', graph: 'myOrientdb', idRegex: /^[0-9]+:[0-9]+$/ });
 ```
 
-## Examples
-
-A good resource to understand the Gremlin API is [GremlinDocs](http://gremlindocs.com/). Below are examples of gremlin and it's equivalent gRex syntax.
-
-__N.B.:__ gRex uses the [Q](http://documentup.com/kriskowal/q/) module to return a Promise when making Ajax calls. All requests are invoked with ``then()`` and the callback is captured by ``then(result, error);``. However, this is not the case when performing Create, Update and Deletes of Vertices or Edges. These actions are batched to reduce the number of calls to the server. In order to send these type of requests a Transaction is created by calling ``var trxn = g.begin();``. Updates are made against this object. Once all updates are done invoke ``trxn.commit().then(result, error);`` to commit your changes. See examples below.
+__N.B.:__ gRex uses the [Q](http://documentup.com/kriskowal/q/) module to return a Promise when making Ajax calls. All requests are invoked with ``then()`` and the callback is captured by ``then(result, error);``. However, this is not the case when performing Create, Update and Deletes of Vertices or Edges. These actions are batched to reduce the number of calls to the server. In order to send these type of requests a Transaction must be created by calling ``var trxn = g.begin();``. Updates are made against this object. Once all updates are done, invoke ``trxn.commit().then(result, error);`` to commit your changes. See examples below.
 
 __Calls invoked with then()__
 ```
@@ -104,7 +101,7 @@ g.V('name', 'marko').out().then(function(result){console.log(result)}, function(
 g.createIndex('my-index', 'Vertex.class').then(function(result){console.log(result)}, function(err){console.log(err)});
 ```
 
-__Creating, updating or deleting Vetices or Edges. Use commit() to commit all changes.__
+__Creating, updating or deleting Vetices or Edges. Use commit() to commit changes.__
 ```
 gRex>     var trxn = g.begin();
 
@@ -123,6 +120,7 @@ gRex>     trxn.removeVertex(200);
 gRex>     trxn.commit().then(function(result){console.log(result)}, function(err){console.log(err)});
 ```
 
+## Examples
 
 For simplicity the callbacks are not included in the examples below.
 
@@ -278,6 +276,31 @@ eg.
      { name: 'Stephen', _id: '#8:335', _type: 'vertex' },
      { name: 'James', _id: '#8:337', _type: 'vertex' } ] 
 }
+```
+
+__Example 14: Create index
+```
+var y = "bob";
+var trxn = g.begin();
+var vertex = trxn.addVertex({name:y});
+
+trxn.commit().then
+    (function(result) {
+        console.log("Added a vertex successfully for", y);
+        g.createIndex('actor', 'Vertex.class').then
+            (function(result){
+                g.idx('actor').put('name', y, g.v(vertex._id)).then
+                    (function(result){
+                    console.log("Index added successfully for", y);
+                    }, function(err) {
+                        console.log(err)
+                    });
+            }, function(err) {
+                console.log(err)
+            });
+    }, function(err) {
+        console.log(err)
+    });
 ```
 
 ## Author
