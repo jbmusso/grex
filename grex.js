@@ -13,9 +13,7 @@ var graphRegex = /^T\.(gt|gte|eq|neq|lte|lt)$|^g\.|^Vertex(?=\.class\b)|^Edge(?=
 var closureRegex = /^\{.*\}$/;
 
 function isIdString(id) {
-
-    //TODO: Check this
-    return !!OPTS.idRegex && isString(id) && OPTS.idRegex.test(id);
+    return !!this.OPTS.idRegex && isString(id) && this.OPTS.idRegex.test(id);
 }
 
 function isString(o) {
@@ -40,22 +38,23 @@ function isArray(o) {
 
 function qryMain(method, options, createNew){
     return function(){
-        var gremlin,
+        var self = this,
+            gremlin,
             args = isArray(arguments[0]) ? arguments[0] : arguments,
             appendArg = '';
 
-        gremlin = createNew ? new Gremlin(options) : this._buildGremlin(this.params);
+        gremlin = createNew ? new Gremlin(options) : self._buildGremlin(self.params);
                  
         //cater for idx param 2
         if(method == 'idx' && args.length > 1){
             for (var k in args[1]){
                 appendArg = k + ":";
-                appendArg += parseArgs(args[1][k])
+                appendArg += parseArgs.call(self, args[1][k])
             }
             appendArg = "[["+ appendArg + "]]";
             args.length = 1;
         }
-        gremlin.params += '.' + method + args(args);
+        gremlin.params += '.' + method + buildArgs.call(self, args);
         gremlin.params += appendArg;
         return gremlin;
     }
@@ -70,7 +69,7 @@ function parseArgs(val) {
         return val.toString();
     }
     //Cater for ids that are not numbers but pass parseFloat test
-    if(isIdString(val) || isNaN(parseFloat(val))) {
+    if(isIdString.call(this, val) || isNaN(parseFloat(val))) {
         return "'" + val + "'";
     }
     if(!isNaN(parseFloat(val))) {
@@ -78,7 +77,6 @@ function parseArgs(val) {
     }
     return val;
 }
-
 
 //[i] => index & [1..2] => range
 //Do not pass in method name, just string arg
@@ -93,14 +91,15 @@ function qryIndex(){
 //and | or | put  => g.v(1).outE().or(g._().has('id', 'T.eq', 9), g._().has('weight', 'T.lt', '0.6f'))
 function qryPipes(method){
     return function() {
-        var gremlin = this._buildGremlin(this.params),
+        var self = this,
+            gremlin = self._buildGremlin(self.params),
             args = [],
             isArray = isArray(arguments[0]),
             argsLen = isArray ? arguments[0].length : arguments.length;
 
         gremlin.params += "." + method + "("
         for (var _i = 0; _i < argsLen; _i++) {
-            gremlin.params += isArray ? arguments[0][_i].params || parseArgs(arguments[0][_i]) : arguments[_i].params || parseArgs(arguments[_i]);
+            gremlin.params += isArray ? arguments[0][_i].params || parseArgs.call(self, arguments[0][_i]) : arguments[_i].params || parseArgs.call(self, arguments[_i]);
             gremlin.params += ",";
         }
         gremlin.params = gremlin.params.slice(0, -1);
@@ -126,11 +125,10 @@ function qryCollection(method){
     }
 }
 
-function args(array) {
+function buildArgs(array) {
     var argList = '',
         append = '',
         jsonString = '';
-        
     for (var _i = 0, l = array.length; _i < l; _i++) {
         if(isClosure(array[_i])){
             append += array[_i];
@@ -139,7 +137,7 @@ function args(array) {
             jsonString = jsonString.replace('{', '[');
             argList += jsonString.replace('}', ']') + ",";
         } else {
-            argList += parseArgs(array[_i]) + ",";
+            argList += parseArgs.call(this, array[_i]) + ",";
         }
     }
     argList = argList.slice(0, -1);
@@ -442,10 +440,10 @@ var Gremlin = (function () {
 
     Gremlin.prototype = {
         _buildGremlin: function (qryString){
-            //console.log(this);
             this.params = qryString;
             return this;
         },
+        
         /*** Transform ***/
         both: qryMain('both'),
         bothE: qryMain('bothE'),
@@ -528,21 +526,18 @@ var Gremlin = (function () {
 
 var gRex = (function(){
         
-    function gRex(){
-    // //default options
-    // this.OPTS = {
-    //     'host': 'localhost',
-    //     'port': 8182,
-    //     'graph': 'tinkergraph',
-    //     'idRegex': false // OrientDB id regex -> /^[0-9]+:[0-9]+$/
-    // };
-
+    function gRex(options){
+        //default options
         this.OPTS = {
             'host': 'localhost',
             'port': 8182,
-            'graph': 'tinkerTest',
-            'idRegex': /^[0-9]+:[0-9]+$/
+            'graph': 'tinkergraph',
+            'idRegex': false // OrientDB id regex -> /^[0-9]+:[0-9]+$/
         };
+
+        if(options){
+            this.setOptions(options);
+        }
 
         this.V = qryMain('V', this.OPTS, true);
         this._ = qryMain('_', this.OPTS, true);
@@ -586,7 +581,6 @@ var gRex = (function(){
             }
         }
     }
-    
 
     gRex.prototype.begin = function (){
         return new Trxn(this.OPTS);
