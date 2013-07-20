@@ -132,7 +132,9 @@ function buildArgs(array) {
     for (var _i = 0, l = array.length; _i < l; _i++) {
         if(isClosure(array[_i])){
             append += array[_i];
-        } else if (isObject(array[_i]) && !(array[_i].hasOwnProperty('params') && isGraphReference(array[_i].params))) {
+        } else if (isObject(array[_i]) && array[_i].hasOwnProperty('verbatim')) {
+            argList += array[_i].verbatim + ","; 
+        } else if (isObject(array[_i]) && !(array[_i].hasOwnProperty('params') && _isGraphReference(array[_i].params))) {
             jsonString = JSON.stringify(array[_i]);
             jsonString = jsonString.replace('{', '[');
             argList += jsonString.replace('}', ']') + ",";
@@ -152,6 +154,84 @@ var Trxn = (function () {
         this.newVertices = [];
     }
 
+    //function converts json document to a stringed version with types
+    function docWithTypes(doc, offRoot) {
+      if (doc === undefined)
+        return doc;
+      if (doc === null) {
+        if (offRoot)
+          return "(null,null)";
+        return doc;
+      }
+      try {
+        var d = {};
+        var self = this;
+        if (Array.isArray(doc)) {
+          var out = offRoot ? ['(list,('] : [];
+          var len = doc.length;
+          for (var i = 0; i < len; i++) {
+            var item = doc[i];
+            out.push(docWithTypes(item, true));
+            if (offRoot)
+              out.push(',');
+          }
+          if (offRoot)
+            out.splice(out.length - 1, 1, '))');
+          d = out.join('');
+        } else if (typeof doc === 'object') {
+          if (doc.constructor === Date) {
+            d = '(long,' + doc.getTime().toString() + ')';
+          } else {
+            var out = offRoot ? [] : null;
+            var keys = Object.keys(doc);
+            var len = keys.length;
+            for (var i = 0; i < len; i++) {
+              var e = keys[i];
+              if (/^_id$|^_type$|^_action$|^_inV$|^outV$/.test(e) && !offRoot) {
+                d[e] = doc[e];
+              } else {
+                var v = doc[e];
+                if (offRoot) {
+                  out.push(i + '=' + docWithTypes(v, true));
+                } else {
+                  d[e] = docWithTypes(v, true);
+                }
+              }
+            }
+            if (offRoot)
+              d[e] = '(map,(' + out.join(',') + '))';
+          }
+        } else {
+          if (doc instanceof Boolean || typeof doc === 'boolean') {
+            d = doc ? "(b,true)" : "(b,false)";
+          } else if (doc instanceof String || typeof doc === 'string') {
+            d = doc.toString();
+          } else if (doc instanceof Number || typeof doc === 'number') {
+            try {
+              d = '(l,' + parseInt(doc) + ')';
+              if ('(l,' + doc.toString() + ')' !== d)
+                throw new Error('Conversion Error (probably overflow)');
+            }
+            catch (ee) {
+              try {
+                d = '(d,' + parseFloat(doc) + ')';
+                if ('(l,' + doc.toString() + ')' !== d)
+                  throw new Error('Conversion Error (probably overflow)');
+              }
+              catch (ee2) {
+                d = doc.toString(); // Assume string
+              }
+            }
+          } else {
+            d = doc.toString(); // Must be a string
+          }
+        }
+        return d;
+      }
+      catch (e) {
+        console.log(doc, e);
+      }
+    }
     function cud(action, type) {
         return function() {
             var o = {},
@@ -193,6 +273,9 @@ var Trxn = (function () {
             } else if (type == 'vertex') {
                 push.call(this.newVertices, o);
                 addToTransaction = false;
+            }
+            if (action == 'update') {
+              o = docWithTypes(o);
             }
             o._type = type;
             if (addToTransaction) {
@@ -550,13 +633,13 @@ var gRex = (function(){
         this.v = qryMain('v', this.OPTS, true);
 
         //Indexing
-        this.createIndex = qryMain('createIndex');
-        this.createKeyIndex = qryMain('createKeyIndex');
-        this.getIndices =  qryMain('getIndices');
-        this.getIndexedKeys =  qryMain('getIndexedKeys');
-        this.getIndex =  qryMain('getIndex');
-        this.dropIndex = qryMain('dropIndex');
-        this.dropKeyIndex = qryMain('dropKeyIndex');
+        this.createIndex = qryMain('createIndex', this.OPTS, true);
+        this.createKeyIndex = qryMain('createKeyIndex', this.OPTS, true);
+        this.getIndices =  qryMain('getIndices', this.OPTS, true);
+        this.getIndexedKeys =  qryMain('getIndexedKeys', this.OPTS, true);
+        this.getIndex =  qryMain('getIndex', this.OPTS, true);
+        this.dropIndex = qryMain('dropIndex', this.OPTS, true);
+        this.dropKeyIndex = qryMain('dropKeyIndex', this.OPTS, true);
 
         //CUD
         // exports.addVertex = _cud('create', 'vertex');
@@ -566,9 +649,9 @@ var gRex = (function(){
         // exports.updateVertex = _cud('update', 'vertex');
         // exports.updateEdge = _cud('update', 'edge');
 
-        this.clear =  qryMain('clear');
-        this.shutdown =  qryMain('shutdown');
-        this.getFeatures = qryMain('getFeatures');
+        this.clear =  qryMain('clear', this.OPTS, true);
+        this.shutdown =  qryMain('shutdown', this.OPTS, true);
+        this.getFeatures = qryMain('getFeatures', this.OPTS, true);
 
     }
 
