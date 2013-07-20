@@ -633,13 +633,13 @@ var gRex = (function(){
         this.v = qryMain('v', this.OPTS, true);
 
         //Indexing
-        this.createIndex = qryMain('createIndex');
-        this.createKeyIndex = qryMain('createKeyIndex');
-        this.getIndices =  qryMain('getIndices');
-        this.getIndexedKeys =  qryMain('getIndexedKeys');
-        this.getIndex =  qryMain('getIndex');
-        this.dropIndex = qryMain('dropIndex');
-        this.dropKeyIndex = qryMain('dropKeyIndex');
+        this.createIndex = qryMain('createIndex', this.OPTS, true);
+        this.createKeyIndex = qryMain('createKeyIndex', this.OPTS, true);
+        this.getIndices =  qryMain('getIndices', this.OPTS, true);
+        this.getIndexedKeys =  qryMain('getIndexedKeys', this.OPTS, true);
+        this.getIndex =  qryMain('getIndex', this.OPTS, true);
+        this.dropIndex = qryMain('dropIndex', this.OPTS, true);
+        this.dropKeyIndex = qryMain('dropKeyIndex', this.OPTS, true);
 
         //CUD
         // exports.addVertex = _cud('create', 'vertex');
@@ -649,9 +649,9 @@ var gRex = (function(){
         // exports.updateVertex = _cud('update', 'vertex');
         // exports.updateEdge = _cud('update', 'edge');
 
-        this.clear =  qryMain('clear');
-        this.shutdown =  qryMain('shutdown');
-        this.getFeatures = qryMain('getFeatures');
+        this.clear =  qryMain('clear', this.OPTS, true);
+        this.shutdown =  qryMain('shutdown', this.OPTS, true);
+        this.getFeatures = qryMain('getFeatures', this.OPTS, true);
 
     }
 
