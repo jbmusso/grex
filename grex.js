@@ -132,7 +132,9 @@ function buildArgs(array) {
     for (var _i = 0, l = array.length; _i < l; _i++) {
         if(isClosure(array[_i])){
             append += array[_i];
-        } else if (isObject(array[_i]) && !(array[_i].hasOwnProperty('params') && isGraphReference(array[_i].params))) {
+        } else if (isObject(array[_i]) && array[_i].hasOwnProperty('verbatim')) {
+            argList += array[_i].verbatim + ","; 
+        } else if (isObject(array[_i]) && !(array[_i].hasOwnProperty('params') && _isGraphReference(array[_i].params))) {
             jsonString = JSON.stringify(array[_i]);
             jsonString = jsonString.replace('{', '[');
             argList += jsonString.replace('}', ']') + ",";
@@ -152,6 +154,84 @@ var Trxn = (function () {
         this.newVertices = [];
     }
 
+    //function converts json document to a stringed version with types
+    function docWithTypes(doc, offRoot) {
+      if (doc === undefined)
+        return doc;
+      if (doc === null) {
+        if (offRoot)
+          return "(null,null)";
+        return doc;
+      }
+      try {
+        var d = {};
+        var self = this;
+        if (Array.isArray(doc)) {
+          var out = offRoot ? ['(list,('] : [];
+          var len = doc.length;
+          for (var i = 0; i < len; i++) {
+            var item = doc[i];
+            out.push(docWithTypes(item, true));
+            if (offRoot)
+              out.push(',');
+          }
+          if (offRoot)
+            out.splice(out.length - 1, 1, '))');
+          d = out.join('');
+        } else if (typeof doc === 'object') {
+          if (doc.constructor === Date) {
+            d = '(long,' + doc.getTime().toString() + ')';
+          } else {
+            var out = offRoot ? [] : null;
+            var keys = Object.keys(doc);
+            var len = keys.length;
+            for (var i = 0; i < len; i++) {
+              var e = keys[i];
+              if (/^_id$|^_type$|^_action$|^_inV$|^outV$/.test(e) && !offRoot) {
+                d[e] = doc[e];
+              } else {
+                var v = doc[e];
+                if (offRoot) {
+                  out.push(i + '=' + docWithTypes(v, true));
+                } else {
+                  d[e] = docWithTypes(v, true);
+                }
+              }
+            }
+            if (offRoot)
+              d[e] = '(map,(' + out.join(',') + '))';
+          }
+        } else {
+          if (doc instanceof Boolean || typeof doc === 'boolean') {
+            d = doc ? "(b,true)" : "(b,false)";
+          } else if (doc instanceof String || typeof doc === 'string') {
+            d = doc.toString();
+          } else if (doc instanceof Number || typeof doc === 'number') {
+            try {
+              d = '(l,' + parseInt(doc) + ')';
+              if ('(l,' + doc.toString() + ')' !== d)
+                throw new Error('Conversion Error (probably overflow)');
+            }
+            catch (ee) {
+              try {
+                d = '(d,' + parseFloat(doc) + ')';
+                if ('(l,' + doc.toString() + ')' !== d)
+                  throw new Error('Conversion Error (probably overflow)');
+              }
+              catch (ee2) {
+                d = doc.toString(); // Assume string
+              }
+            }
+          } else {
+            d = doc.toString(); // Must be a string
+          }
+        }
+        return d;
+      }
+      catch (e) {
+        console.log(doc, e);
+      }
+    }
     function cud(action, type) {
         return function() {
             var o = {},
@@ -193,6 +273,9 @@ var Trxn = (function () {
             } else if (type == 'vertex') {
                 push.call(this.newVertices, o);
                 addToTransaction = false;
+            }
+            if (action == 'update') {
+              o = docWithTypes(o);
             }
             o._type = type;
             if (addToTransaction) {
