@@ -36,15 +36,13 @@ function isArray(o) {
     return toString.call(o) === '[object Array]';
 }
 
-function qryMain(method, options, createNew){
+function qryMain(method, gremlinObj){
     return function(){
         var self = this,
-            gremlin,
+            gremlin = gremlinObj || self._buildGremlin(self.params),
             args = isArray(arguments[0]) ? arguments[0] : arguments,
             appendArg = '';
 
-        gremlin = createNew ? new Gremlin(options) : self._buildGremlin(self.params);
-                 
         //cater for idx param 2
         if(method == 'idx' && args.length > 1){
             for (var k in args[1]){
@@ -622,24 +620,24 @@ var gRex = (function(){
             this.setOptions(options);
         }
 
-        this.V = qryMain('V', this.OPTS, true);
-        this._ = qryMain('_', this.OPTS, true);
-        this.E = qryMain('E', this.OPTS, true);
-        this.V =  qryMain('V', this.OPTS, true);
+        this.V = qryMain('V', new Gremlin(this.OPTS));
+        this._ = qryMain('_', new Gremlin(this.OPTS));
+        this.E = qryMain('E', new Gremlin(this.OPTS));
+        this.V =  qryMain('V', new Gremlin(this.OPTS));
 
         //Methods
-        this.e = qryMain('e', this.OPTS, true);
-        this.idx = qryMain('idx', this.OPTS, true);
-        this.v = qryMain('v', this.OPTS, true);
+        this.e = qryMain('e', new Gremlin(this.OPTS));
+        this.idx = qryMain('idx', new Gremlin(this.OPTS));
+        this.v = qryMain('v', new Gremlin(this.OPTS));
 
         //Indexing
-        this.createIndex = qryMain('createIndex', this.OPTS, true);
-        this.createKeyIndex = qryMain('createKeyIndex', this.OPTS, true);
-        this.getIndices =  qryMain('getIndices', this.OPTS, true);
-        this.getIndexedKeys =  qryMain('getIndexedKeys', this.OPTS, true);
-        this.getIndex =  qryMain('getIndex', this.OPTS, true);
-        this.dropIndex = qryMain('dropIndex', this.OPTS, true);
-        this.dropKeyIndex = qryMain('dropKeyIndex', this.OPTS, true);
+        this.createIndex = qryMain('createIndex', new Gremlin(this.OPTS));
+        this.createKeyIndex = qryMain('createKeyIndex', new Gremlin(this.OPTS));
+        this.getIndices =  qryMain('getIndices', new Gremlin(this.OPTS));
+        this.getIndexedKeys =  qryMain('getIndexedKeys', new Gremlin(this.OPTS));
+        this.getIndex =  qryMain('getIndex', new Gremlin(this.OPTS));
+        this.dropIndex = qryMain('dropIndex', new Gremlin(this.OPTS));
+        this.dropKeyIndex = qryMain('dropKeyIndex', new Gremlin(this.OPTS));
 
         //CUD
         // exports.addVertex = _cud('create', 'vertex');
@@ -649,9 +647,9 @@ var gRex = (function(){
         // exports.updateVertex = _cud('update', 'vertex');
         // exports.updateEdge = _cud('update', 'edge');
 
-        this.clear =  qryMain('clear', this.OPTS, true);
-        this.shutdown =  qryMain('shutdown', this.OPTS, true);
-        this.getFeatures = qryMain('getFeatures', this.OPTS, true);
+        this.clear =  qryMain('clear', new Gremlin(this.OPTS));
+        this.shutdown =  qryMain('shutdown', new Gremlin(this.OPTS));
+        this.getFeatures = qryMain('getFeatures', new Gremlin(this.OPTS));
 
     }
 
@@ -671,4 +669,5 @@ var gRex = (function(){
 
     return gRex;
 })();
+gRex.connect = gRex; 
 module.exports = gRex;
