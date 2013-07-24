@@ -25,7 +25,7 @@
   "engines": {
     "node": ">=0.6.0"
   },
-  "main": "grex.js",
+  "main": "./index.js",
   "devDependencies": {
     "grunt": "~0.4.1",
     "grunt-contrib-uglify": "~0.2.2",
