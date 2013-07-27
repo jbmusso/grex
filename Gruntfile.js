@@ -25,8 +25,12 @@ module.exports = function(grunt){
 	grunt.loadNpmTasks('grunt-contrib-uglify');
 	// Load the plugin that provides the "lint" task.
 	grunt.loadNpmTasks('grunt-contrib-jshint');
+	// Load the plugin that provides the "browserify" task.
+	grunt.loadNpmTasks('grunt-browserify');
+	// Load the plugin that provides the "mocha/phantomjs" task.
+	grunt.loadNpmTasks('grunt-mocha');
 
 	// Default task(s).
-	grunt.registerTask('default', ['jshint', 'uglify']);
+	grunt.registerTask('default', ['jshint', 'browserify', 'uglify']);
 
 }
