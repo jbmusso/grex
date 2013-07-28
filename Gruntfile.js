@@ -2,23 +2,32 @@ module.exports = function(grunt){
 	// Project configuration.
 	grunt.initConfig({
 	  pkg: grunt.file.readJSON('package.json'),
-	  uglify: {
-	    options: {
-	      banner: '/*! <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> */\n'
-	    },
-	    build: {
-	      src: 'src/<%= pkg.name %>.js',
-	      dest: 'build/<%= pkg.name %>.min.js'
+		uglify: {
+			options: {
+			banner: '/*! <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> */\n'
+		},
+		build: {
+			src: 'src/<%= pkg.name %>.js',
+			dest: 'build/<%= pkg.name %>.min.js'
+			}
+		},
+		jshint: {
+			ignore_warning: {
+				options: {
+				'-W040': true,
+				},
+				src: ['src/*.js'],
+			}
+		},
+	  	// Configure a mochaTest task
+	    mochaTest: {
+	      test: {
+	        options: {
+	          reporter: 'spec'
+	        },
+	        src: ['test/*.js']
+	      }
 	    }
-	  },
-	  jshint: {
-	  	ignore_warning: {
-	      options: {
-	        '-W040': true,
-	      },
-	      src: ['src/*.js'],
-	    }
-	  }
 	});
 
 	// Load the plugin that provides the "uglify" task.
@@ -28,9 +37,12 @@ module.exports = function(grunt){
 	// Load the plugin that provides the "browserify" task.
 	grunt.loadNpmTasks('grunt-browserify');
 	// Load the plugin that provides the "mocha/phantomjs" task.
-	grunt.loadNpmTasks('grunt-mocha');
+//	grunt.loadNpmTasks('grunt-mocha');
+	// Add the grunt-mocha-test tasks.
+	grunt.loadNpmTasks('grunt-mocha-test');
+
 
 	// Default task(s).
-	grunt.registerTask('default', ['jshint', 'browserify', 'uglify']);
+	grunt.registerTask('default', ['jshint', 'grunt-mocha-test', 'uglify']);
 
 }
