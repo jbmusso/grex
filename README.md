@@ -278,7 +278,8 @@ eg.
 }
 ```
 
-__Example 14: Create index
+__Example 14: Create index__
+
 ```
 var y = "bob";
 var trxn = g.begin();
