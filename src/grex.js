@@ -13,6 +13,11 @@
     var graphRegex = /^T\.(gt|gte|eq|neq|lte|lt)$|^g\.|^Vertex(?=\.class\b)|^Edge(?=\.class\b)/;
     var closureRegex = /^\{.*\}$/;
 
+
+    function isRegexId(id) {
+        return !!this.OPTS.idRegex && isString(id) && this.OPTS.idRegex.test(id);
+    };
+
     function isString(o) {
         return toString.call(o) === '[object String]';
     }
@@ -49,7 +54,7 @@
                 appendArg = "[["+ appendArg + "]]";
                 args.length = 1;
             }
-            console.log(self);
+            
             gremlin.params += '.' + method + buildArgs.call(self, args);
             gremlin.params += appendArg;
             return gremlin;
@@ -65,7 +70,7 @@
             return val.toString();
         }
         //Cater for ids that are not numbers but pass parseFloat test
-        if(this.isId(val) || isNaN(parseFloat(val))) {
+        if(isRegexId.call(this, val) || isNaN(parseFloat(val))) {
             return "'" + val + "'";
         }
         if(!isNaN(parseFloat(val))) {
@@ -122,20 +127,22 @@
     }
 
     function buildArgs(array) {
-        var argList = '',
+        var self = this,
+            argList = '',
             append = '',
             jsonString = '';
+            
         for (var _i = 0, l = array.length; _i < l; _i++) {
             if(isClosure(array[_i])){
                 append += array[_i];
             } else if (isObject(array[_i]) && array[_i].hasOwnProperty('verbatim')) {
                 argList += array[_i].verbatim + ","; 
-            } else if (isObject(array[_i]) && !(array[_i].hasOwnProperty('params') && _isGraphReference(array[_i].params))) {
+            } else if (isObject(array[_i]) && !(array[_i].hasOwnProperty('params') && isGraphReference(array[_i].params))) {
                 jsonString = JSON.stringify(array[_i]);
                 jsonString = jsonString.replace('{', '[');
                 argList += jsonString.replace('}', ']') + ",";
             } else {
-                argList += parseArgs.call(this, array[_i]) + ",";
+                argList += parseArgs.call(self, array[_i]) + ",";
             }
         }
         argList = argList.slice(0, -1);
@@ -225,7 +232,7 @@
             return d;
           }
           catch (e) {
-            console.log(doc, e);
+            console.error(doc, e);
           }
         }
 
@@ -639,20 +646,16 @@
             this.dropKeyIndex = qryMain('dropKeyIndex', new Gremlin(this.OPTS));
 
             //CUD
-            // exports.addVertex = _cud('create', 'vertex');
-            // exports.addEdge = _cud('create', 'edge');
-            // exports.removeVertex = _cud('delete', 'vertex');
-            // exports.removeEdge = _cud('delete', 'edge');
-            // exports.updateVertex = _cud('update', 'vertex');
-            // exports.updateEdge = _cud('update', 'edge');
+            // exports.addVertex = cud('create', 'vertex');
+            // exports.addEdge = cud('create', 'edge');
+            // exports.removeVertex = cud('delete', 'vertex');
+            // exports.removeEdge = cud('delete', 'edge');
+            // exports.updateVertex = cud('update', 'vertex');
+            // exports.updateEdge = cud('update', 'edge');
 
             this.clear =  qryMain('clear', new Gremlin(this.OPTS));
             this.shutdown =  qryMain('shutdown', new Gremlin(this.OPTS));
             this.getFeatures = qryMain('getFeatures', new Gremlin(this.OPTS));
-
-            this.isId = function (id) {
-                return !!this.OPTS.idRegex && isString(id) && this.OPTS.idRegex.test(id);
-            };
 
             this.connect = function(){
                 return q.fcall(function() {

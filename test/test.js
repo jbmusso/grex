@@ -94,12 +94,12 @@ describe('Branch', function(){
 
 describe('Misc', function(){
 	describe('float', function() {
-        it("should return [ 'vadas', 32, 'lop' ]", function(done){
-            g.v(1).outE().has("weight", "T.gte", "0.5f")//.property("weight")
+        it("should return weight", function(done){
+            g.v(1).outE().has("weight", "T.gte", "0.5f").property("weight")
             	.then(function(result){
             		console.log(result);
-            		result.results.should.have.lengthOf(3);
-	      			result.results.should.eql([ 'vadas', 32, 'lop' ]);
+            		result.results.should.have.lengthOf(2);
+	      			result.results.should.eql([ 0.5, 1 ]);
 	      			done();	
 	      		});
         });
