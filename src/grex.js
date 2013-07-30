@@ -10,7 +10,7 @@
     var gremlinExt = '/tp/gremlin?script=';
     var batchExt = '/tp/batch/tx';
     var newVertex = '/vertices';
-    var graphRegex = /^T\.(gt|gte|eq|neq|lte|lt)$|^g\.|^Vertex(?=\.class\b)|^Edge(?=\.class\b)/;
+    var graphRegex = /^T\.(gt|gte|eq|neq|lte|lt|decr|incr)$|^g\.|^Vertex(?=\.class\b)|^Edge(?=\.class\b)/;
     var closureRegex = /^\{.*\}$/;
 
 
@@ -42,20 +42,26 @@
         return function(){
             var self = this,
                 gremlin = reset ? new Gremlin(this.OPTS) : self._buildGremlin(self.params),
-                args = isArray(arguments[0]) ? arguments[0] : arguments,
+                args = '',
                 appendArg = '';
 
-            //cater for idx param 2
-            if(method == 'idx' && args.length > 1){
-                for (var k in args[1]){
-                    appendArg = k + ":";
-                    appendArg += parseArgs.call(self, args[1][k])
+            //cater for select array parameters
+            if(method == 'select'){
+                args = arguments;
+                gremlin.params += '.' + method + buildArgs.call(self, args, true);
+            } else {
+                args = isArray(arguments[0]) ? arguments[0] : arguments;
+                //cater for idx param 2
+                if(method == 'idx' && args.length > 1){
+                    for (var k in args[1]){
+                        appendArg = k + ":";
+                        appendArg += parseArgs.call(self, args[1][k])
+                    }
+                    appendArg = "[["+ appendArg + "]]";
+                    args.length = 1;
                 }
-                appendArg = "[["+ appendArg + "]]";
-                args.length = 1;
+                gremlin.params += '.' + method + buildArgs.call(self, args);    
             }
-            
-            gremlin.params += '.' + method + buildArgs.call(self, args);
             gremlin.params += appendArg;
             return gremlin;
         }
@@ -105,7 +111,6 @@
             }
             gremlin.params = gremlin.params.slice(0, -1);
             gremlin.params += ")";
-console.log(gremlin.params);
             return gremlin;
         }
     }
@@ -113,21 +118,24 @@ console.log(gremlin.params);
     //retain & except => g.V().retain([g.v(1), g.v(2), g.v(3)])
     function qryCollection(method){
         return function() {
-            var gremlin = this._buildGremlin(this.params),
-                args = [];
+            var self = this,
+                gremlin = this._buildGremlin(this.params),
+                param = '';
 
-            gremlin.params += "." + method + "(["
-            for (var _i = 0, argsLen = arguments[0].length; _i < argsLen; _i++) {
-                gremlin.params += arguments[0][_i].params;
-                gremlin.params += ",";
+            if(isArray(arguments[0])){
+                for (var _i = 0, argsLen = arguments[0].length; _i < argsLen; _i++) {
+                    param += arguments[0][_i].params;
+                    param += ",";
+                }
+                gremlin.params += "." + method + "([" + param + "])";
+            } else {
+                gremlin.params += "." + method + buildArgs.call(self, arguments[0]);
             }
-            gremlin.params = gremlin.params.slice(0, -1);
-            gremlin.params += "])";
             return gremlin;
         }
     }
 
-    function buildArgs(array) {
+    function buildArgs(array, retainArray) {
         var self = this,
             argList = '',
             append = '',
@@ -142,6 +150,8 @@ console.log(gremlin.params);
                 jsonString = JSON.stringify(array[_i]);
                 jsonString = jsonString.replace('{', '[');
                 argList += jsonString.replace('}', ']') + ",";
+            } else if(retainArray && isArray(array[_i])) {
+                argList += "[" + parseArgs.call(self, array[_i]) + "],";
             } else {
                 argList += parseArgs.call(self, array[_i]) + ",";
             }
@@ -554,6 +564,7 @@ console.log(gremlin.params);
             scatter: qryMain('scatter'),
             select: qryMain('select'),
             transform: qryMain('transform'),
+            orderMap: qryMain('orderMap'),
             
             /*** Filter ***/
             index: qryIndex(), //index(i)
@@ -599,6 +610,9 @@ console.log(gremlin.params);
             iterate: qryMain('iterate'),
             next: qryMain('next'),
             toList: qryMain('toList'),
+            keys: qryMain('keys'),
+            remove: qryMain('remove'),
+            values: qryMain('values'),
             put: qryPipes('put'),
 
             getPropertyKeys: qryMain('getPropertyKeys'),

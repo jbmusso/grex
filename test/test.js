@@ -78,6 +78,66 @@ describe('Transforms', function(){
 	      		});
         });
 
+    }),
+    describe('select', function(){
+		it('should return vertices with keys x & y', function(done){
+			g.v(1).as('x').out('knows').as('y').select()
+				.then(function(result){
+					result.results.should.have.lengthOf(2);
+					result.results[0].should.have.keys('x', 'y');
+					result.results[1].should.have.keys('x', 'y');
+					done();	
+				});
+		});
+
+		it('should return vertices with key y', function(done){
+			g.v(1).as('x').out('knows').as('y').select(["y"])
+				.then(function(result){
+					//console.log(result);
+					result.results.should.have.lengthOf(2);
+					result.results[0].should.have.keys('y');
+					result.results[1].should.have.keys('y');
+					done();	
+				});
+		});
+
+		it('should return object with key y and name', function(done){
+			g.v(1).as('x').out('knows').as('y').select(["y"],"{it.name}")
+				.then(function(result){
+					//console.log(result);
+					result.results.should.have.lengthOf(2);
+					result.results.should.includeEql({ y: 'vadas' });
+					result.results.should.includeEql({ y: 'josh' });
+					done();	
+				});
+		});
+
+		it('should return vertices with id and name', function(done){
+			g.v(1).as('x').out('knows').as('y').select("{it.id}{it.name}")
+				.then(function(result){
+					//console.log(result);
+					result.results.should.have.lengthOf(2);
+					result.results[0].should.have.keys('x', 'y');
+					result.results[1].should.have.keys('x', 'y');
+					done();	
+				});
+		});
+	}),
+  	describe('orderMap', function() {
+        it("should get id 1", function(done){
+            g.V().both().groupCount().cap().orderMap('T.decr')
+            	.then(function(result){
+            		console.log(result);
+	      			result.results.should.have.lengthOf(6);
+	      			result.results.should.eql([ { name: 'lop', lang: 'java', _id: '3', _type: 'vertex' },
+											    { name: 'marko', age: 29, _id: '1', _type: 'vertex' },
+											    { name: 'josh', age: 32, _id: '4', _type: 'vertex' },
+											    { name: 'vadas', age: 27, _id: '2', _type: 'vertex' },
+											    { name: 'peter', age: 35, _id: '6', _type: 'vertex' },
+											    { name: 'ripple', lang: 'java', _id: '5', _type: 'vertex' } ]);
+					done();	
+	      		});
+        });
     })
 });
 
@@ -102,7 +162,7 @@ describe('Filters', function(){
 					done();	
 				});
 		});
-	})
+	}),
 
 	describe('and', function(){
 		it('should return marko & josh', function(done){
@@ -112,6 +172,53 @@ describe('Filters', function(){
 	      			result.results.should.have.lengthOf(2);
 	      			result.results.should.includeEql({ name: 'marko', age: 29, _id: '1', _type: 'vertex' });
 	      			result.results.should.includeEql({ name: 'josh', age: 32, _id: '4', _type: 'vertex' });
+					done();	
+				});
+		});
+	}),
+	describe('or', function(){
+		it('should return edges id 7 & 9', function(done){
+			g.v(1).outE().or(g._().has('id', 'T.eq', 9), g._().has('weight', 'T.lt', '0.6f'))
+				.then(function(result){
+					//console.log(result);
+	      			result.results.should.have.lengthOf(2);
+	      			result.results.should.includeEql({ weight: 0.5,
+												       _id: '7',
+												       _type: 'edge',
+												       _outV: '1',
+												       _inV: '2',
+												       _label: 'knows' });
+	      			result.results.should.includeEql({ weight: 0.4,
+												       _id: '9',
+												       _type: 'edge',
+												       _outV: '1',
+												       _inV: '3',
+												       _label: 'created' });
+					done();	
+				});
+		});
+	}),
+	describe('retain', function(){
+		it('should return vertices with id 3,2,1', function(done){
+			g.V().retain([g.v(1), g.v(2), g.v(3)])
+				.then(function(result){
+					//console.log(result);
+	      			result.results.should.have.lengthOf(3);
+	      			result.results.should.includeEql({ name: 'marko', age: 29, _id: '1', _type: 'vertex' });
+	      			result.results.should.includeEql({ name: 'vadas', age: 27, _id: '2', _type: 'vertex' });
+	      			result.results.should.includeEql({ name: 'lop', lang: 'java', _id: '3', _type: 'vertex' });
+					done();	
+				});
+		});
+	}),
+	describe('except', function(){
+		it('should return vertices josh & peter', function(done){
+			g.V().has('age','T.lt',30).as('x').out('created').in('created').except('x')
+				.then(function(result){
+					//console.log(result);
+	      			result.results.should.have.lengthOf(2);
+	      			result.results.should.includeEql({ name: 'josh', age: 32, _id: '4', _type: 'vertex' });
+	      			result.results.should.includeEql({ name: 'peter', age: 35, _id: '6', _type: 'vertex' });
 					done();	
 				});
 		});
@@ -132,7 +239,18 @@ describe('Side Effects', function(){
 });
 
 describe('Branch', function(){
-	describe('ifThenElse', function() {
+	describe('copySplit', function() {
+        it("should get [ 'ripple', 27, 'lop', 32 ]", function(done){
+            g.v(1).out('knows').copySplit(g._().out('created').property('name'), g._().property('age')).fairMerge()
+            	.then(function(result){
+            		console.log(result);
+            		result.results.should.have.lengthOf(4);
+	      			result.results.should.eql([ 'ripple', 27, 'lop', 32 ]);
+	      			done();	
+	      		});
+        });
+    }),
+    describe('ifThenElse', function() {
         it("should get [ 'vadas', 32, 'lop' ]", function(done){
             g.v(1).out().ifThenElse("{it.name=='josh'}{it.age}{it.name}")
             	.then(function(result){
@@ -145,6 +263,67 @@ describe('Branch', function(){
     })
 });
 
+
+describe('Methods', function(){
+	describe('indexing', function() {
+        it("should create index 'my-index'", function(done){
+            g.createIndex("my-index", 'Vertex.class')
+            	.then(function(result){
+            		//console.log(result);
+	      			result.success.should.eql(true);
+	      			done();	
+	      		});
+        });
+        
+        it("should add name => marko to index 'my-index'", function(done){
+            g.idx("my-index").put("name", "marko", g.v(1))
+            	.then(function(result){
+            		//console.log(result);
+	      			result.success.should.eql(true);
+	      			done();	
+	      		});
+        });
+        it("should retrieve indexed value marko from 'my-index'", function(done){
+            g.idx("my-index", {'name':'marko'})
+            	.then(function(result){
+            		//console.log(result);
+	      			result.success.should.eql(true);
+	      			result.results.should.includeEql({ name: 'marko', age: 29, _id: '1', _type: 'vertex' });
+	      			done();	
+	      		});
+        });
+        it("should drop index 'my-index'", function(done){
+            g.dropIndex("my-index")
+            	.then(function(result){
+            		//console.log(result);
+	      			result.success.should.eql(true);
+	      			done();	
+	      		});
+        });
+    }),
+	describe('keys', function() {
+        it("should return name & age keys", function(done){
+            g.v(1).keys()
+            	.then(function(result){
+            		//console.log(result);
+	      			result.results.should.have.lengthOf(2);
+	      			result.results.should.eql([ 'age', 'name' ]);
+	      			done();	
+	      		});
+        });
+    }),
+	describe('values', function() {
+        it("should return marko & 29 values", function(done){
+            g.v(1).values()
+            	.then(function(result){
+            		//console.log(result);
+	      			result.results.should.have.lengthOf(2);
+	      			result.results.should.eql([ 29, 'marko' ]);
+	      			done();	
+	      		});
+        });
+    })
+});
 
 describe('Misc', function(){
 	describe('float', function() {
