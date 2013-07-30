@@ -1,5 +1,5 @@
 ;(function(global) {
-    "use strict"
+    "use strict";
     var q = require('q');
     var http = require('http');
 
@@ -49,6 +49,7 @@
                 appendArg = "[["+ appendArg + "]]";
                 args.length = 1;
             }
+            console.log(self);
             gremlin.params += '.' + method + buildArgs.call(self, args);
             gremlin.params += appendArg;
             return gremlin;
@@ -698,5 +699,3 @@
     }
 
 })(this);
-//gRex.connect = gRex; 
-//module.exports = gRex;

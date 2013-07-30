@@ -33,7 +33,7 @@ gRex can be loaded as:
 
 -   a Node.js and CommonJS module available from NPM as the ``grex`` package
 
-    ```bash
+    ```
     $ npm install grex
     ```
 
