@@ -38,10 +38,10 @@
         return toString.call(o) === '[object Array]';
     }
 
-    function qryMain(method, gremlinObj){
+    function qryMain(method, reset){
         return function(){
             var self = this,
-                gremlin = gremlinObj || self._buildGremlin(self.params),
+                gremlin = reset ? new Gremlin(this.OPTS) : self._buildGremlin(self.params),
                 args = isArray(arguments[0]) ? arguments[0] : arguments,
                 appendArg = '';
 
@@ -93,18 +93,19 @@
     function qryPipes(method){
         return function() {
             var self = this,
-                gremlin = self._buildGremlin(self.params),
+                gremlin = self._buildGremlin(this.params),
                 args = [],
-                isArray = isArray(arguments[0]),
-                argsLen = isArray ? arguments[0].length : arguments.length;
+                isArr = isArray(arguments[0]),
+                argsLen = isArr ? arguments[0].length : arguments.length;
 
             gremlin.params += "." + method + "("
             for (var _i = 0; _i < argsLen; _i++) {
-                gremlin.params += isArray ? arguments[0][_i].params || parseArgs.call(self, arguments[0][_i]) : arguments[_i].params || parseArgs.call(self, arguments[_i]);
+                gremlin.params += isArr ? arguments[0][_i].params || parseArgs.call(self, arguments[0][_i]) : arguments[_i].params || parseArgs.call(self, arguments[_i]);
                 gremlin.params += ",";
             }
             gremlin.params = gremlin.params.slice(0, -1);
             gremlin.params += ")";
+console.log(gremlin.params);
             return gremlin;
         }
     }
@@ -481,9 +482,10 @@
     })();
 
     var Gremlin = (function () {
-        function Gremlin(options) {
+        function Gremlin(options, params) {
             this.OPTS = options;
-            this.params = 'g';    
+            this.params = params? params:'g';
+            //this.params = 'g';    
         }
       
         function get() {
@@ -626,24 +628,24 @@
                 this.setOptions(options);
             }
 
-            this.V = qryMain('V', new Gremlin(this.OPTS));
-            this._ = qryMain('_', new Gremlin(this.OPTS));
-            this.E = qryMain('E', new Gremlin(this.OPTS));
-            this.V =  qryMain('V', new Gremlin(this.OPTS));
+            this.V = qryMain('V', true);
+            this._ = qryMain('_', true);
+            this.E = qryMain('E', true);
+            this.V =  qryMain('V', true);
 
             //Methods
-            this.e = qryMain('e', new Gremlin(this.OPTS));
-            this.idx = qryMain('idx', new Gremlin(this.OPTS));
-            this.v = qryMain('v', new Gremlin(this.OPTS));
+            this.e = qryMain('e', true);
+            this.idx = qryMain('idx', true);
+            this.v = qryMain('v', true);
 
             //Indexing
-            this.createIndex = qryMain('createIndex', new Gremlin(this.OPTS));
-            this.createKeyIndex = qryMain('createKeyIndex', new Gremlin(this.OPTS));
-            this.getIndices =  qryMain('getIndices', new Gremlin(this.OPTS));
-            this.getIndexedKeys =  qryMain('getIndexedKeys', new Gremlin(this.OPTS));
-            this.getIndex =  qryMain('getIndex', new Gremlin(this.OPTS));
-            this.dropIndex = qryMain('dropIndex', new Gremlin(this.OPTS));
-            this.dropKeyIndex = qryMain('dropKeyIndex', new Gremlin(this.OPTS));
+            this.createIndex = qryMain('createIndex', true);
+            this.createKeyIndex = qryMain('createKeyIndex', true);
+            this.getIndices =  qryMain('getIndices', true);
+            this.getIndexedKeys =  qryMain('getIndexedKeys', true);
+            this.getIndex =  qryMain('getIndex', true);
+            this.dropIndex = qryMain('dropIndex', true);
+            this.dropKeyIndex = qryMain('dropKeyIndex', true);
 
             //CUD
             // exports.addVertex = cud('create', 'vertex');
@@ -653,9 +655,9 @@
             // exports.updateVertex = cud('update', 'vertex');
             // exports.updateEdge = cud('update', 'edge');
 
-            this.clear =  qryMain('clear', new Gremlin(this.OPTS));
-            this.shutdown =  qryMain('shutdown', new Gremlin(this.OPTS));
-            this.getFeatures = qryMain('getFeatures', new Gremlin(this.OPTS));
+            this.clear =  qryMain('clear', true);
+            this.shutdown =  qryMain('shutdown', true);
+            this.getFeatures = qryMain('getFeatures', true);
 
             this.connect = function(){
                 return q.fcall(function() {
