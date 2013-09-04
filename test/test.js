@@ -1,6 +1,5 @@
 var gRex = require('../index.js');
 
-//var g;
 beforeEach(function(done){
 	gRex.connect()
 		.then(function(result){

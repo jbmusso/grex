@@ -10,6 +10,8 @@
  - New Transaction process for CUD. Must create transaction object and invoke cud methods. Includes better error trapping.
  - Transaction success no longer requires testing for success = true || false. Only successful values are returned to success callback. All errors sent to error callback.
  - Removed version and querytime from returned results
+ - Complies with Blueprints 2.4.0
+ - Add Contains.IN and Contains.NOT_IN
 
 ## 0.1.10
 

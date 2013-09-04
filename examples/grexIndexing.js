@@ -1,3 +1,4 @@
+var g = require('../src/grex.js');
 var y = "bob";
 var trxn = g.begin();
 var vertex = trxn.addVertex({name:y});

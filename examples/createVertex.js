@@ -1,4 +1,4 @@
-var g = require('../grex.js');
+var g = require('../src/grex.js');
 var t1, t2;
 
 var trxn = g.begin();

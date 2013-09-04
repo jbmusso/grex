@@ -10,7 +10,7 @@
     var gremlinExt = '/tp/gremlin?script=';
     var batchExt = '/tp/batch/tx';
     var newVertex = '/vertices';
-    var graphRegex = /^T\.(gt|gte|eq|neq|lte|lt|decr|incr)$|^g\.|^Vertex(?=\.class\b)|^Edge(?=\.class\b)/;
+    var graphRegex = /^T\.(gt|gte|eq|neq|lte|lt|decr|incr|notin)$|^Contains\.(IN|NOT_IN)$|^g\.|^Vertex(?=\.class\b)|^Edge(?=\.class\b)/;
     var closureRegex = /^\{.*\}$/;
 
 
@@ -168,7 +168,7 @@
             this.newVertices = [];
         }
 
-        //function converts json document to a stringed version with types
+        //function converts json document to a stringified version with types
         function docWithTypes(doc, offRoot) {
           if (doc === undefined)
             return doc;
@@ -291,6 +291,7 @@
                 }
                 if (action == 'update') {
                   o = docWithTypes(o);
+                  console.log(o);
                 }
                 o._type = type;
                 if (addToTransaction) {
@@ -494,8 +495,7 @@
     var Gremlin = (function () {
         function Gremlin(options, params) {
             this.OPTS = options;
-            this.params = params? params:'g';
-            //this.params = 'g';    
+            this.params = params ? params : 'g';
         }
       
         function get() {

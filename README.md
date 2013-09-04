@@ -266,9 +266,8 @@ trxn.commit().then(function(result){
     console.error(err)
 }); 
 
-This will return a JSON object with an array called newVertices.
-
-eg. 
+//This will return a JSON object with an array called newVertices. For example:
+ 
 { success: true,
   newVertices: 
    [ { name: 'Frank', _id: '#8:334', _type: 'vertex' },
