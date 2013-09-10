@@ -13,6 +13,60 @@
     var graphRegex = /^T\.(gt|gte|eq|neq|lte|lt|decr|incr|notin)$|^Contains\.(IN|NOT_IN)$|^g\.|^Vertex(?=\.class\b)|^Edge(?=\.class\b)/;
     var closureRegex = /^\{.*\}$/;
 
+    var typeHash = { 
+        'integer': 'i',
+        'long': 'l',
+        'float': 'f',
+        'double': 'd',
+        'string': 's',
+        'boolean': 'b',
+        'i': 'i',
+        'l': 'l',
+        'f': 'f',
+        'd': 'd',
+        's': 's',
+        'b': 'b',
+        'array': 'list',
+        'a': 'list',
+        'list': 'list',
+        'obj': 'map',
+        'object': 'map',
+        'o': 'map',
+        'map': 'map',
+        'date': 'l'
+    };
+
+/*
+Structure of typeMap
+
+{
+    //if no definition is provided type will be inferred
+    //string (default)
+    prop: 'string', // or 's',
+    //boolean (default for anything that looks like a Boolean)
+    prop2: 'boolean', // or 'b',
+    //integer
+    prop3: 'integer', // or 'i',
+    //float
+    prop4: 'float', // or 'f',
+    //long (default for anything that passes parseInt())
+    prop5: 'long', // or 'l',
+    //double (default for anything that passes parseFloat())
+    prop5: 'double', // or 'd',
+    //list (array) with all same type
+    arrProp: ['string'],
+    arrProp: ['s'],
+    arrProp: ['long'],
+    arrProp: ['l'],
+    //list (array) with mixed types
+    //key indicates index to start applying type
+    arrProp: [{ '0':'string' }, { '5':'long' }],
+    arrProp2: [{ '2':'i' }, { '7':'d' }],
+    //map => recursively applies types to embedded objects
+    mapProp: { prop1: 'string', prop2: 'integer', prop3: { prop4: 'd' }}
+}
+
+*/
 
     function isRegexId(id) {
         return !!this.OPTS.idRegex && isString(id) && this.OPTS.idRegex.test(id);
@@ -34,14 +88,104 @@
         return isString(val) && closureRegex.test(val);   
     }
 
+    function isReallyNaN(x) {
+        return x !== x;
+    }
+
     function isArray(o) {
         return toString.call(o) === '[object Array]';
     }
 
+    //Need to look at this
+    function isNumber(o) {
+        return toString.call(o) === '[object Number]';
+    };
+    
+    function isReallyNumber(o) {
+        return toString.call(o) === '[object Number]';
+    };
+    
+    function parseBoolean(val) {
+        if(isString(val)) {
+            if(val.toLowerCase() === 'true') {
+                return true;
+            }
+            if(val.toLowerCase() === 'false') {
+                return false;
+            }
+        }
+        return val;
+    };
+
+    function isBoolean(o) {
+        return toString.call(parseBoolean(o)) === '[object Boolean]';
+    };
+
+    function isFunction(o) {
+        return toString.call(o) === '[object Function]';
+    };
+    
+    function isNull(o) {
+        return toString.call(o) === '[object Null]';
+    };
+    
+    function isUndefined(o) {
+        return toString.call(o) === '[object Undefined]';
+    };
+
+    //check this out
+    function parseNumber(val) {
+        var numResult = 1;
+        if(numResult != null) {
+            return parseFloat(numResult);
+        }
+        return val;
+    };
+    
+    //check this out
+    function parseValue(val) {
+        var numResult = 1;
+        if(numResult != null) {
+            if(!!numResult[2]) {
+                return parseFloat(numResult[1].replace(numResult[2].charAt(0), ''));
+            }
+            return parseFloat(numResult[1]);
+        }
+        if(isBoolean(val)) {
+            return Utils.parseBoolean(val);
+        }
+        return val;
+    };
+
+    function embeddedObject(o, prop) {
+        var props = prop.indexOf(".") > -1 ? prop.split(".") : [prop],
+            l = props.length, 
+            lastProp = props[l - 1], 
+            currentProp;
+
+        for(var i = 0; i < l; i++) {
+            if(o.hasOwnProperty(props[i])) {
+                currentProp = props[i];
+                if(!isObject(o[currentProp])) {
+                    break;
+                }
+                o = o[currentProp];
+            }
+        }
+        if(currentProp != lastProp) {
+            o = {};
+        }
+        return o;
+    };
+
+
+
+
+
     function qryMain(method, reset){
         return function(){
             var self = this,
-                gremlin = reset ? new Gremlin(this.OPTS) : self._buildGremlin(self.params),
+                gremlin = reset ? new Gremlin(this/*.OPTS*/) : self._buildGremlin(self.params),
                 args = '',
                 appendArg = '';
 
@@ -162,11 +306,49 @@
 
     var Trxn = (function () {
 
-        function Trxn(options) {
+        function Trxn(options, typeMap) {
             this.OPTS = options;
+            this.typeMap = typeMap;
             this.txArray = [];
             this.newVertices = [];
         }
+
+
+        function addTypes(obj, typeDef, embedded){
+            var tempObj = {};
+            var tempStr = '';
+
+            console.log(typeDef);
+            for(var k in obj){
+                if(obj.hasOwnProperty(k)){
+                    if(typeDef && (k in typeDef)){
+                        if (isObject(typeDef[k])) {
+                            if(embedded){
+                                tempStr += k + '=(map,(' + addTypes(obj[k], typeDef[k], true) + ')';
+                            } else {
+                                tempObj[k] = '(map,(' + addTypes(obj[k], typeDef[k], true) + ')'; 
+                            }
+                        } else {
+                            if(embedded){
+                                tempStr += ','+k + '=(' + typeHash[typeDef[k]] + ',' + obj[k] + ')';
+                            } else {
+                                tempObj[k] = '(' + typeHash[typeDef[k]] + ',' + obj[k] + ')';
+                            }
+                            
+                        }
+                    } else {
+                        tempObj[k] = obj[k];
+                    }                    
+                }
+            }
+            //tempStr = tempStr.replace('),)', '))');
+            tempStr = tempStr.replace(',(,', ',(');
+            console.log(tempObj);
+            //console.log(tempStr);
+
+            return embedded ? tempStr.slice(0,-1) + '))': tempObj;
+        }
+
 
         //function converts json document to a stringified version with types
         function docWithTypes(doc, offRoot) {
@@ -274,7 +456,7 @@
                             if (isObject(arguments[0])) {
                                 //create new Vertex
                                 o = arguments[0];
-                                push.call(this.newVertices, o);
+                                push.call(this.newVertices, addTypes(o, this.typeMap));
                                 addToTransaction = false;
                             } else {
                                 if(argLen == 2){
@@ -286,19 +468,14 @@
                     }
                 //Allow for no args to be passed
                 } else if (type == 'vertex') {
-                    push.call(this.newVertices, o);
+                    push.call(this.newVertices, addTypes(o, this.typeMap));
                     addToTransaction = false;
-                }
-                if (action == 'update') {
-                  o = docWithTypes(o);
-                  console.log(o);
                 }
                 o._type = type;
                 if (addToTransaction) {
                     o._action = action;
-                    push.call(this.txArray, o);    
+                    push.call(this.txArray, addTypes(o, this.typeMap));    
                 };
-                return o;
             }
         }
 
@@ -336,7 +513,7 @@
                 .then(function(success){
                     return errObj.message = "Could not complete transaction. Transaction has been rolled back.";
                 }, function(fail){
-                    errObj.message =  "Could not complete transaction. Unable to roll back newly created vertices.";
+                    errObj.message = "Could not complete transaction. Unable to roll back newly created vertices.";
                     errObj.ids = self.txArray.map(function(item){
                         return item._id;
                     });
@@ -493,9 +670,10 @@
     })();
 
     var Gremlin = (function () {
-        function Gremlin(options, params) {
-            this.OPTS = options;
-            this.params = params ? params : 'g';
+        function Gremlin(gRex/*options*//*, params*/) {
+            this.gRex = gRex;
+            this.OPTS = gRex.OPTS;//options;
+            this.params = 'g';//params ? params : 'g';
         }
       
         function get() {
@@ -505,11 +683,12 @@
         }
 
         function getData() {
+            var self = this;
             var deferred = q.defer();
             var options = {
                 'host': this.OPTS.host,
                 'port': this.OPTS.port,
-                'path': pathBase + this.OPTS.graph + gremlinExt + encodeURIComponent(this.params),
+                'path': pathBase + this.OPTS.graph + gremlinExt + encodeURIComponent(this.params) + '&rexster.showTypes=true',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded'
                 },
@@ -518,22 +697,65 @@
 
             http.get(options, function(res) {
                 var body = '';
-                var o = {};
+                var typeMap = {};
+                var tempObj = {};
+                var returnObj = {};
+                var resultObj = { results: [], typeMap: {} };
+                var idKey;
+                var n;
                 res.on('data', function(results) {
                     body += results;
                 });
 
                 res.on('end', function() {
-                    o = JSON.parse(body);
-                    delete o.version;
-                    delete o.queryTime;
-                    deferred.resolve(o);
+                    deferred.resolve(transformResults.call(self.gRex, JSON.parse(body).results));
                 });
+
             }).on('error', function(e) {
                 deferred.reject(e);
             });
             
             return deferred.promise;
+        }
+
+        function transformResults(results){
+            var typeMap = {};
+            var tempObj = {};
+            var returnObj = {};
+            var result = { results: [], typeMap: {} };
+            var idKey;
+            var n = results.length;
+                    
+            while (n--) {
+                tempObj = results[n];
+                returnObj = {};
+                for(var k in tempObj){
+                    if (tempObj.hasOwnProperty) {
+                        if (isObject(tempObj[k]) && 'type' in tempObj[k]) {
+                            if(!!typeMap[k] && typeMap[k] != tempObj[k].type){
+                                if(!result.typeMapErr){
+                                    result.typeMapErr = {};
+                                }
+                                console.error('_id:' + tempObj._id + ' => {' + k + ':' + tempObj[k].type + '}');
+                                //only capture the first error
+                                if(!(k in result.typeMapErr)){
+                                    result.typeMapErr[k] = typeMap[k] + ' <=> ' + tempObj[k].type;    
+                                }
+                            }
+                            typeMap[k] = tempObj[k].type;
+                            returnObj[k] = tempObj[k].value;
+                        } else {
+                            returnObj[k] = tempObj[k];
+                        };
+                    };
+                }
+                result.results.push(returnObj);
+            }
+            result.typeMap = typeMap;
+            for(var k2 in typeMap){
+                this.typeMap[k2] = typeMap[k2];
+            }
+            return result;
         }
 
         Gremlin.prototype = {
@@ -638,6 +860,8 @@
                 'idRegex': false // OrientDB id regex -> /^[0-9]+:[0-9]+$/
             };
 
+            this.typeMap = {};
+
             if(options){
                 this.setOptions(options);
             }
@@ -681,6 +905,22 @@
             };
         }
 
+        //obj1 over writes obj2
+        function merge(obj1, obj2) {
+            for(var p in obj2) {
+                try  {
+                    if(obj1.hasOwnProperty(p)) {
+                        obj1[p] = merge(obj1[p], obj2[p]);
+                    } else {
+                        obj1[p] = obj2[p];
+                    }
+                } catch (e) {
+                    obj1[p] = obj2[p];
+                }
+            }
+            return obj1;
+        };
+
         gRex.prototype.setOptions = function (options){
             if(!!options){
                 for (var k in options){
@@ -691,10 +931,9 @@
             }
         }
 
-        gRex.prototype.begin = function (){
-            return new Trxn(this.OPTS);
+        gRex.prototype.begin = function (typeMap){
+            return new Trxn(this.OPTS, typeMap ? merge(typeMap, this.typeMap) : this.typeMap);
         }
-
         return gRex;
     })();
 

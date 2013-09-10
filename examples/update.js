@@ -1,18 +1,45 @@
 var grex = require('../src/grex.js');
 var trxn;
 
+
 var g = grex.connect()
 	.then(function(g){
-	
-	console.log(g);
-	trxn = g.begin();
-	trxn.updateVertex(1, {age:'(l,50.2)'});
-	trxn.commit().then(function(result){
-	    console.log("updated vertice successfully. -> ", result);  
+		
+	    //g.V()
+	    //g.v(6,1,4)
+	    	//.then(function(){
+	    		//console.log(g);
+				
+				trxn = g.begin({ name: 'string', age: 'integer', address:{'street':{number:'integer', name:'string'}}});
 
-	}, function(err) {
-	    console.error(err)
-	});
+				//trxn = g.begin({ name: 'string', age: 'integer', address:{'street':{number:{unit:'integer',estate:'string'}}, primary:'boolean'}});
+
+				//trxn.addVertex(100,{name:'Frank', age:'90'});
+				//trxn.updateVertex(1, {age:'30'});
+				
+				trxn.updateVertex(1, { address: {street:{number:5,name:'testName'}}});
+
+				//trxn.updateVertex(1, { address: {street:{number:{unit:10,estate:'Panetta'}}, primary:true} });
+
+
+				trxn.commit().then(function(result){
+				    console.log("updated vertice successfully. -> ", result);  
+
+				}, function(err) {
+				    console.error(err)
+				});
+	    	//});
+	
+	
+	// //console.log(g);
+	// trxn = g.begin(/*{age:'d'}*/);
+	// trxn.updateVertex(1, {age:5});
+	// trxn.commit().then(function(result){
+	//     console.log("updated vertice successfully. -> ", result);  
+
+	// }, function(err) {
+	//     console.error(err)
+	// });
 }, function(err){
 	console.log(err);
 });
