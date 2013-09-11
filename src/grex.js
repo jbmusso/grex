@@ -178,10 +178,6 @@ Structure of typeMap
         return o;
     };
 
-
-
-
-
     function qryMain(method, reset){
         return function(){
             var self = this,
@@ -314,9 +310,10 @@ Structure of typeMap
         }
 
 
-        function addTypes(obj, typeDef, embedded){
+        function addTypes(obj, typeDef, embedded, list){
             var tempObj = {};
             var tempStr = '';
+            var obj2;
 
             //console.log(typeDef);
             for(var k in obj){
@@ -324,13 +321,35 @@ Structure of typeMap
                     if(typeDef && (k in typeDef)){
                         if (isObject(typeDef[k])) {
                             if(embedded){
-                                tempStr += k + '=(map,(' + addTypes(obj[k], typeDef[k], true) + ')';
+                                if (list) {
+                                    obj2 = obj[k];
+                                    for(var k2 in obj2){
+                                        if(obj2.hasOwnProperty(k2)){
+                                            if(typeDef[k] && (k2 in typeDef[k])){
+                                                tempStr += '(map,(' + addTypes(obj[k], typeDef[k], true) + ')';
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    tempStr += k + '=(map,(' + addTypes(obj[k], typeDef[k], true) + ')';
+                                }
                             } else {
                                 tempObj[k] = '(map,(' + addTypes(obj[k], typeDef[k], true) + ')'; 
                             }
+                        } else if (isArray(typeDef[k])) {
+                            if(embedded){
+                                tempStr += '(list,(' + addTypes(obj[k], typeDef[k], true, true) + ')';
+                            } else {
+                                tempObj[k] = '(list,(' + addTypes(obj[k], typeDef[k], true, true); 
+                            }
                         } else {
                             if(embedded){
-                                tempStr += ','+k + '=(' + typeHash[typeDef[k]] + ',' + obj[k] + ')';
+                                if (list) {
+                                    tempStr += '(' + typeHash[typeDef[k]] + ',' + obj[k] + '),';
+                                } else {
+                                    tempStr += ','+k + '=(' + typeHash[typeDef[k]] + ',' + obj[k] + ')';    
+                                };
+                                
                             } else {
                                 tempObj[k] = '(' + typeHash[typeDef[k]] + ',' + obj[k] + ')';
                             }
@@ -341,12 +360,10 @@ Structure of typeMap
                     }                    
                 }
             }
-            //tempStr = tempStr.replace('),)', '))');
             tempStr = tempStr.replace(',(,', ',(');
+            tempStr = tempStr.replace('),)', '))');
             //console.log(tempObj);
-            //console.log(tempStr);
-
-            return embedded ? tempStr.slice(0,-1) + '))': tempObj;
+            return embedded ? tempStr + '))' : tempObj;
         }
 
 
@@ -474,7 +491,8 @@ Structure of typeMap
                 o._type = type;
                 if (addToTransaction) {
                     o._action = action;
-                    push.call(this.txArray, addTypes(o, this.typeMap));    
+                    push.call(this.txArray, addTypes(o, this.typeMap));   
+                    //console.log(this.txArray); 
                 };
             }
         }
@@ -701,7 +719,6 @@ Structure of typeMap
                 var tempObj = {};
                 var returnObj = {};
                 var resultObj = { results: [], typeMap: {} };
-                var idKey;
                 var n;
                 res.on('data', function(results) {
                     body += results;
@@ -718,33 +735,60 @@ Structure of typeMap
             return deferred.promise;
         }
 
-        function objectTypeMap(obj){
+        function createTypeDef(obj){
             var tempObj = {},
-                swapObj = {};
+                tempTypeObj = {},
+                tempResultObj = {},
+                tempTypeArr = [],
+                tempResultArr = [],
+                len = 0,
+                returnObj = {typeDef:{}, result: {}};
 
-            for(var k in obj){
-                if (obj.hasOwnProperty(k)) {
-                    if(obj[k].type == 'map'){
-                        tempObj[k] = objectTypeMap(obj[k].value);
+            if (isArray(obj)) { 
+                len = obj.length;
+                for (var i = 0; i < len; i++) {
+                    if (obj[i].type == 'map' || obj[i].type == 'list') {
+                        tempObj = createTypeDef(obj[i].value);
+                        tempTypeArr[i] = tempObj.typeDef;
+                        tempResultArr[i] = tempObj.result;
                     } else {
-                        tempObj[k] = obj[k].type;
+                        tempTypeArr.push(obj[i].type);
+                        tempResultArr.push(obj[i].value);    
                     }
                 };
-            }
-            return tempObj;
+                returnObj.typeDef = tempTypeArr;
+                returnObj.result = tempResultArr;
+            } else {
+                for(var k in obj){
+                    if (obj.hasOwnProperty(k)) {
+                        if(obj[k].type == 'map' || obj[k].type == 'list'){
+                            tempObj = createTypeDef(obj[k].value);
+                            tempTypeObj[k] = tempObj.typeDef;
+                            tempResultObj[k] = tempObj.result;
+                        } else {
+                            tempTypeObj[k] = obj[k].type;
+                            tempResultObj[k] = obj[k].value;
+                        }
+                    };
+                }
+                returnObj.typeDef = tempTypeObj;
+                returnObj.result = tempResultObj;
+
+            };
+            console.log(returnObj);
+            return returnObj;
         }
 
         function transformResults(results){
             var typeMap = {};
-            var tempObj = {};
-            var returnObj = {};
+            var typeObj, tempObj, returnObj;
             var result = { results: [], typeMap: {} };
-            var idKey;
             var n = results.length;
             
             while (n--) {
                 tempObj = results[n];
                 returnObj = {};
+                typeObj = {};
                 for(var k in tempObj){
                     if (tempObj.hasOwnProperty) {
                         if (isObject(tempObj[k]) && 'type' in tempObj[k]) {
@@ -758,10 +802,12 @@ Structure of typeMap
                                     result.typeMapErr[k] = typeMap[k] + ' <=> ' + tempObj[k].type;    
                                 }
                             }
-                            if (tempObj[k].type == 'map') {
+                            if (tempObj[k].type == 'map' || tempObj[k].type == 'list') {
                                 //build recursive func to build object
-                                typeMap[k] = objectTypeMap(tempObj[k].value); 
-                                console.log(typeMap);
+                                typeObj = createTypeDef(tempObj[k].value);
+                                typeMap[k] = typeObj.typeDef; 
+                                returnObj[k] = typeObj.result;
+                                //console.log(typeMap);
                             } else {
                                 typeMap[k] = tempObj[k].type;
                                 returnObj[k] = tempObj[k].value;
