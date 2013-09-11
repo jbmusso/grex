@@ -318,7 +318,7 @@ Structure of typeMap
             var tempObj = {};
             var tempStr = '';
 
-            console.log(typeDef);
+            //console.log(typeDef);
             for(var k in obj){
                 if(obj.hasOwnProperty(k)){
                     if(typeDef && (k in typeDef)){
@@ -343,7 +343,7 @@ Structure of typeMap
             }
             //tempStr = tempStr.replace('),)', '))');
             tempStr = tempStr.replace(',(,', ',(');
-            console.log(tempObj);
+            //console.log(tempObj);
             //console.log(tempStr);
 
             return embedded ? tempStr.slice(0,-1) + '))': tempObj;
@@ -718,6 +718,22 @@ Structure of typeMap
             return deferred.promise;
         }
 
+        function objectTypeMap(obj){
+            var tempObj = {},
+                swapObj = {};
+
+            for(var k in obj){
+                if (obj.hasOwnProperty(k)) {
+                    if(obj[k].type == 'map'){
+                        tempObj[k] = objectTypeMap(obj[k].value);
+                    } else {
+                        tempObj[k] = obj[k].type;
+                    }
+                };
+            }
+            return tempObj;
+        }
+
         function transformResults(results){
             var typeMap = {};
             var tempObj = {};
@@ -725,7 +741,7 @@ Structure of typeMap
             var result = { results: [], typeMap: {} };
             var idKey;
             var n = results.length;
-                    
+            
             while (n--) {
                 tempObj = results[n];
                 returnObj = {};
@@ -742,8 +758,14 @@ Structure of typeMap
                                     result.typeMapErr[k] = typeMap[k] + ' <=> ' + tempObj[k].type;    
                                 }
                             }
-                            typeMap[k] = tempObj[k].type;
-                            returnObj[k] = tempObj[k].value;
+                            if (tempObj[k].type == 'map') {
+                                //build recursive func to build object
+                                typeMap[k] = objectTypeMap(tempObj[k].value); 
+                                console.log(typeMap);
+                            } else {
+                                typeMap[k] = tempObj[k].type;
+                                returnObj[k] = tempObj[k].value;
+                            };
                         } else {
                             returnObj[k] = tempObj[k];
                         };
