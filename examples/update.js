@@ -7,8 +7,8 @@ var g = grex.connect()
 		
 	    //g.V()
 	    g.v(100)
-	    	.then(function(){
-	    		//console.log(g);
+	    	.then(function(r){
+	    		console.log(JSON.stringify(r));
 				
 				//trxn = g.begin(/*{ name: 'string', age: 'integer', address:{'street':{number:'integer', name:'string'}}}*/);
 

@@ -775,7 +775,7 @@ Structure of typeMap
                 returnObj.result = tempResultObj;
 
             };
-            console.log(returnObj);
+            //console.log(returnObj);
             return returnObj;
         }
 
