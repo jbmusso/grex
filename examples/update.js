@@ -2,11 +2,11 @@ var grex = require('../src/grex.js');
 var trxn;
 
 
-var g = grex.connect()
+grex.connect()
 	.then(function(g){
 		
 	    //g.V()
-	    g.v(100)
+	    g.v(1)
 	    	.then(function(r){
 	    		console.log(JSON.stringify(r));
 				
@@ -16,16 +16,16 @@ var g = grex.connect()
 				
 				//trxn = g.begin({ friends: ['string','integer',{name:{first:'string', second:'string'}}]});
 
-				trxn = g.begin({ friends: ['string','integer',['double','boolean']]});
+				trxn = g.begin({ friends: ['string','integer',{name:{first:'string',second:'string'}}]});
 
 				//trxn.addVertex(100,{name:'Frank', age:'90'});
 				//trxn.updateVertex(1, {age:'20'});
 				
 				//trxn.updateVertex(1, { address: {street:{number:{unit:15,estate:'test444Name'}}, primary: false}});
 
-				//trxn.updateVertex(100, { friends: ['Lisa', 5, {name:{first:'Craig',second:'p'}}]});
+				trxn.updateVertex(1, { friends: ['Lisa', 5, {name:{first:'Craig',second:'p'}}]});
 
-				trxn.updateVertex(100, { friends: ['Lisa', 5, ['100.05',true]]});
+				//trxn.updateVertex(100, { friends: ['Lisa', 5, ['100.05',true]]});
 
 
 				trxn.commit().then(function(result){

@@ -120,6 +120,21 @@ gRex>     trxn.removeVertex(200);
 gRex>     trxn.commit().then(function(result){console.log(result)}, function(err){console.log(err)});
 ```
 
+## Property Data Types
+
+[Rexster Graph Server](https://github.com/tinkerpop/rexster/wiki) supports the following Property Data Types:
+
+- Strings
+- Boolean
+- Integer
+- Long
+- Float
+- Double
+- List (Array)
+- Map
+
+A retrival gRex uses type values obtained from the server when data is retrieve to ascertain the data types. If a property value does not have a defined data type, gRex will not try to infer the data type and will siply allow the value to be passed as a string, which is the default behaviour. Situations in which the data type will be unknown is when a new object or property is created. In these instances you are able to pass a type definition to a transaction so that gRex understands how to send the data.
+
 ## Examples
 
 For simplicity the callbacks are not included in the examples below.
