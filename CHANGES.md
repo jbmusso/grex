@@ -1,6 +1,7 @@
 ## TODO (upcoming releases)
 - Option to not use Transaction to do CUD (ie No need for commit()). eg. g.addVertex().then(); Batch kibble will not required for these calls
 - Client version initialised with var g = require('grex');
+- Test CUD
  
 ## 0.2.0
 
@@ -12,6 +13,7 @@
  - Removed version and querytime from returned results
  - Complies with Blueprints 2.4.0
  - Add Contains.IN and Contains.NOT_IN
+ - Data Type preservation
 
 ## 0.1.10
 

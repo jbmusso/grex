@@ -1,4 +1,4 @@
 ;(function(){
-	var grex = require(__dirname + '/src/grex.js');
+	var grex = require('./src/grex.js');
 	module.exports = grex;
 })();

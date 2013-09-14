@@ -23,13 +23,26 @@ module.exports = function(grunt){
 	    mochaTest: {
 	      test: {
 	        options: {
-	          reporter: 'spec',
-	          require: 'should',
-	          globals: 'g'
+	        	timeout: 10000,
+	          	reporter: 'spec',
+	          	require: 'should',
+	          	globals: 'g'
 	        },
 	        src: ['test/*.js']
 	      }
-	    }
+	    },
+		browserify2: {
+			dev: {
+			  entry: './build/entry.js',
+			  mount: '/application.js',
+			  server: './build/server.js',
+			  debug: true
+			},
+			compile: {
+			  entry: './build/entry.js',
+			  compile: './public/application.js'
+			}
+		}	    
 	});
 
 	// Load the plugin that provides the "uglify" task.
@@ -37,7 +50,7 @@ module.exports = function(grunt){
 	// Load the plugin that provides the "lint" task.
 	grunt.loadNpmTasks('grunt-contrib-jshint');
 	// Load the plugin that provides the "browserify" task.
-	grunt.loadNpmTasks('grunt-browserify');
+	grunt.loadNpmTasks('grunt-browserify2');
 	// Load the plugin that provides the "mocha/phantomjs" task.
 //	grunt.loadNpmTasks('grunt-mocha');
 	// Add the grunt-mocha-test tasks.
@@ -45,6 +58,7 @@ module.exports = function(grunt){
 
 
 	// Default task(s).
-	grunt.registerTask('default', ['jshint', 'grunt-mocha-test', 'uglify']);
+	grunt.registerTask('default', ['jshint', 'grunt-mocha-test', 'browserify2:dev']);
+	grunt.registerTask('compile', 'browserify2:compile');
 
 }

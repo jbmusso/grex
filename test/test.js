@@ -12,7 +12,6 @@ describe('Transforms', function(){
   	describe('id', function() {
         it("should return all ids", function(done){
             g.V().id().then(function(result){
-            	//console.log(result);
 	      			result.results.should.have.lengthOf(6);
 	      			result.results.should.eql([ '3', '2', '1', '6', '5', '4' ]);
 	      			done();	
@@ -126,7 +125,7 @@ describe('Transforms', function(){
         it("should get id 1", function(done){
             g.V().both().groupCount().cap().orderMap('T.decr')
             	.then(function(result){
-            		console.log(result);
+            		//console.log(result);
 	      			result.results.should.have.lengthOf(6);
 	      			result.results.should.eql([ { name: 'lop', lang: 'java', _id: '3', _type: 'vertex' },
 											    { name: 'marko', age: 29, _id: '1', _type: 'vertex' },
@@ -242,7 +241,7 @@ describe('Branch', function(){
         it("should get [ 'ripple', 27, 'lop', 32 ]", function(done){
             g.v(1).out('knows').copySplit(g._().out('created').property('name'), g._().property('age')).fairMerge()
             	.then(function(result){
-            		console.log(result);
+            		//console.log(result);
             		result.results.should.have.lengthOf(4);
 	      			result.results.should.eql([ 'ripple', 27, 'lop', 32 ]);
 	      			done();	
@@ -268,8 +267,7 @@ describe('Methods', function(){
         it("should create index 'my-index'", function(done){
             g.createIndex("my-index", 'Vertex.class')
             	.then(function(result){
-            		//console.log(result);
-	      			result.success.should.eql(true);
+            		result.results[0].should.eql('index[my-index:Vertex]');
 	      			done();	
 	      		});
         });
@@ -277,7 +275,7 @@ describe('Methods', function(){
         it("should add name => marko to index 'my-index'", function(done){
             g.idx("my-index").put("name", "marko", g.v(1))
             	.then(function(result){
-            		//console.log(result);
+	      			// console.log(result);
 	      			result.success.should.eql(true);
 	      			done();	
 	      		});
@@ -285,8 +283,7 @@ describe('Methods', function(){
         it("should retrieve indexed value marko from 'my-index'", function(done){
             g.idx("my-index", {'name':'marko'})
             	.then(function(result){
-            		//console.log(result);
-	      			result.success.should.eql(true);
+            		result.results.should.have.lengthOf(1);
 	      			result.results.should.includeEql({ name: 'marko', age: 29, _id: '1', _type: 'vertex' });
 	      			done();	
 	      		});
@@ -294,7 +291,7 @@ describe('Methods', function(){
         it("should drop index 'my-index'", function(done){
             g.dropIndex("my-index")
             	.then(function(result){
-            		//console.log(result);
+            		// console.log(result);
 	      			result.success.should.eql(true);
 	      			done();	
 	      		});

@@ -6,3 +6,7 @@ gRexTestServer.js
 npm-debug.log
 
 node_modules
+
+browser/bundle.js
+
+indexGrex.html

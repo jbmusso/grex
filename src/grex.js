@@ -52,50 +52,9 @@
         return isString(val) && closureRegex.test(val);   
     }
 
-    function isReallyNaN(x) {
-        return x !== x;
-    }
-
     function isArray(o) {
         return toString.call(o) === '[object Array]';
     }
-
-    //Need to look at this
-    function isNumber(o) {
-        return toString.call(o) === '[object Number]';
-    };
-    
-    function isReallyNumber(o) {
-        return toString.call(o) === '[object Number]';
-    };
-    
-    function parseBoolean(val) {
-        if(isString(val)) {
-            if(val.toLowerCase() === 'true') {
-                return true;
-            }
-            if(val.toLowerCase() === 'false') {
-                return false;
-            }
-        }
-        return val;
-    };
-
-    function isBoolean(o) {
-        return toString.call(parseBoolean(o)) === '[object Boolean]';
-    };
-
-    function isFunction(o) {
-        return toString.call(o) === '[object Function]';
-    };
-    
-    function isNull(o) {
-        return toString.call(o) === '[object Null]';
-    };
-    
-    function isUndefined(o) {
-        return toString.call(o) === '[object Undefined]';
-    };
 
     //obj1 over writes obj2
     function merge(obj1, obj2) {
@@ -112,31 +71,7 @@
         }
         return obj1;
     };
-
-    //check this out
-    function parseNumber(val) {
-        var numResult = 1;
-        if(numResult != null) {
-            return parseFloat(numResult);
-        }
-        return val;
-    };
-    
-    //check this out
-    function parseValue(val) {
-        var numResult = 1;
-        if(numResult != null) {
-            if(!!numResult[2]) {
-                return parseFloat(numResult[1].replace(numResult[2].charAt(0), ''));
-            }
-            return parseFloat(numResult[1]);
-        }
-        if(isBoolean(val)) {
-            return Utils.parseBoolean(val);
-        }
-        return val;
-    };
-
+   
     function qryMain(method, reset){
         return function(){
             var self = this,
@@ -267,7 +202,6 @@
             this.txArray = [];
             this.newVertices = [];
         }
-
 
         function addTypes(obj, typeDef, embedded, list){
             var tempObj = {};
@@ -446,8 +380,6 @@
 
                 if(!!newVerticesLen){
                     for (var i = 0; i < newVerticesLen; i++) {
-                        //Need to see why no creating promised
-                        //just changed 
                         promises.push(postData.call(self, newVertex, self.newVertices[i]));
                     };
                     return q.all(promises).then(function(result){
@@ -518,7 +450,7 @@
                 'method': 'POST'
             };
             options.path += urlPath;
-            
+
             var req = http.request(options, function(res) {
                 var body = '';
                 var o = {};
@@ -688,42 +620,47 @@
         function transformResults(results){
             var typeMap = {};
             var typeObj, tempObj, returnObj;
-            var result = { results: [], typeMap: {} };
-            var n = results.length;
+            var result = { success: true, results: [], typeMap: {} };
+            var n, l = results ? results.length : 0;
             
-            while (n--) {
+            for(n = 0; n<l; n++){
                 tempObj = results[n];
-                returnObj = {};
-                typeObj = {};
-                for(var k in tempObj){
-                    if (tempObj.hasOwnProperty) {
-                        if (isObject(tempObj[k]) && 'type' in tempObj[k]) {
-                            if(!!typeMap[k] && typeMap[k] != tempObj[k].type){
-                                if(!result.typeMapErr){
-                                    result.typeMapErr = {};
+                if (isObject(tempObj)) {
+                    returnObj = {};
+                    typeObj = {};
+                    for(var k in tempObj){
+                        if (tempObj.hasOwnProperty) {
+                            if (isObject(tempObj[k]) && 'type' in tempObj[k]) {
+                                if(!!typeMap[k] && typeMap[k] != tempObj[k].type){
+                                    if(!result.typeMapErr){
+                                        result.typeMapErr = {};
+                                    }
+                                    console.error('_id:' + tempObj._id + ' => {' + k + ':' + tempObj[k].type + '}');
+                                    //only capture the first error
+                                    if(!(k in result.typeMapErr)){
+                                        result.typeMapErr[k] = typeMap[k] + ' <=> ' + tempObj[k].type;    
+                                    }
                                 }
-                                console.error('_id:' + tempObj._id + ' => {' + k + ':' + tempObj[k].type + '}');
-                                //only capture the first error
-                                if(!(k in result.typeMapErr)){
-                                    result.typeMapErr[k] = typeMap[k] + ' <=> ' + tempObj[k].type;    
-                                }
-                            }
-                            if (tempObj[k].type == 'map' || tempObj[k].type == 'list') {
-                                //build recursive func to build object
-                                typeObj = createTypeDef(tempObj[k].value);
-                                typeMap[k] = typeObj.typeDef; 
-                                returnObj[k] = typeObj.result;
+                                if (tempObj[k].type == 'map' || tempObj[k].type == 'list') {
+                                    //build recursive func to build object
+                                    typeObj = createTypeDef(tempObj[k].value);
+                                    typeMap[k] = typeObj.typeDef; 
+                                    returnObj[k] = typeObj.result;
+                                } else {
+                                    typeMap[k] = tempObj[k].type;
+                                    returnObj[k] = tempObj[k].value;
+                                };
                             } else {
-                                typeMap[k] = tempObj[k].type;
-                                returnObj[k] = tempObj[k].value;
+                                returnObj[k] = tempObj[k];
                             };
-                        } else {
-                            returnObj[k] = tempObj[k];
                         };
-                    };
+                    }
+                    result.results.push(returnObj);
+                } else {
+                    result.results.push(tempObj);
                 }
-                result.results.push(returnObj);
             }
+
             result.typeMap = typeMap;
             //This will preserve any local TypeDefs
             this.typeMap = merge(this.typeMap, typeMap);
@@ -873,7 +810,6 @@
                 return q.fcall(function() {
                     return self;
                 });
-
             };
         }
 
@@ -890,9 +826,9 @@
         gRex.prototype.begin = function (typeMap){
             return new Trxn(this.OPTS, typeMap ? merge(typeMap, this.typeMap) : this.typeMap);
         }
+
         return gRex;
     })();
-
 
     var grex = function(options){
         var db = new gRex(options);
