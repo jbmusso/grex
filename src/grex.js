@@ -803,7 +803,7 @@
             // exports.updateEdge = cud('update', 'edge');
 
             this.clear =  qryMain('clear', true);
-            this.shutdown =  qryMain('shutdown', true);
+            this.shutdown = qryMain('shutdown', true);
             this.getFeatures = qryMain('getFeatures', true);
 
             this.connect = function(){

@@ -198,7 +198,7 @@ var typeDef = { active: 'boolean',
 var trxn = new g.begin(typeDef);
 ```
 
-If there is already a Type definition for a preoprty, the passed in type definition is merged with the existing type definition and takes precedence.
+If there is already a Type definition for a property, the passed in type definition is merged with the existing type definition and takes precedence.
 
 ## Examples
 
