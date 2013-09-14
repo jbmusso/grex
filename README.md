@@ -149,7 +149,7 @@ You are only required to provide a Type definition for properties that are being
 
 In order to use a Type Definition, you pass in an Object to the Transaction ``begin`` function.
 
-### Simple Type Definition
+#### Simple Type Definition
 
 A Type definition is an Object Literal. The key is the property name for the Object you are providing a Type definition for and the value is the Type that is being assigned to that property. For example, to define a property as boolean for a key called 'active' you would do the following:
 
@@ -168,12 +168,12 @@ This is the similar for all the simple Types.
 
 Complex types, such as ``list`` and ``map`` are a little different.
 
-### List Type Definition
+#### List Type Definition
 To define a Type for are List (Array), you simply provide an Array as the value and provide the type name for each item in the array. You will need to know which index a particular Type will be located. Any items added to the array after item[3] will be added as the last Type defined in the array, in this instance the items will be added as integers.
 
 ```{ items: ['string', 'string', 'boolean', 'integer'] }```
 
-### Map Type Definition
+#### Map Type Definition
 Map Type's are simply object literals. To define a map type you pass in objects much the same as defining a simple type above.
 
 ```{ address: { number: 'integer', street: 'string', city: 'string'} }```
@@ -186,7 +186,7 @@ Both List and Map Types can have embedded list and map types.
 * map with embedded list
 ```{ address: { number: 'integer', street: 'string', city: 'string', occupantNames:['string']} }```
 
-### Type Definition Usage
+#### Type Definition Usage
 
 To use a Type definition, just pass it to the ``begin`` function of a transaction.
 
