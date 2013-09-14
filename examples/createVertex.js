@@ -1,23 +1,23 @@
-var g = require('../grex.js');
+var grex = require('../src/grex.js');
 var t1, t2;
+var trxn;
 
-t1 = g.addVertex({name:'Test1a'});
-t2 = g.addVertex({name:'Test2a'});
-g.addEdge(t1, t2, 'linked', {name:"ALabel"})
+grex.connect().then(function(g){
 
-t1 = g.addVertex({name:'Test1b'});
-t2 = g.addVertex({name:'Test2b'});
-g.addEdge(t2, t1, 'linked', {name:"BLabel"})
+	trxn = g.begin();
 
-g.commit()
-.then(function(result){
-    if (result) {
-        if (result.success == false) {
-            console.error("Failed to add vertices.");
-        } else {
-            console.log("Added new vertices successfully. -> ", result);            
-        }
-    }
-}, function(err) {
-    console.error(err)
+	t1 = trxn.addVertex(111,{name:'Test1a'});
+	t2 = trxn.addVertex(222,{name:'Test2a'});
+	trxn.addEdge(111, 222, 'linked', {name:"ALabel"})
+
+	// t1 = trxn.addVertex({name:'Test1b'});
+	// t2 = trxn.addVertex({name:'Test2b'});
+	// trxn.addEdge(t2, t1, 'linked', {name:"BLabel"})
+
+	trxn.commit().then(function(result){
+	    console.log("Added new vertices successfully. -> ", result);            
+	}, function(err) {
+	    console.error(err)
+	});
+
 });

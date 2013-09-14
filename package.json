@@ -1,10 +1,19 @@
 {
   "name": "grex",
   "description": "Client for Rexster Graph Server",
-  "version": "0.1.10",
-  "keywords": ["database", "graph", "tinkerpop", "rexster", "gremlin", "blueprints"],
+  "version": "0.2.0",
+  "keywords": [
+    "database",
+    "graph",
+    "tinkerpop",
+    "rexster",
+    "gremlin",
+    "blueprints"
+  ],
   "homepage": "https://github.com/entrendipity/grex",
-  "authors": ["Frank Panetta <frank.panetta@entrendipity.com.au>"],
+  "authors": [
+    "Frank Panetta <frank.panetta@entrendipity.com.au>"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/entrendipity/grex.git"
@@ -16,5 +25,14 @@
   "engines": {
     "node": ">=0.6.0"
   },
-  "main": "grex.js"
+  "main": "./index.js",
+  "devDependencies": {
+    "grunt": "~0.4.1",
+    "grunt-contrib-uglify": "~0.2.2",
+    "grunt-contrib-jshint": "~0.6.0",
+    "grunt-browserify": "~1.2.1",
+    "grunt-mocha": "~0.4.0",
+    "grunt-mocha-test": "~0.6.2",
+    "grunt-browserify2": "~0.1.8"
+  }
 }

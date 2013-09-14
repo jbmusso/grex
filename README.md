@@ -21,20 +21,19 @@ Add an ``allow`` tag to the database extensions configuration in the rexster.xml
 
 A tool for making and composing asynchronous promises in JavaScript.
 
-## Installation
+## Usage
 
 gRex can be loaded as:
 
--   a ``<script>`` tag in the browser (creating a ``g`` global variable). Files are located in the browser directory.
+-   a ``<script>`` tag in the browser. Files are located in the browser directory.
 
     ```
-     <script type="text/javascript" src="q.min.js"></script>    
      <script type="text/javascript" src="grex.min.js"></script>
     ```
 
 -   a Node.js and CommonJS module available from NPM as the ``grex`` package
 
-    ```bash
+    ```
     $ npm install grex
     ```
 
@@ -51,7 +50,7 @@ gRex can be loaded as:
 gRex tries to implement Gremlin syntax as closely as possible. However, there are some differences.
 
 * All method calls require brackets __()__, even if there are no arguments.
-* __Closures__ do not translate to javascript. Closures need to passed in as one string argument to gRex methods. 
+* __Closures__ do not translate to javascript. Closures need to passed in as a string argument to gRex methods. 
 
     ```
     g.v(1).out().gather("{it.size()}");
@@ -63,9 +62,11 @@ gRex tries to implement Gremlin syntax as closely as possible. However, there ar
     ```
     g.v(1).outE().has("weight", "T.gte", "0.5f").property("weight")
     ```
-* Certain methods cannot be implemented. Such as ``aggregate``, ``store``, ``table``, ``tree`` and ``fill``. These methods take a local object and populate it with data, which cannot be done in this environment.
+* Certain methods cannot be implemented. Such as ``aggregate``, ``store``, ``table``, ``tree`` and ``fill``. These methods require a local object to populate with data, which cannot be done in this environment.
 
 ## Getting Started
+
+A good resource to understand the Gremlin API is [GremlinDocs](http://gremlindocs.com/). Below are examples of gremlin and it's equivalent gRex syntax.
 
 ###Options
 
@@ -91,11 +92,7 @@ This can remain as false, if IDs are number. If IDs are not numbers (i.e. alpha-
 g.setOptions({ host: 'myDomain', graph: 'myOrientdb', idRegex: /^[0-9]+:[0-9]+$/ });
 ```
 
-## Examples
-
-A good resource to understand the Gremlin API is [GremlinDocs](http://gremlindocs.com/). Below are examples of gremlin and it's equivalent gRex syntax.
-
-__N.B.:__ gRex uses the [Q](http://documentup.com/kriskowal/q/) module to return a Promise when making Ajax calls. All requests are invoked with ``then()`` and the callback is captured by ``then(result, error);``. However, this is not the case when performing Create, Update and Deletes of Vertices or Edges. These actions are batched to reduce the number of calls to the server. In order to send these type of requests invoke ``g.commit().then(result, error);`` after making your updates to the data. See examples below.
+__N.B.:__ gRex uses the [Q](http://documentup.com/kriskowal/q/) module to return a Promise when making Ajax calls. All requests are invoked with ``then()`` and the callback is captured by ``then(result, error);``. However, this is not the case when performing Create, Update and Deletes of Vertices or Edges. These actions are batched to reduce the number of calls to the server. In order to send these type of requests a Transaction must be created by calling ``var trxn = g.begin();``. Updates are made against this object. Once all updates are done, invoke ``trxn.commit().then(result, error);`` to commit your changes. See examples below.
 
 __Calls invoked with then()__
 ```
@@ -104,23 +101,106 @@ g.V('name', 'marko').out().then(function(result){console.log(result)}, function(
 g.createIndex('my-index', 'Vertex.class').then(function(result){console.log(result)}, function(err){console.log(err)});
 ```
 
-__Creating, updating or deleting Vetices or Edges. Use g.commit() to commit all changes.__
+__Creating, updating or deleting Vetices or Edges. Use commit() to commit changes.__
 ```
-gRex>     g.addVertex(100, {k1:'v1', 'k2':'v2', k3:'v3'});
+gRex>     var trxn = g.begin();
 
-gRex>     g.addVertex(200, {k1:'v1', 'k2':'v2', k3:'v3'});
+gRex>     trxn.addVertex(100, {k1:'v1', 'k2':'v2', k3:'v3'});
 
-gRex>     g.addEdge(300,100,200,'pal',{weight:'0.75f'})
+gRex>     trxn.addVertex(200, {k1:'v1', 'k2':'v2', k3:'v3'});
 
-gRex>     g.updateVertex(100, {k2: 'v4'});
+gRex>     trxn.addEdge(300,100,200,'pal',{weight:'0.75f'})
 
-gRex>     g.removeVertex(100, ['k2', 'k3']);
+gRex>     trxn.updateVertex(100, {k2: 'v4'});
 
-gRex>     g.removeVertex(200);
+gRex>     trxn.removeVertex(100, ['k2', 'k3']);
 
-gRex>     g.commit().then(function(result){console.log(result)}, function(err){console.log(err)});
+gRex>     trxn.removeVertex(200);
+
+gRex>     trxn.commit().then(function(result){console.log(result)}, function(err){console.log(err)});
 ```
 
+## Property Data Types
+
+[Rexster Graph Server](https://github.com/tinkerpop/rexster/wiki) supports the following Property Data Types:
+
+- Strings
+- Boolean
+- Integer
+- Long
+- Float
+- Double
+- List (Array)
+- Map
+
+gRex automatically preserves data types. It uses type values obtained from the server, when data is retrieved, to ascertain data types. If a property's data type is unknown, gRex will not try to infer the data type and will simply allow the value to be passed as a string, which is the default behaviour. However, it is possible to provide a type definition to a Transaction, which will then be used to pass type information to the server during a POST.
+
+### Type Definition
+
+When Rexster returns data, it will include Type information, gRex will create a Type definition based on this information to be used in subsequent POST requests. Type definitions can only be generated for Objects that have been retrieved from the server. So, if you are updating or creating a 'Person' object the type definition will only be available if a 'Person' object was previously requested and retrieved from teh server.
+
+Also, if totally new properties need to have a Type definition, so that gRex can understand how to send the information to the server.
+
+A Type definition is an Object and is used globally. For example, if 'age' has been defined as type integer in a 'Person' object, then whenever gRex encounters an 'age' property, regardless of the Object, it will be treated as an integer. Although, if the 'age' property is embedded in another object, then it will need to be explicitly defined.
+
+You are only required to provide a Type definition for properties that are being added.
+
+### Creating a Type Definition
+
+In order to use a Type Definition, you pass in an Object to the Transaction ``begin`` function.
+
+#### Simple Type Definition
+
+A Type definition is an Object Literal. The key is the property name for the Object you are providing a Type definition for and the value is the Type that is being assigned to that property. For example, to define a property as boolean for a key called 'active' you would do the following:
+
+```{ active: 'boolean' }```
+OR
+```{ active: 'b' }```
+
+This is the similar for all the simple Types.
+
+- Strings = 'string' or 's'
+- Boolean = 'boolean' or 'b'
+- Integer = 'integer' or 'i'
+- Long = 'long' or 'l'
+- Float = 'float' or 'f'
+- Double = 'double' or 'd'
+
+Complex types, such as ``list`` and ``map`` are a little different.
+
+#### List Type Definition
+To define a Type for are List (Array), you simply provide an Array as the value and provide the type name for each item in the array. You will need to know which index a particular Type will be located. Any items added to the array after item[3] will be added as the last Type defined in the array, in this instance the items will be added as integers.
+
+```{ items: ['string', 'string', 'boolean', 'integer'] }```
+
+#### Map Type Definition
+Map Type's are simply object literals. To define a map type you pass in objects much the same as defining a simple type above.
+
+```{ address: { number: 'integer', street: 'string', city: 'string'} }```
+
+Both List and Map Types can have embedded list and map types.
+
+* list with embedded map [NB. There is currently a bug for maps embedded in lists]
+```{ items: ['string', {age: 'integer'}, 'boolean', 'integer'] }```
+
+* map with embedded list
+```{ address: { number: 'integer', street: 'string', city: 'string', occupantNames:['string']} }```
+
+#### Type Definition Usage
+
+To use a Type definition, just pass it to the ``begin`` function of a transaction.
+
+```
+var typeDef = { active: 'boolean', 
+                items: ['string', 'string', 'boolean', 'integer'], 
+                address: { number: 'integer', street: 'string', city: 'string', occupantNames:['string']}
+            };
+var trxn = new g.begin(typeDef);
+```
+
+If there is already a Type definition for a property, the passed in type definition is merged with the existing type definition and takes precedence.
+
+## Examples
 
 For simplicity the callbacks are not included in the examples below.
 
@@ -229,49 +309,45 @@ gRex>     g.dropIndex("my-index", "Vertex.class")
 __Example 12: Create, Update, Delete__
 
 ```
-gRex>     g.addVertex(100, {k1:'v1', 'k2':'v2', k3:'v3'});
+gRex>     var trxn = g.begin();
 
-gRex>     g.addVertex(200, {k1:'v1', 'k2':'v2', k3:'v3'});
+gRex>     trxn.addVertex(100, {k1:'v1', 'k2':'v2', k3:'v3'});
 
-gRex>     g.addEdge(300,100,200,'pal',{weight:'0.75f'})
+gRex>     trxn.addVertex(200, {k1:'v1', 'k2':'v2', k3:'v3'});
 
-gRex>     g.updateVertex(100, {k2: 'v4'});
+gRex>     trxn.addEdge(300,100,200,'pal',{weight:'0.75f'})
 
-gRex>     g.removeVertex(100, ['k2', 'k3']);
+gRex>     trxn.updateVertex(100, {k2: 'v4'});
 
-gRex>     g.removeVertex(200);
+gRex>     trxn.removeVertex(100, ['k2', 'k3']);
 
-gRex>     g.commit()
+gRex>     trxn.removeVertex(200);
+
+gRex>     trxn.commit()
 ```
 
 __Example 13: Create with database generated id's__
 
 ```
+var trxn = g.begin();
 var v1, v2;
 
-v1 = g.addVertex({name:'Frank'});
-v2 = g.addVertex({name:'Luca'});
-g.addEdge(v1, v2, 'knows', {since:"2003/06/01"})
+v1 = trxn.addVertex({name:'Frank'});
+v2 = trxn.addVertex({name:'Luca'});
+trxn.addEdge(v1, v2, 'knows', {since:"2003/06/01"})
 
-v1 = g.addVertex({name:'Stephen'});
-v2 = g.addVertex({name:'James'});
-g.addEdge(v2, v1, 'knows', {since:"2000/01/01"})
+v1 = trxn.addVertex({name:'Stephen'});
+v2 = trxn.addVertex({name:'James'});
+trxn.addEdge(v2, v1, 'knows', {since:"2000/01/01"})
 
-g.commit().then(function(result){
-    if (result) {
-        if (result.success == false) {
-            console.error("Failed to add vertices.");
-        } else {
-            console.log("New vertices -> ", result);            
-        }
-    }
+trxn.commit().then(function(result){
+    console.log("New vertices -> ", result);            
 }, function(err) {
     console.error(err)
 }); 
 
-This will return a JSON object with an array called newVertices.
-
-eg. 
+//This will return a JSON object with an array called newVertices. For example:
+ 
 { success: true,
   newVertices: 
    [ { name: 'Frank', _id: '#8:334', _type: 'vertex' },
@@ -279,6 +355,32 @@ eg.
      { name: 'Stephen', _id: '#8:335', _type: 'vertex' },
      { name: 'James', _id: '#8:337', _type: 'vertex' } ] 
 }
+```
+
+__Example 14: Create index__
+
+```
+var y = "bob";
+var trxn = g.begin();
+var vertex = trxn.addVertex({name:y});
+
+trxn.commit().then
+    (function(result) {
+        console.log("Added a vertex successfully for", y);
+        g.createIndex('actor', 'Vertex.class').then
+            (function(result){
+                g.idx('actor').put('name', y, g.v(vertex._id)).then
+                    (function(result){
+                    console.log("Index added successfully for", y);
+                    }, function(err) {
+                        console.log(err)
+                    });
+            }, function(err) {
+                console.log(err)
+            });
+    }, function(err) {
+        console.log(err)
+    });
 ```
 
 ## Author
