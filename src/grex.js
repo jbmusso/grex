@@ -28,7 +28,8 @@
         'b': 'b',
         'list': 'list',
         'map': 'map',
-        'date': 'l'
+        'date': 'l',
+        'unknown': 's' //this is to allow for a bug - to be removed once resolved
     };
 
     function isRegexId(id) {
@@ -273,7 +274,6 @@
             var tempStr = '';
             var obj2, idx = 0;
 
-            //console.log(typeDef);
             for(var k in obj){
                 if(obj.hasOwnProperty(k)){
                     if(typeDef){
@@ -340,10 +340,7 @@
                     }                    
                 }
             }
-            //tempStr = tempStr.replace(',(,', ',(');
-            //tempStr = tempStr.replace('),)', '))');
             tempStr = tempStr.replace(')(', '),(');
-            //console.log(tempObj);
             return embedded ? tempStr : tempObj;
         }
 
@@ -393,7 +390,6 @@
                 if (addToTransaction) {
                     o._action = action;
                     push.call(this.txArray, addTypes(o, this.typeMap));   
-                    //console.log(this.txArray); 
                 };
             }
         }
@@ -507,7 +503,6 @@
         }
 
         function postData(urlPath, data){
-            console.log(data);
             var self = this;
             var deferred = q.defer();
             var payload = JSON.stringify(data) || '{}';
@@ -643,7 +638,7 @@
                 tempResultObj = {},
                 tempTypeArr = [],
                 tempResultArr = [],
-                len = 0,
+                len = 0, rest = 1,
                 returnObj = {typeDef:{}, result: {}};
 
             if (isArray(obj)) { 
@@ -654,10 +649,20 @@
                         tempTypeArr[i] = tempObj.typeDef;
                         tempResultArr[i] = tempObj.result;
                     } else {
+                        //determine if the array has same types
+                        //then only show the type upto that index
+                        if(i > 0){
+                            //TODO: May need to compare Object Types 
+                            //unable to do so at this time due to a bug
+                            if (obj[i].type !== obj[i - 1].type) {
+                                rest = i + 1;
+                            };
+                        }
                         tempTypeArr.push(obj[i].type);
                         tempResultArr.push(obj[i].value);    
                     }
                 };
+                tempTypeArr.length = rest;
                 returnObj.typeDef = tempTypeArr;
                 returnObj.result = tempResultArr;
             } else {
@@ -677,7 +682,6 @@
                 returnObj.result = tempResultObj;
 
             };
-            //console.log(returnObj);
             return returnObj;
         }
 
@@ -709,7 +713,6 @@
                                 typeObj = createTypeDef(tempObj[k].value);
                                 typeMap[k] = typeObj.typeDef; 
                                 returnObj[k] = typeObj.result;
-                                //console.log(typeMap);
                             } else {
                                 typeMap[k] = tempObj[k].type;
                                 returnObj[k] = tempObj[k].value;
@@ -724,9 +727,6 @@
             result.typeMap = typeMap;
             //This will preserve any local TypeDefs
             this.typeMap = merge(this.typeMap, typeMap);
-            // for(var k2 in typeMap){
-            //     this.typeMap[k2] = typeMap[k2];
-            // }
             return result;
         }
 
