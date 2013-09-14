@@ -133,7 +133,72 @@ gRex>     trxn.commit().then(function(result){console.log(result)}, function(err
 - List (Array)
 - Map
 
-A retrival gRex uses type values obtained from the server when data is retrieve to ascertain the data types. If a property value does not have a defined data type, gRex will not try to infer the data type and will siply allow the value to be passed as a string, which is the default behaviour. Situations in which the data type will be unknown is when a new object or property is created. In these instances you are able to pass a type definition to a transaction so that gRex understands how to send the data.
+gRex automatically preserves data types. It uses type values obtained from the server, when data is retrieved, to ascertain data types. If a property's data type is unknown, gRex will not try to infer the data type and will simply allow the value to be passed as a string, which is the default behaviour. However, it is possible to provide a type definition to a Transaction, which will then be used to pass type information to the server during a POST.
+
+### Type Definition
+
+When Rexster returns data, it will include Type information, gRex will create a Type definition based on this information to be used in subsequent POST requests. Type definitions can only be generated for Objects that have been retrieved from the server. So, if you are updating or creating a 'Person' object the type definition will only be available if a 'Person' object was previously requested and retrieved from teh server.
+
+Also, if totally new properties need to have a Type definition, so that gRex can understand how to send the information to the server.
+
+A Type definition is an Object and is used globally. For example, if 'age' has been defined as type integer in a 'Person' object, then whenever gRex encounters an 'age' property, regardless of the Object, it will be treated as an integer. Although, if the 'age' property is embedded in another object, then it will need to be explicitly defined.
+
+You are only required to provide a Type definition for properties that are being added.
+
+### Creating a Type Definition
+
+In order to use a Type Definition, you pass in an Object to the Transaction ``begin`` function.
+
+### Simple Type Definition
+
+A Type definition is an Object Literal. The key is the property name for the Object you are providing a Type definition for and the value is the Type that is being assigned to that property. For example, to define a property as boolean for a key called 'active' you would do the following:
+
+```{ active: 'boolean' }```
+OR
+```{ active: 'b' }```
+
+This is the similar for all the simple Types.
+
+- Strings = 'string' or 's'
+- Boolean = 'boolean' or 'b'
+- Integer = 'integer' or 'i'
+- Long = 'long' or 'l'
+- Float = 'float' or 'f'
+- Double = 'double' or 'd'
+
+Complex types, such as ``list`` and ``map`` are a little different.
+
+### List Type Definition
+To define a Type for are List (Array), you simply provide an Array as the value and provide the type name for each item in the array. You will need to know which index a particular Type will be located. Any items added to the array after item[3] will be added as the last Type defined in the array, in this instance the items will be added as integers.
+
+```{ items: ['string', 'string', 'boolean', 'integer'] }```
+
+### Map Type Definition
+Map Type's are simply object literals. To define a map type you pass in objects much the same as defining a simple type above.
+
+```{ address: { number: 'integer', street: 'string', city: 'string'} }```
+
+Both List and Map Types can have embedded list and map types.
+
+* list with embedded map [NB. There is currently a bug for maps embedded in lists]
+```{ items: ['string', {age: 'integer'}, 'boolean', 'integer'] }```
+
+* map with embedded list
+```{ address: { number: 'integer', street: 'string', city: 'string', occupantNames:['string']} }```
+
+### Type Definition Usage
+
+To use a Type definition, just pass it to the ``begin`` function of a transaction.
+
+```
+var typeDef = { active: 'boolean', 
+                items: ['string', 'string', 'boolean', 'integer'], 
+                address: { number: 'integer', street: 'string', city: 'string', occupantNames:['string']}
+            };
+var trxn = new g.begin(typeDef);
+```
+
+If there is already a Type definition, the passed in type definition to the begin function is merged with the existing type definition and takes precedence.
 
 ## Examples
 
