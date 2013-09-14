@@ -326,28 +326,28 @@ Structure of typeMap
                                     for(var k2 in obj2){
                                         if(obj2.hasOwnProperty(k2)){
                                             if(typeDef[k] && (k2 in typeDef[k])){
-                                                tempStr += '(map,(' + addTypes(obj[k], typeDef[k], true) + ')';
+                                                tempStr += '(map,(' + addTypes(obj[k], typeDef[k], true) + '))';
                                             }
                                         }
                                     }
                                 } else {
-                                    tempStr += k + '=(map,(' + addTypes(obj[k], typeDef[k], true) + ')';
+                                    tempStr += k + '=(map,(' + addTypes(obj[k], typeDef[k], true) + '))';
                                 }
                             } else {
-                                tempObj[k] = '(map,(' + addTypes(obj[k], typeDef[k], true) + ')'; 
+                                tempObj[k] = '(map,(' + addTypes(obj[k], typeDef[k], true) + '))'; 
                             }
                         } else if (isArray(typeDef[k])) {
                             if(embedded){
-                                tempStr += '(list,(' + addTypes(obj[k], typeDef[k], true, true) + ')';
+                                tempStr += '(list,(' + addTypes(obj[k], typeDef[k], true, true) + '))';
                             } else {
-                                tempObj[k] = '(list,(' + addTypes(obj[k], typeDef[k], true, true); 
+                                tempObj[k] = '(list,(' + addTypes(obj[k], typeDef[k], true, true) + '))'; 
                             }
                         } else {
                             if(embedded){
                                 if (list) {
                                     tempStr += '(' + typeHash[typeDef[k]] + ',' + obj[k] + '),';
                                 } else {
-                                    tempStr += ','+k + '=(' + typeHash[typeDef[k]] + ',' + obj[k] + ')';    
+                                    tempStr += ','+ k + '=(' + typeHash[typeDef[k]] + ',' + obj[k] + ')';    
                                 };
                                 
                             } else {
@@ -363,7 +363,7 @@ Structure of typeMap
             tempStr = tempStr.replace(',(,', ',(');
             tempStr = tempStr.replace('),)', '))');
             //console.log(tempObj);
-            return embedded ? tempStr + '))' : tempObj;
+            return embedded ? tempStr : tempObj;
         }
 
 
@@ -492,7 +492,8 @@ Structure of typeMap
                 if (addToTransaction) {
                     o._action = action;
                     push.call(this.txArray, addTypes(o, this.typeMap));   
-                    //console.log(this.txArray); 
+                    //this.txArray[0].friends = '(list,((s,Lisa),(i,5),(map,(name=(map,(first=(s,Craig),second=(s,p)))))))';
+                    console.log(this.txArray); 
                 };
             }
         }
@@ -606,6 +607,7 @@ Structure of typeMap
         }
 
         function postData(urlPath, data){
+            console.log(data);
             var self = this;
             var deferred = q.defer();
             var payload = JSON.stringify(data) || '{}';

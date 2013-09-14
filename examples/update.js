@@ -12,18 +12,20 @@ grex.connect()
 				
 				//trxn = g.begin(/*{ name: 'string', age: 'integer', address:{'street':{number:'integer', name:'string'}}}*/);
 
-				//trxn = g.begin(/*{ name: 'string', age: 'integer', address:{'street':{number:{unit:'integer',estate:'string'}}, primary:'boolean'}}*/);
+				//trxn = g.begin({ name: 'string', age: 'integer', address:{'street':{number:{unit:'integer',estate:'string'}}, primary:'boolean'}});
 				
 				//trxn = g.begin({ friends: ['string','integer',{name:{first:'string', second:'string'}}]});
 
-				trxn = g.begin({ friends: ['string','integer',{name:{first:'string',second:'string'}}]});
-
+				trxn = g.begin({ friends: ['string','integer',{'name1':'string'}]});
+				
 				//trxn.addVertex(100,{name:'Frank', age:'90'});
 				//trxn.updateVertex(1, {age:'20'});
 				
 				//trxn.updateVertex(1, { address: {street:{number:{unit:15,estate:'test444Name'}}, primary: false}});
 
-				trxn.updateVertex(1, { friends: ['Lisa', 5, {name:{first:'Craig',second:'p'}}]});
+				//trxn.updateVertex(1, { friends: ['Lisa', 5, {name:{first:'Craig',second:'p'}}]});
+
+				trxn.updateVertex(1, { friends: ['Lisa', 5, {name1:'Craig'}]});
 
 				//trxn.updateVertex(100, { friends: ['Lisa', 5, ['100.05',true]]});
 
