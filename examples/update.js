@@ -16,7 +16,7 @@ grex.connect()
 				
 				//trxn = g.begin({ friends: ['string','integer',{name:{first:'string', second:'string'}}]});
 
-				trxn = g.begin({ friends: ['string','integer',{'name1':'string'}]});
+				trxn = g.begin({ friends: ['string','integer',{'aName':'string'}]});
 				
 				//trxn.addVertex(100,{name:'Frank', age:'90'});
 				//trxn.updateVertex(1, {age:'20'});
@@ -25,7 +25,7 @@ grex.connect()
 
 				//trxn.updateVertex(1, { friends: ['Lisa', 5, {name:{first:'Craig',second:'p'}}]});
 
-				trxn.updateVertex(1, { friends: ['Lisa', 5, {name1:'Craig'}]});
+				trxn.updateVertex(1, { friends: ['Lisa', 5, {aName:'Craig'}, {aName:'Frank'}]});
 
 				//trxn.updateVertex(100, { friends: ['Lisa', 5, ['100.05',true]]});
 

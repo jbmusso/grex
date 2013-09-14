@@ -26,47 +26,10 @@
         'd': 'd',
         's': 's',
         'b': 'b',
-        'array': 'list',
-        'a': 'list',
         'list': 'list',
-        'obj': 'map',
-        'object': 'map',
-        'o': 'map',
         'map': 'map',
         'date': 'l'
     };
-
-/*
-Structure of typeMap
-
-{
-    //if no definition is provided type will be inferred
-    //string (default)
-    prop: 'string', // or 's',
-    //boolean (default for anything that looks like a Boolean)
-    prop2: 'boolean', // or 'b',
-    //integer
-    prop3: 'integer', // or 'i',
-    //float
-    prop4: 'float', // or 'f',
-    //long (default for anything that passes parseInt())
-    prop5: 'long', // or 'l',
-    //double (default for anything that passes parseFloat())
-    prop5: 'double', // or 'd',
-    //list (array) with all same type
-    arrProp: ['string'],
-    arrProp: ['s'],
-    arrProp: ['long'],
-    arrProp: ['l'],
-    //list (array) with mixed types
-    //key indicates index to start applying type
-    arrProp: [{ '0':'string' }, { '5':'long' }],
-    arrProp2: [{ '2':'i' }, { '7':'d' }],
-    //map => recursively applies types to embedded objects
-    mapProp: { prop1: 'string', prop2: 'integer', prop3: { prop4: 'd' }}
-}
-
-*/
 
     function isRegexId(id) {
         return !!this.OPTS.idRegex && isString(id) && this.OPTS.idRegex.test(id);
@@ -133,6 +96,22 @@ Structure of typeMap
         return toString.call(o) === '[object Undefined]';
     };
 
+    //obj1 over writes obj2
+    function merge(obj1, obj2) {
+        for(var p in obj2) {
+            try  {
+                if(obj1.hasOwnProperty(p)) {
+                    obj1[p] = merge(obj1[p], obj2[p]);
+                } else {
+                    obj1[p] = obj2[p];
+                }
+            } catch (e) {
+                obj1[p] = obj2[p];
+            }
+        }
+        return obj1;
+    };
+
     //check this out
     function parseNumber(val) {
         var numResult = 1;
@@ -155,27 +134,6 @@ Structure of typeMap
             return Utils.parseBoolean(val);
         }
         return val;
-    };
-
-    function embeddedObject(o, prop) {
-        var props = prop.indexOf(".") > -1 ? prop.split(".") : [prop],
-            l = props.length, 
-            lastProp = props[l - 1], 
-            currentProp;
-
-        for(var i = 0; i < l; i++) {
-            if(o.hasOwnProperty(props[i])) {
-                currentProp = props[i];
-                if(!isObject(o[currentProp])) {
-                    break;
-                }
-                o = o[currentProp];
-            }
-        }
-        if(currentProp != lastProp) {
-            o = {};
-        }
-        return o;
     };
 
     function qryMain(method, reset){
@@ -313,13 +271,13 @@ Structure of typeMap
         function addTypes(obj, typeDef, embedded, list){
             var tempObj = {};
             var tempStr = '';
-            var obj2;
+            var obj2, idx = 0;
 
             //console.log(typeDef);
             for(var k in obj){
                 if(obj.hasOwnProperty(k)){
-                    if(typeDef && (k in typeDef)){
-                        if (isObject(typeDef[k])) {
+                    if(typeDef){
+                        if ((k in typeDef) && isObject(typeDef[k])) {
                             if(embedded){
                                 if (list) {
                                     obj2 = obj[k];
@@ -336,7 +294,7 @@ Structure of typeMap
                             } else {
                                 tempObj[k] = '(map,(' + addTypes(obj[k], typeDef[k], true) + '))'; 
                             }
-                        } else if (isArray(typeDef[k])) {
+                        } else if ((k in typeDef) && isArray(typeDef[k])) {
                             if(embedded){
                                 tempStr += '(list,(' + addTypes(obj[k], typeDef[k], true, true) + '))';
                             } else {
@@ -345,105 +303,48 @@ Structure of typeMap
                         } else {
                             if(embedded){
                                 if (list) {
-                                    tempStr += '(' + typeHash[typeDef[k]] + ',' + obj[k] + '),';
+                                    if (k in typeDef) {
+                                        idx = k;
+                                        tempStr += '(' + typeHash[typeDef[idx]] + ',' + obj[k] + ')';
+                                        tempStr = tempStr.replace(')(', '),(');
+                                    } else {
+                                        idx = typeDef.length - 1;
+                                        if (isObject(typeDef[idx])) {
+                                            tempStr += ',(map,(' + addTypes(obj[k], typeDef[idx], true) + '))';    
+                                        } else if (isArray(typeDef[idx])){
+                                            tempStr += ',(list,(' + addTypes(obj[k], typeDef[idx], true, true) + '))';
+                                        } else {
+                                          tempStr += '(' + typeHash[typeDef[idx]] + ',' + obj[k] + ')';
+                                          tempStr = tempStr.replace(')(', '),(');
+                                        };
+                                    };
+                                    //tempStr += '(' + typeHash[typeDef[idx]] + ',' + obj[k] + '),';
                                 } else {
-                                    tempStr += ','+ k + '=(' + typeHash[typeDef[k]] + ',' + obj[k] + ')';    
+                                    if (k in typeDef) {
+                                        tempStr += /*','+*/ k + '=(' + typeHash[typeDef[k]] + ',' + obj[k] + ')';
+                                        tempStr = tempStr.replace(')(', '),(');    
+                                    } else {
+                                        tempObj[k] = obj[k];
+                                    };
                                 };
-                                
                             } else {
-                                tempObj[k] = '(' + typeHash[typeDef[k]] + ',' + obj[k] + ')';
+                                if (k in typeDef) {
+                                    tempObj[k] = '(' + typeHash[typeDef[k]] + ',' + obj[k] + ')';
+                                } else {
+                                    tempObj[k] = obj[k];
+                                };
                             }
-                            
                         }
                     } else {
                         tempObj[k] = obj[k];
                     }                    
                 }
             }
-            tempStr = tempStr.replace(',(,', ',(');
-            tempStr = tempStr.replace('),)', '))');
+            //tempStr = tempStr.replace(',(,', ',(');
+            //tempStr = tempStr.replace('),)', '))');
+            tempStr = tempStr.replace(')(', '),(');
             //console.log(tempObj);
             return embedded ? tempStr : tempObj;
-        }
-
-
-        //function converts json document to a stringified version with types
-        function docWithTypes(doc, offRoot) {
-          if (doc === undefined)
-            return doc;
-          if (doc === null) {
-            if (offRoot)
-              return "(null,null)";
-            return doc;
-          }
-          try {
-            var d = {};
-            var self = this;
-            if (Array.isArray(doc)) {
-              var out = offRoot ? ['(list,('] : [];
-              var len = doc.length;
-              for (var i = 0; i < len; i++) {
-                var item = doc[i];
-                out.push(docWithTypes(item, true));
-                if (offRoot)
-                  out.push(',');
-              }
-              if (offRoot)
-                out.splice(out.length - 1, 1, '))');
-              d = out.join('');
-            } else if (typeof doc === 'object') {
-              if (doc.constructor === Date) {
-                d = '(long,' + doc.getTime().toString() + ')';
-              } else {
-                var out = offRoot ? [] : null;
-                var keys = Object.keys(doc);
-                var len = keys.length;
-                for (var i = 0; i < len; i++) {
-                  var e = keys[i];
-                  if (/^_id$|^_type$|^_action$|^_inV$|^outV$/.test(e) && !offRoot) {
-                    d[e] = doc[e];
-                  } else {
-                    var v = doc[e];
-                    if (offRoot) {
-                      out.push(i + '=' + docWithTypes(v, true));
-                    } else {
-                      d[e] = docWithTypes(v, true);
-                    }
-                  }
-                }
-                if (offRoot)
-                  d[e] = '(map,(' + out.join(',') + '))';
-              }
-            } else {
-              if (doc instanceof Boolean || typeof doc === 'boolean') {
-                d = doc ? "(b,true)" : "(b,false)";
-              } else if (doc instanceof String || typeof doc === 'string') {
-                d = doc.toString();
-              } else if (doc instanceof Number || typeof doc === 'number') {
-                try {
-                  d = '(l,' + parseInt(doc) + ')';
-                  if ('(l,' + doc.toString() + ')' !== d)
-                    throw new Error('Conversion Error (probably overflow)');
-                }
-                catch (ee) {
-                  try {
-                    d = '(d,' + parseFloat(doc) + ')';
-                    if ('(l,' + doc.toString() + ')' !== d)
-                      throw new Error('Conversion Error (probably overflow)');
-                  }
-                  catch (ee2) {
-                    d = doc.toString(); // Assume string
-                  }
-                }
-              } else {
-                d = doc.toString(); // Must be a string
-              }
-            }
-            return d;
-          }
-          catch (e) {
-            console.error(doc, e);
-          }
         }
 
         function cud(action, type) {
@@ -492,8 +393,7 @@ Structure of typeMap
                 if (addToTransaction) {
                     o._action = action;
                     push.call(this.txArray, addTypes(o, this.typeMap));   
-                    //this.txArray[0].friends = '(list,((s,Lisa),(i,5),(map,(name=(map,(first=(s,Craig),second=(s,p)))))))';
-                    console.log(this.txArray); 
+                    //console.log(this.txArray); 
                 };
             }
         }
@@ -822,9 +722,11 @@ Structure of typeMap
                 result.results.push(returnObj);
             }
             result.typeMap = typeMap;
-            for(var k2 in typeMap){
-                this.typeMap[k2] = typeMap[k2];
-            }
+            //This will preserve any local TypeDefs
+            this.typeMap = merge(this.typeMap, typeMap);
+            // for(var k2 in typeMap){
+            //     this.typeMap[k2] = typeMap[k2];
+            // }
             return result;
         }
 
@@ -974,22 +876,6 @@ Structure of typeMap
 
             };
         }
-
-        //obj1 over writes obj2
-        function merge(obj1, obj2) {
-            for(var p in obj2) {
-                try  {
-                    if(obj1.hasOwnProperty(p)) {
-                        obj1[p] = merge(obj1[p], obj2[p]);
-                    } else {
-                        obj1[p] = obj2[p];
-                    }
-                } catch (e) {
-                    obj1[p] = obj2[p];
-                }
-            }
-            return obj1;
-        };
 
         gRex.prototype.setOptions = function (options){
             if(!!options){
