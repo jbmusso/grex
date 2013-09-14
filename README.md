@@ -37,13 +37,37 @@ gRex can be loaded as:
     $ npm install grex
     ```
 
-    then in node
+    then in Node or the browser
 
     ```
     var g = require(“grex”);
     ```
 
 -   a RequireJS module
+
+## Connnecting to a database
+
+```
+//connect takes options object and returns a Promise
+g.connect({ 'database': 'myGraphDB', 
+            'host': 'my.host.com',
+            'port': 8000 }).then(function(graphDB){
+
+    //once connected the return value is a reference to the graph
+    trxn = graphDB.begin();
+
+    t1 = trxn.addVertex({name:'Test1a'});
+    t2 = trxn.addVertex({name:'Test2a'});
+    trxn.addEdge(t1, t2, 'linked', {name:"ALabel"})
+
+    trxn.commit().then(function(result){
+        console.log("Added new vertices successfully. -> ", result);            
+    }, function(err) {
+        console.error(err)
+    });
+
+});
+```
 
 ## Introduction
 
