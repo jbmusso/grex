@@ -53,7 +53,7 @@ var Contains = gRex.Contains;
 var Vertex = gRex.Vertex;
 var Edge = gRex.Edge;
 ```
-You can know use these objects in place of the string representation in your queries.
+You can now use these objects in place of the string representation in your queries.
 
 ## Connnecting to a database
 
