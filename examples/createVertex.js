@@ -2,13 +2,18 @@ var grex = require('../src/grex.js');
 var t1, t2;
 var trxn;
 
-grex.connect().then(function(g){
+grex.connect({
+                'host': 'localhost',
+                'port': 8182,
+                'graph': 'orientdbsample',
+                'idRegex': /^[0-9]+:[0-9]+$/
+            }).then(function(g){
 
-	trxn = g.begin();
+	trxn = g.begin({name:'string',age:'integer', weight:'float'});
 
-	t1 = trxn.addVertex(111,{name:'Test1a'});
-	t2 = trxn.addVertex(222,{name:'Test2a'});
-	trxn.addEdge(111, 222, 'linked', {name:"ALabel"})
+	t1 = trxn.addVertex({name:'Test1a', age:20});
+	t2 = trxn.addVertex({name:'Test2a', age:'30'});
+	trxn.addEdge(t1, t2, 'linked', {name:"ALabel", weight:1.2})
 
 	// t1 = trxn.addVertex({name:'Test1b'});
 	// t2 = trxn.addVertex({name:'Test2b'});
