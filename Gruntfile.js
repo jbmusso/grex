@@ -1,4 +1,9 @@
 module.exports = function(grunt){
+
+	//Need to work out how to include browserify & uglify
+	//browserify -r ./src/grex.js:grex > ./browser/bundle.js
+	//uglifyjs ./browser/bundle.js -o ./browser/grex.min.js
+
 	// Project configuration.
 	grunt.initConfig({
 	  pkg: grunt.file.readJSON('package.json'),
