@@ -13,6 +13,25 @@
     var graphRegex = /^T\.(gt|gte|eq|neq|lte|lt|decr|incr|notin|in)$|^Contains\.(IN|NOT_IN)$|^g\.|^Vertex(?=\.class\b)|^Edge(?=\.class\b)/;
     var closureRegex = /^\{.*\}$/;
 
+    var T = { 'gt': 'T.gt',
+              'gte': 'T.gte',
+              'eq': 'T.eq',
+              'neq': 'T.neq',
+              'lte': 'T.lte',
+              'lt': 'T.lt',
+              'decr': 'T.decr',
+              'incr': 'T.incr',
+              'notin': 'T.notin',
+              'in': 'T.in'
+            };
+
+    var Contains = { 'IN': 'Contains.IN',
+              'NOT_IN': 'Contains.NOT_IN'
+            };
+
+    var Vertex = { 'class': 'Vertex.class' };
+    var Edge = { 'class': 'Edge.class' };
+
     var typeHash = { 
         'integer': 'i',
         'long': 'l',
@@ -850,17 +869,10 @@
         return db.connect();
     };
 
-    // some AMD build optimizers, like r.js, check for specific condition patterns like the following:
-    if (typeof define == 'function' && typeof define.amd == 'object' && define.amd) {        
-        define({ connect: grex });
-    }
-    // check for `exports` after `define` in case a build optimizer adds an `exports` object
-    else if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
-        exports.connect = grex;
-    }
-    else {
-        //browser
-        global.gRex = { connect: grex };
-    }
+    exports.connect = grex;
+    exports.T = T;
+    exports.Contains = Contains;
+    exports.Vertex = Vertex;
+    exports.Edge = Edge;
 
 })(this);

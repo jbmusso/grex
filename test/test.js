@@ -1,4 +1,9 @@
-var gRex = require('../index.js');
+var gRex = require('../index.js'),
+	T = gRex.T,
+	Contains = gRex.Contains,
+	Vertex = gRex.Vertex,
+	Edge = gRex.Edge;
+
 
 beforeEach(function(done){
 	gRex.connect()
@@ -47,7 +52,7 @@ describe('Transforms', function(){
     	});
     	
     	it('should return id and age array = [ [ "4", 32 ], [ "1", 29 ] ] ', function(done){
-	    	g.E().has('weight', 'T.gt', '0.5f').outV().transform('{[it.id,it.age]}')
+	    	g.E().has('weight', T.gt, '0.5f').outV().transform('{[it.id,it.age]}')
 	      		.then(function(result){
 	      			//console.log(result);
 	      			result.results.should.have.lengthOf(2);
@@ -123,7 +128,7 @@ describe('Transforms', function(){
 	}),
   	describe('orderMap', function() {
         it("should get id 1", function(done){
-            g.V().both().groupCount().cap().orderMap('T.decr')
+            g.V().both().groupCount().cap().orderMap(T.decr)
             	.then(function(result){
             		//console.log(result);
 	      			result.results.should.have.lengthOf(6);
@@ -176,7 +181,7 @@ describe('Filters', function(){
 	}),
 	describe('or', function(){
 		it('should return edges id 7 & 9', function(done){
-			g.v(1).outE().or(g._().has('id', 'T.eq', 9), g._().has('weight', 'T.lt', '0.6f'))
+			g.v(1).outE().or(g._().has('id', T.eq, 9), g._().has('weight', T.lt, '0.6f'))
 				.then(function(result){
 					//console.log(result);
 	      			result.results.should.have.lengthOf(2);
@@ -211,7 +216,7 @@ describe('Filters', function(){
 	}),
 	describe('except', function(){
 		it('should return vertices josh & peter', function(done){
-			g.V().has('age','T.lt',30).as('x').out('created').in('created').except('x')
+			g.V().has('age',T.lt,30).as('x').out('created').in('created').except('x')
 				.then(function(result){
 					//console.log(result);
 	      			result.results.should.have.lengthOf(2);
@@ -324,7 +329,7 @@ describe('Methods', function(){
 describe('Misc', function(){
 	describe('float', function() {
         it("should return weight", function(done){
-            g.v(1).outE().has("weight", "T.gte", "0.5f").property("weight")
+            g.v(1).outE().has("weight", T.gte, "0.5f").property("weight")
             	.then(function(result){
             		//console.log(result);
             		result.results.should.have.lengthOf(2);

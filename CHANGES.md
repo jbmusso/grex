@@ -3,6 +3,13 @@
 - Client version initialised with var g = require('grex');
 - Test CUD
 
+## 0.2.2
+- Expose Tokens object
+- Expose Contains object
+- Expose Vertex object
+- Expose Edge object
+
+
 ## 0.2.1
 - Fixed bug on createVertex transaction
 - added T.in and T.notin
