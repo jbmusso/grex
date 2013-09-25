@@ -10,7 +10,7 @@
     var gremlinExt = '/tp/gremlin?script=';
     var batchExt = '/tp/batch/tx';
     var newVertex = '/vertices';
-    var graphRegex = /^T\.(gt|gte|eq|neq|lte|lt|decr|incr|notin)$|^Contains\.(IN|NOT_IN)$|^g\.|^Vertex(?=\.class\b)|^Edge(?=\.class\b)/;
+    var graphRegex = /^T\.(gt|gte|eq|neq|lte|lt|decr|incr|notin|in)$|^Contains\.(IN|NOT_IN)$|^g\.|^Vertex(?=\.class\b)|^Edge(?=\.class\b)/;
     var closureRegex = /^\{.*\}$/;
 
     var typeHash = { 
@@ -75,7 +75,7 @@
     function qryMain(method, reset){
         return function(){
             var self = this,
-                gremlin = reset ? new Gremlin(this/*.OPTS*/) : self._buildGremlin(self.params),
+                gremlin = reset ? new Gremlin(this) : self._buildGremlin(self.params),
                 args = '',
                 appendArg = '';
 
@@ -255,10 +255,9 @@
                                           tempStr = tempStr.replace(')(', '),(');
                                         };
                                     };
-                                    //tempStr += '(' + typeHash[typeDef[idx]] + ',' + obj[k] + '),';
                                 } else {
                                     if (k in typeDef) {
-                                        tempStr += /*','+*/ k + '=(' + typeHash[typeDef[k]] + ',' + obj[k] + ')';
+                                        tempStr += k + '=(' + typeHash[typeDef[k]] + ',' + obj[k] + ')';
                                         tempStr = tempStr.replace(')(', '),(');    
                                     } else {
                                         tempObj[k] = obj[k];
@@ -308,7 +307,7 @@
                             if (isObject(arguments[0])) {
                                 //create new Vertex
                                 o = arguments[0];
-                                push.call(this.newVertices, addTypes(o, this.typeMap));
+                                push.call(this.newVertices, o/*addTypes(o, this.typeMap)*/);
                                 addToTransaction = false;
                             } else {
                                 if(argLen == 2){
@@ -320,7 +319,7 @@
                     }
                 //Allow for no args to be passed
                 } else if (type == 'vertex') {
-                    push.call(this.newVertices, addTypes(o, this.typeMap));
+                    push.call(this.newVertices, o/*addTypes(o, this.typeMap)*/);
                     addToTransaction = false;
                 }
                 o._type = type;
@@ -328,6 +327,7 @@
                     o._action = action;
                     push.call(this.txArray, addTypes(o, this.typeMap));   
                 };
+                return o;
             }
         }
 
@@ -383,7 +383,7 @@
 
                 if(!!newVerticesLen){
                     for (var i = 0; i < newVerticesLen; i++) {
-                        promises.push(postData.call(self, newVertex, self.newVertices[i]));
+                        promises.push(postData.call(self, newVertex, addTypes(self.newVertices[i], self.typeMap),{'Content-Type':'application/vnd.rexster-typed-v1+json'}));
                     };
                     return q.all(promises).then(function(result){
                         var inError = false;
@@ -392,7 +392,11 @@
                         var resultLen = result.length;
                         for (var j = 0; j < resultLen; j++) {
                             if('results' in result[j] && '_id' in result[j].results){
-                                self.newVertices[j]._id = result[j].results._id;
+                                for(var prop in result[j].results){
+                                    if(result[j].results.hasOwnProperty(prop)){
+                                        self.newVertices[j][prop] = result[j].results[prop];
+                                    }
+                                }
                             } else {
                                 inError = true;
                             }
@@ -437,7 +441,7 @@
             }
         }
 
-        function postData(urlPath, data){
+        function postData(urlPath, data, headers){
             var self = this;
             var deferred = q.defer();
             var payload = JSON.stringify(data) || '{}';
@@ -452,6 +456,14 @@
                 },
                 'method': 'POST'
             };
+
+            if(headers){
+                for(var prop in headers){
+                    if(headers.hasOwnProperty(prop)){
+                        options.headers[prop] = headers[prop];
+                    }
+                }
+            }
             options.path += urlPath;
 
             var req = http.request(options, function(res) {
@@ -632,7 +644,7 @@
                     returnObj = {};
                     typeObj = {};
                     for(var k in tempObj){
-                        if (tempObj.hasOwnProperty) {
+                        if (tempObj.hasOwnProperty(k)) {
                             if (isObject(tempObj[k]) && 'type' in tempObj[k]) {
                                 if(!!typeMap[k] && typeMap[k] != tempObj[k].type){
                                     if(!result.typeMapErr){
