@@ -102,6 +102,9 @@
     }
 
     function parseArgs(val) {
+        if(val === null) {
+            return 'null';
+        }
         //check to see if the arg is referencing the graph ie. g.v(1)
         if(isObject(val) && val.hasOwnProperty('params') && isGraphReference(val.params)){
             return val.params.toString();
