@@ -40,16 +40,26 @@ gRex can be loaded as:
     then in Node or the browser
 
     ```
-    var g = require(“grex”);
+    var gRex = require(“grex”);
     ```
 
 -   a RequireJS module
+
+You will notice that in the examples tokens are passed as string (i.e. 'T.gt'). However, gRex also exposes some objects for convenience to make it feel more natural. To access the objects reference them like so:
+
+```
+var T = gRex.T;
+var Contains = gRex.Contains;
+var Vertex = gRex.Vertex;
+var Edge = gRex.Edge;
+```
+You can know use these objects in place of the string representation in your queries.
 
 ## Connnecting to a database
 
 ```
 //connect takes options object and returns a Promise
-g.connect({ 'database': 'myGraphDB', 
+gRex.connect({ 'database': 'myGraphDB', 
             'host': 'my.host.com',
             'port': 8000 }).then(function(graphDB){
 
