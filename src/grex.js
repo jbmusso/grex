@@ -307,7 +307,7 @@
                             if (isObject(arguments[0])) {
                                 //create new Vertex
                                 o = arguments[0];
-                                push.call(this.newVertices, o/*addTypes(o, this.typeMap)*/);
+                                push.call(this.newVertices, o);
                                 addToTransaction = false;
                             } else {
                                 if(argLen == 2){
@@ -319,7 +319,7 @@
                     }
                 //Allow for no args to be passed
                 } else if (type == 'vertex') {
-                    push.call(this.newVertices, o/*addTypes(o, this.typeMap)*/);
+                    push.call(this.newVertices, o);
                     addToTransaction = false;
                 }
                 o._type = type;
