@@ -46,9 +46,7 @@
         's': 's',
         'b': 'b',
         'list': 'list',
-        'map': 'map',
-        'date': 'l',
-        'unknown': 's' //this is to allow for a bug - to be removed once resolved
+        'map': 'map'
     };
 
     function isRegexId(id) {
@@ -90,7 +88,23 @@
         }
         return obj1;
     };
-   
+
+    //Last obect wins
+/*    function merge(obj1, obj2) {
+        if(isObject(obj2)){
+            for (var prop in obj2) {
+                if(obj1.hasOwnProperty(prop)){
+                    obj1[prop] = merge(obj1[prop],obj2[prop]);  
+                } else {
+                    obj1[prop] = obj2[prop];
+                }
+            }
+        } else { 
+            return obj2;
+        }
+        return obj1;
+    };
+  */ 
     function qryMain(method, reset){
         return function(){
             var self = this,
@@ -614,21 +628,22 @@
                         tempObj = createTypeDef(obj[i].value);
                         tempTypeArr[i] = tempObj.typeDef;
                         tempResultArr[i] = tempObj.result;
-                    } else {
-                        //determine if the array has same types
-                        //then only show the type upto that index
-                        if(i > 0){
-                            //TODO: May need to compare Object Types 
-                            //unable to do so at this time due to a bug
-                            if (obj[i].type !== obj[i - 1].type) {
-                                rest = i + 1;
-                            };
-                        }
+                    } else {                        
                         tempTypeArr.push(obj[i].type);
                         tempResultArr.push(obj[i].value);    
                     }
+                    if(i > 0){
+                        //If type is map or list need to do deep compare
+                        //to ascertain whether equal or not
+                        //determine if the array has same types
+                        //then only show the type upto that index
+                        if (obj[i].type !== obj[i - 1].type) {
+                            rest = i + 1;
+                        };
+                    }
                 };
-                tempTypeArr.length = rest;
+
+                //tempTypeArr.length = rest;
                 returnObj.typeDef = tempTypeArr;
                 returnObj.result = tempResultArr;
             } else {
@@ -696,7 +711,7 @@
             }
 
             result.typeMap = typeMap;
-            //This will preserve any local TypeDefs
+            //This will preserve any locally defined TypeDefs
             this.typeMap = merge(this.typeMap, typeMap);
             return result;
         }
