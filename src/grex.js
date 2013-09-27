@@ -346,8 +346,6 @@
                     o._action = action;
                     push.call(this.txArray, addTypes(o, this.typeMap));   
                 };
-                console.log("\n this.txArray => " + JSON.stringify(this.txArray));
-            
                 return o;
             }
         }
@@ -466,8 +464,6 @@
             var self = this;
             var deferred = q.defer();
             var payload = JSON.stringify(data) || '{}';
-            
-            console.log("\n paylod => " + payload);
             
             var options = {
                 'host': this.OPTS.host,
@@ -608,7 +604,9 @@
                 tempResultObj = {},
                 tempTypeArr = [],
                 tempResultArr = [],
+                tempTypeArrLen = 0,
                 len = 0, rest = 1,
+                mergedObject = {},
                 returnObj = {typeDef:{}, result: {}};
 
             if (isArray(obj)) { 
@@ -632,8 +630,16 @@
                         };
                     }
                 };
-
-                //tempTypeArr.length = rest;
+                if(rest > 1 && isObject(tempTypeArr[rest])){
+                    //merge remaining objects
+                    tempTypeArrLen = tempTypeArr.length;
+                    mergedObject = tempTypeArr[rest - 1];
+                    for(var j = rest;j < tempTypeArrLen; j++){
+                        mergedObject = merge(mergedObject, tempTypeArr[j])
+                    }
+                    tempResultArr[rest - 1] = mergedObject;
+                }
+                tempTypeArr.length = rest;
                 returnObj.typeDef = tempTypeArr;
                 returnObj.result = tempResultArr;
             } else {
@@ -703,9 +709,6 @@
             result.typeMap = typeMap;
             //This will preserve any locally defined TypeDefs
             this.typeMap = merge(this.typeMap, typeMap);
-
-            console.log("\n generated TypeMap => " + JSON.stringify(this.typeMap));
-            console.log("\n this.TypeMap => " + JSON.stringify(this.typeMap) + '\n');
             return result;
         }
 
