@@ -13,20 +13,22 @@
     var graphRegex = /^T\.(gt|gte|eq|neq|lte|lt|decr|incr|notin|in)$|^Contains\.(IN|NOT_IN)$|^g\.|^Vertex(?=\.class\b)|^Edge(?=\.class\b)/;
     var closureRegex = /^\{.*\}$/;
 
-    var T = { 'gt': 'T.gt',
-              'gte': 'T.gte',
-              'eq': 'T.eq',
-              'neq': 'T.neq',
-              'lte': 'T.lte',
-              'lt': 'T.lt',
-              'decr': 'T.decr',
-              'incr': 'T.incr',
-              'notin': 'T.notin',
-              'in': 'T.in'
+    var T = { 
+                'gt': 'T.gt',
+                'gte': 'T.gte',
+                'eq': 'T.eq',
+                'neq': 'T.neq',
+                'lte': 'T.lte',
+                'lt': 'T.lt',
+                'decr': 'T.decr',
+                'incr': 'T.incr',
+                'notin': 'T.notin',
+                'in': 'T.in'
             };
 
-    var Contains = { 'IN': 'Contains.IN',
-              'NOT_IN': 'Contains.NOT_IN'
+    var Contains = { 
+                'IN': 'Contains.IN',
+                'NOT_IN': 'Contains.NOT_IN'
             };
 
     var Vertex = { 'class': 'Vertex.class' };
@@ -46,9 +48,7 @@
         's': 's',
         'b': 'b',
         'list': 'list',
-        'map': 'map',
-        'date': 'l',
-        'unknown': 's' //this is to allow for a bug - to be removed once resolved
+        'map': 'map'
     };
 
     function isRegexId(id) {
@@ -90,7 +90,7 @@
         }
         return obj1;
     };
-   
+
     function qryMain(method, reset){
         return function(){
             var self = this,
@@ -247,12 +247,14 @@
                                 } else {
                                     tempStr += k + '=(map,(' + addTypes(obj[k], typeDef[k], true) + '))';
                                 }
+                                tempStr = tempStr.replace(')(', '),(');
                             } else {
                                 tempObj[k] = '(map,(' + addTypes(obj[k], typeDef[k], true) + '))'; 
                             }
                         } else if ((k in typeDef) && isArray(typeDef[k])) {
                             if(embedded){
                                 tempStr += '(list,(' + addTypes(obj[k], typeDef[k], true, true) + '))';
+                                tempStr = tempStr.replace(')(', '),(');
                             } else {
                                 tempObj[k] = '(list,(' + addTypes(obj[k], typeDef[k], true, true) + '))'; 
                             }
@@ -262,7 +264,6 @@
                                     if (k in typeDef) {
                                         idx = k;
                                         tempStr += '(' + typeHash[typeDef[idx]] + ',' + obj[k] + ')';
-                                        tempStr = tempStr.replace(')(', '),(');
                                     } else {
                                         idx = typeDef.length - 1;
                                         if (isObject(typeDef[idx])) {
@@ -271,9 +272,9 @@
                                             tempStr += ',(list,(' + addTypes(obj[k], typeDef[idx], true, true) + '))';
                                         } else {
                                           tempStr += '(' + typeHash[typeDef[idx]] + ',' + obj[k] + ')';
-                                          tempStr = tempStr.replace(')(', '),(');
                                         };
                                     };
+                                    tempStr = tempStr.replace(')(', '),(');
                                 } else {
                                     if (k in typeDef) {
                                         tempStr += k + '=(' + typeHash[typeDef[k]] + ',' + obj[k] + ')';
@@ -295,7 +296,6 @@
                     }                    
                 }
             }
-            tempStr = tempStr.replace(')(', '),(');
             return embedded ? tempStr : tempObj;
         }
 
@@ -551,10 +551,10 @@
     })();
 
     var Gremlin = (function () {
-        function Gremlin(gRex/*options*//*, params*/) {
+        function Gremlin(gRex) {
             this.gRex = gRex;
-            this.OPTS = gRex.OPTS;//options;
-            this.params = 'g';//params ? params : 'g';
+            this.OPTS = gRex.OPTS;
+            this.params = 'g';
         }
       
         function get() {
@@ -604,7 +604,9 @@
                 tempResultObj = {},
                 tempTypeArr = [],
                 tempResultArr = [],
+                tempTypeArrLen = 0,
                 len = 0, rest = 1,
+                mergedObject = {},
                 returnObj = {typeDef:{}, result: {}};
 
             if (isArray(obj)) { 
@@ -614,20 +616,29 @@
                         tempObj = createTypeDef(obj[i].value);
                         tempTypeArr[i] = tempObj.typeDef;
                         tempResultArr[i] = tempObj.result;
-                    } else {
-                        //determine if the array has same types
-                        //then only show the type upto that index
-                        if(i > 0){
-                            //TODO: May need to compare Object Types 
-                            //unable to do so at this time due to a bug
-                            if (obj[i].type !== obj[i - 1].type) {
-                                rest = i + 1;
-                            };
-                        }
+                    } else {                        
                         tempTypeArr.push(obj[i].type);
                         tempResultArr.push(obj[i].value);    
                     }
+                    if(i > 0){
+                        //If type is map or list need to do deep compare
+                        //to ascertain whether equal or not
+                        //determine if the array has same types
+                        //then only show the type upto that index
+                        if (obj[i].type !== obj[i - 1].type) {
+                            rest = i + 1;
+                        };
+                    }
                 };
+                if(rest > 1 && isObject(tempTypeArr[rest])){
+                    //merge remaining objects
+                    tempTypeArrLen = tempTypeArr.length;
+                    mergedObject = tempTypeArr[rest - 1];
+                    for(var j = rest;j < tempTypeArrLen; j++){
+                        mergedObject = merge(mergedObject, tempTypeArr[j])
+                    }
+                    tempResultArr[rest - 1] = mergedObject;
+                }
                 tempTypeArr.length = rest;
                 returnObj.typeDef = tempTypeArr;
                 returnObj.result = tempResultArr;
@@ -696,7 +707,7 @@
             }
 
             result.typeMap = typeMap;
-            //This will preserve any local TypeDefs
+            //This will preserve any locally defined TypeDefs
             this.typeMap = merge(this.typeMap, typeMap);
             return result;
         }
@@ -827,14 +838,6 @@
             this.getIndex =  qryMain('getIndex', true);
             this.dropIndex = qryMain('dropIndex', true);
             this.dropKeyIndex = qryMain('dropKeyIndex', true);
-
-            //CUD
-            // exports.addVertex = cud('create', 'vertex');
-            // exports.addEdge = cud('create', 'edge');
-            // exports.removeVertex = cud('delete', 'vertex');
-            // exports.removeEdge = cud('delete', 'edge');
-            // exports.updateVertex = cud('update', 'vertex');
-            // exports.updateEdge = cud('update', 'edge');
 
             this.clear =  qryMain('clear', true);
             this.shutdown = qryMain('shutdown', true);
