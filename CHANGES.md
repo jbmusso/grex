@@ -3,6 +3,10 @@
 - Client version initialised with var g = require('grex');
 - Test CUD
 
+## 0.2.3
+- Fixed bug that was dropping comma in typeDef's on subsequent posts
+- Cater for embedded objects in lists
+
 ## 0.2.2
 - Expose Tokens object
 - Expose Contains object
