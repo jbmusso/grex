@@ -247,12 +247,14 @@
                                 } else {
                                     tempStr += k + '=(map,(' + addTypes(obj[k], typeDef[k], true) + '))';
                                 }
+                                tempStr = tempStr.replace(')(', '),(');
                             } else {
                                 tempObj[k] = '(map,(' + addTypes(obj[k], typeDef[k], true) + '))'; 
                             }
                         } else if ((k in typeDef) && isArray(typeDef[k])) {
                             if(embedded){
                                 tempStr += '(list,(' + addTypes(obj[k], typeDef[k], true, true) + '))';
+                                tempStr = tempStr.replace(')(', '),(');
                             } else {
                                 tempObj[k] = '(list,(' + addTypes(obj[k], typeDef[k], true, true) + '))'; 
                             }
@@ -262,7 +264,6 @@
                                     if (k in typeDef) {
                                         idx = k;
                                         tempStr += '(' + typeHash[typeDef[idx]] + ',' + obj[k] + ')';
-                                        tempStr = tempStr.replace(')(', '),(');
                                     } else {
                                         idx = typeDef.length - 1;
                                         if (isObject(typeDef[idx])) {
@@ -271,9 +272,9 @@
                                             tempStr += ',(list,(' + addTypes(obj[k], typeDef[idx], true, true) + '))';
                                         } else {
                                           tempStr += '(' + typeHash[typeDef[idx]] + ',' + obj[k] + ')';
-                                          tempStr = tempStr.replace(')(', '),(');
                                         };
                                     };
+                                    tempStr = tempStr.replace(')(', '),(');
                                 } else {
                                     if (k in typeDef) {
                                         tempStr += k + '=(' + typeHash[typeDef[k]] + ',' + obj[k] + ')';
@@ -295,7 +296,6 @@
                     }                    
                 }
             }
-            tempStr = tempStr.replace(')(', '),(');
             return embedded ? tempStr : tempObj;
         }
 
@@ -346,6 +346,8 @@
                     o._action = action;
                     push.call(this.txArray, addTypes(o, this.typeMap));   
                 };
+                console.log("\n this.txArray => " + JSON.stringify(this.txArray));
+            
                 return o;
             }
         }
@@ -464,6 +466,8 @@
             var self = this;
             var deferred = q.defer();
             var payload = JSON.stringify(data) || '{}';
+            
+            console.log("\n paylod => " + payload);
             
             var options = {
                 'host': this.OPTS.host,
@@ -699,6 +703,9 @@
             result.typeMap = typeMap;
             //This will preserve any locally defined TypeDefs
             this.typeMap = merge(this.typeMap, typeMap);
+
+            console.log("\n generated TypeMap => " + JSON.stringify(this.typeMap));
+            console.log("\n this.TypeMap => " + JSON.stringify(this.typeMap) + '\n');
             return result;
         }
 
