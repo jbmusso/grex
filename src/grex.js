@@ -13,20 +13,22 @@
     var graphRegex = /^T\.(gt|gte|eq|neq|lte|lt|decr|incr|notin|in)$|^Contains\.(IN|NOT_IN)$|^g\.|^Vertex(?=\.class\b)|^Edge(?=\.class\b)/;
     var closureRegex = /^\{.*\}$/;
 
-    var T = { 'gt': 'T.gt',
-              'gte': 'T.gte',
-              'eq': 'T.eq',
-              'neq': 'T.neq',
-              'lte': 'T.lte',
-              'lt': 'T.lt',
-              'decr': 'T.decr',
-              'incr': 'T.incr',
-              'notin': 'T.notin',
-              'in': 'T.in'
+    var T = { 
+                'gt': 'T.gt',
+                'gte': 'T.gte',
+                'eq': 'T.eq',
+                'neq': 'T.neq',
+                'lte': 'T.lte',
+                'lt': 'T.lt',
+                'decr': 'T.decr',
+                'incr': 'T.incr',
+                'notin': 'T.notin',
+                'in': 'T.in'
             };
 
-    var Contains = { 'IN': 'Contains.IN',
-              'NOT_IN': 'Contains.NOT_IN'
+    var Contains = { 
+                'IN': 'Contains.IN',
+                'NOT_IN': 'Contains.NOT_IN'
             };
 
     var Vertex = { 'class': 'Vertex.class' };
@@ -89,22 +91,6 @@
         return obj1;
     };
 
-    //Last obect wins
-/*    function merge(obj1, obj2) {
-        if(isObject(obj2)){
-            for (var prop in obj2) {
-                if(obj1.hasOwnProperty(prop)){
-                    obj1[prop] = merge(obj1[prop],obj2[prop]);  
-                } else {
-                    obj1[prop] = obj2[prop];
-                }
-            }
-        } else { 
-            return obj2;
-        }
-        return obj1;
-    };
-  */ 
     function qryMain(method, reset){
         return function(){
             var self = this,
@@ -565,10 +551,10 @@
     })();
 
     var Gremlin = (function () {
-        function Gremlin(gRex/*options*//*, params*/) {
+        function Gremlin(gRex) {
             this.gRex = gRex;
-            this.OPTS = gRex.OPTS;//options;
-            this.params = 'g';//params ? params : 'g';
+            this.OPTS = gRex.OPTS;
+            this.params = 'g';
         }
       
         function get() {
@@ -842,14 +828,6 @@
             this.getIndex =  qryMain('getIndex', true);
             this.dropIndex = qryMain('dropIndex', true);
             this.dropKeyIndex = qryMain('dropKeyIndex', true);
-
-            //CUD
-            // exports.addVertex = cud('create', 'vertex');
-            // exports.addEdge = cud('create', 'edge');
-            // exports.removeVertex = cud('delete', 'vertex');
-            // exports.removeEdge = cud('delete', 'edge');
-            // exports.updateVertex = cud('update', 'vertex');
-            // exports.updateEdge = cud('update', 'edge');
 
             this.clear =  qryMain('clear', true);
             this.shutdown = qryMain('shutdown', true);
