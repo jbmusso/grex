@@ -3,6 +3,9 @@
 - Client version initialised with var g = require('grex');
 - Test CUD
 
+## 0.2.4
+- Allow _() to be chained.
+
 ## 0.2.3
 - Fixed bug that was dropping comma in typeDef's on subsequent posts
 - Cater for embedded objects in lists
@@ -12,7 +15,6 @@
 - Expose Contains object
 - Expose Vertex object
 - Expose Edge object
-
 
 ## 0.2.1
 - Fixed bug on createVertex transaction
