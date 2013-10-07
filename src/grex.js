@@ -3,8 +3,8 @@ var q = require("q"),
     Trxn = require("./transaction"),
     qryMain = require("./gremlin");
 
-module.exports = (function(){
 
+module.exports = (function(){
     function gRex(options){
         var self = this;
         //default options

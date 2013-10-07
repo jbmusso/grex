@@ -31,13 +31,13 @@ var newVertex = '/vertices';
 
 
 module.exports = (function () {
-
     function Trxn(options, typeMap) {
         this.OPTS = options;
         this.typeMap = typeMap;
         this.txArray = [];
         this.newVertices = [];
     }
+
 
     function addTypes(obj, typeDef, embedded, list){
         var tempObj = {};
@@ -86,8 +86,8 @@ module.exports = (function () {
                                         tempStr += ',(list,(' + addTypes(obj[k], typeDef[idx], true, true) + '))';
                                     } else {
                                       tempStr += '(' + typeHash[typeDef[idx]] + ',' + obj[k] + ')';
-                                    };
-                                };
+                                    }
+                                }
                                 tempStr = tempStr.replace(')(', '),(');
                             } else {
                                 if (k in typeDef) {
@@ -95,14 +95,14 @@ module.exports = (function () {
                                     tempStr = tempStr.replace(')(', '),(');
                                 } else {
                                     tempObj[k] = obj[k];
-                                };
-                            };
+                                }
+                            }
                         } else {
                             if (k in typeDef) {
                                 tempObj[k] = '(' + typeHash[typeDef[k]] + ',' + obj[k] + ')';
                             } else {
                                 tempObj[k] = obj[k];
-                            };
+                            }
                         }
                     }
                 } else {
@@ -156,12 +156,14 @@ module.exports = (function () {
                 addToTransaction = false;
             }
             o._type = type;
+
             if (addToTransaction) {
                 o._action = action;
                 push.call(this.txArray, addTypes(o, this.typeMap));
-            };
+            }
+
             return o;
-        }
+        };
     }
 
     //returns an error Object
@@ -172,20 +174,24 @@ module.exports = (function () {
         //roll back all other transactions
         console.error('problem with Transaction');
         self.txArray.length = 0;
+
         for (var i = self.newVertices.length - 1; i >= 0; i--) {
             //check if any vertices were created and create a Transaction
             //to delete them from the database
             if('_id' in self.newVertices[i]){
                 self.removeVertex(self.newVertices[i]._id);
             }
-        };
+        }
+
         //This indicates that nothing was able to be created as there
         //is no need to create a tranasction to delete the any vertices as there
         //were no new vertices successfully created as part of this Transaction
         self.newVertices.length = 0;
-        if(!self.txArray.length){
+        if (!self.txArray.length){
             return q.fcall(function () {
-                return errObj.message = "Could not complete transaction. Transaction has been rolled back.";
+                errObj.message = "Could not complete transaction. Transaction has been rolled back.";
+
+                return errObj;
             });
         }
 
@@ -196,13 +202,16 @@ module.exports = (function () {
         //from the database and need to be handled manually.
         return postData.call(self, batchExt, { tx: self.txArray })
             .then(function(success){
-                return errObj.message = "Could not complete transaction. Transaction has been rolled back.";
+                errObj.message = "Could not complete transaction. Transaction has been rolled back.";
+
+                return errObj;
             }, function(fail){
                 errObj.message = "Could not complete transaction. Unable to roll back newly created vertices.";
                 errObj.ids = self.txArray.map(function(item){
                     return item._id;
                 });
                 self.txArray.length = 0;
+
                 return errObj;
             });
     }
@@ -217,7 +226,8 @@ module.exports = (function () {
             if(!!newVerticesLen){
                 for (var i = 0; i < newVerticesLen; i++) {
                     promises.push(postData.call(self, newVertex, addTypes(self.newVertices[i], self.typeMap),{'Content-Type':'application/vnd.rexster-typed-v1+json'}));
-                };
+                }
+
                 return q.all(promises).then(function(result){
                     var inError = false;
                     //Update the _id for the created Vertices
@@ -233,7 +243,7 @@ module.exports = (function () {
                         } else {
                             inError = true;
                         }
-                    };
+                    }
 
                     if(inError){
                         return rollbackVertices.call(self)
@@ -243,17 +253,20 @@ module.exports = (function () {
                                 throw error;
                             });
                     }
+
                     //Update any edges that may have referenced the newly created Vertices
                     for (var k = 0; k < txLen; k++) {
                         if(self.txArray[k]._type == 'edge' && self.txArray[k]._action == 'create'){
                             if (isObject(self.txArray[k]._inV)) {
                                 self.txArray[k]._inV = self.txArray[k]._inV._id;
-                            };
+                            }
+
                             if (isObject(self.txArray[k]._outV)) {
                                 self.txArray[k]._outV = self.txArray[k]._outV._id;
-                            };
+                            }
                         }
-                    };
+                    }
+
                     return postData.call(self, batchExt, { tx: self.txArray });
                 }, function(err){
                     console.error(err);
@@ -263,15 +276,17 @@ module.exports = (function () {
                     if(self.txArray[k]._type == 'edge' && self.txArray[k]._action == 'create'){
                         if (isObject(self.txArray[k]._inV)) {
                             self.txArray[k]._inV = self.txArray[k]._inV._id;
-                        };
+                        }
+
                         if (isObject(this.txArray[k]._outV)) {
                             self.txArray[k]._outV = self.txArray[k]._outV._id;
-                        };
+                        }
                     }
-                };
+                }
+
                 return postData.call(self, batchExt, { tx: self.txArray });
             }
-        }
+        };
     }
 
     function postData(urlPath, data, headers){
@@ -308,7 +323,7 @@ module.exports = (function () {
             });
             res.on('end', function() {
                 o = JSON.parse(body);
-                if('success' in o && o.success == false){
+                if('success' in o && o.success === false){
                     //send error info with reject
                     if(self.newVertices && !!self.newVertices.length){
                         //This indicates that all new Vertices were created but failed to
@@ -344,11 +359,12 @@ module.exports = (function () {
         req.on('error', function(e) {
             console.error('problem with request: ' + e.message);
             deferred.reject(e);
-        });
+        })
 
         // write data to request body
         req.write(payload);
         req.end();
+
         return deferred.promise;
     }
 
@@ -360,6 +376,7 @@ module.exports = (function () {
         updateVertex: cud('update', 'vertex'),
         updateEdge: cud('update', 'edge'),
         commit: post()
-    }
+    };
+
     return Trxn;
 })();

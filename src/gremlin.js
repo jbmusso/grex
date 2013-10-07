@@ -31,7 +31,7 @@ function qryMain(method, reset){
             if(method == 'idx' && args.length > 1){
                 for (var k in args[1]){
                     appendArg = k + ":";
-                    appendArg += parseArgs.call(self, args[1][k])
+                    appendArg += parseArgs.call(self, args[1][k]);
                 }
                 appendArg = "[["+ appendArg + "]]";
                 args.length = 1;
@@ -40,8 +40,8 @@ function qryMain(method, reset){
         }
         gremlin.params += appendArg;
         return gremlin;
-    }
-};
+    };
+}
 
 module.exports = qryMain;
 
@@ -53,7 +53,7 @@ function qryIndex(){
         var gremlin = this._buildGremlin(this.params);
         gremlin.params += '['+ arg.toString() + ']';
         return gremlin;
-    }
+    };
 }
 
 
@@ -66,7 +66,7 @@ function qryPipes(method){
             isArr = isArray(arguments[0]),
             argsLen = isArr ? arguments[0].length : arguments.length;
 
-        gremlin.params += "." + method + "("
+        gremlin.params += "." + method + "(";
         for (var _i = 0; _i < argsLen; _i++) {
             gremlin.params += isArr ? arguments[0][_i].params || parseArgs.call(self, arguments[0][_i]) : arguments[_i].params || parseArgs.call(self, arguments[_i]);
             gremlin.params += ",";
@@ -74,7 +74,7 @@ function qryPipes(method){
         gremlin.params = gremlin.params.slice(0, -1);
         gremlin.params += ")";
         return gremlin;
-    }
+    };
 }
 
 //retain & except => g.V().retain([g.v(1), g.v(2), g.v(3)])
@@ -94,7 +94,7 @@ function qryCollection(method){
             gremlin.params += "." + method + buildArgs.call(self, arguments[0]);
         }
         return gremlin;
-    }
+    };
 }
 
 function buildArgs(array, retainArray) {
@@ -155,7 +155,7 @@ Gremlin = (function () {
     function get() {
         return function(success, error){
             return getData.call(this).then(success, error);
-        }
+        };
     }
 
     function getData() {
@@ -215,26 +215,28 @@ Gremlin = (function () {
                     tempTypeArr.push(obj[i].type);
                     tempResultArr.push(obj[i].value);
                 }
-                if(i > 0){
+
+                if(i > 0) {
                     //If type is map or list need to do deep compare
                     //to ascertain whether equal or not
                     //determine if the array has same types
                     //then only show the type upto that index
                     if (obj[i].type !== obj[i - 1].type) {
                         rest = i + 1;
-                    };
+                    }
                 }
-            };
+            }
 
             if(rest > 1 && isObject(tempTypeArr[rest])){
                 //merge remaining objects
                 tempTypeArrLen = tempTypeArr.length;
                 mergedObject = tempTypeArr[rest - 1];
                 for(var j = rest;j < tempTypeArrLen; j++){
-                    mergedObject = merge(mergedObject, tempTypeArr[j])
+                    mergedObject = merge(mergedObject, tempTypeArr[j]);
                 }
                 tempResultArr[rest - 1] = mergedObject;
             }
+
             tempTypeArr.length = rest;
             returnObj.typeDef = tempTypeArr;
             returnObj.result = tempResultArr;
@@ -249,12 +251,13 @@ Gremlin = (function () {
                         tempTypeObj[k] = obj[k].type;
                         tempResultObj[k] = obj[k].value;
                     }
-                };
+                }
             }
             returnObj.typeDef = tempTypeObj;
             returnObj.result = tempResultObj;
 
-        };
+        }
+
         return returnObj;
     }
 
@@ -290,11 +293,11 @@ Gremlin = (function () {
                             } else {
                                 typeMap[k] = tempObj[k].type;
                                 returnObj[k] = tempObj[k].value;
-                            };
+                            }
                         } else {
                             returnObj[k] = tempObj[k];
-                        };
-                    };
+                        }
+                    }
                 }
                 result.results.push(returnObj);
             } else {
