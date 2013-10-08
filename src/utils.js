@@ -22,6 +22,7 @@ module.exports = {
                 obj1[p] = obj2[p];
             }
         }
+
         return obj1;
     },
 

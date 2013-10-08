@@ -27,18 +27,23 @@ function qryMain(method, reset){
             gremlin.params += '.' + method + buildArgs.call(self, args, true);
         } else {
             args = isArray(arguments[0]) ? arguments[0] : arguments;
+
             //cater for idx param 2
             if(method == 'idx' && args.length > 1){
                 for (var k in args[1]){
                     appendArg = k + ":";
                     appendArg += parseArgs.call(self, args[1][k]);
                 }
+
                 appendArg = "[["+ appendArg + "]]";
                 args.length = 1;
             }
+
             gremlin.params += '.' + method + buildArgs.call(self, args);
         }
+
         gremlin.params += appendArg;
+
         return gremlin;
     };
 }
@@ -52,6 +57,7 @@ function qryIndex(){
     return function(arg) {
         var gremlin = this._buildGremlin(this.params);
         gremlin.params += '['+ arg.toString() + ']';
+
         return gremlin;
     };
 }
@@ -67,12 +73,15 @@ function qryPipes(method){
             argsLen = isArr ? arguments[0].length : arguments.length;
 
         gremlin.params += "." + method + "(";
+
         for (var _i = 0; _i < argsLen; _i++) {
             gremlin.params += isArr ? arguments[0][_i].params || parseArgs.call(self, arguments[0][_i]) : arguments[_i].params || parseArgs.call(self, arguments[_i]);
             gremlin.params += ",";
         }
+
         gremlin.params = gremlin.params.slice(0, -1);
         gremlin.params += ")";
+
         return gremlin;
     };
 }
@@ -89,10 +98,12 @@ function qryCollection(method){
                 param += arguments[0][_i].params;
                 param += ",";
             }
+
             gremlin.params += "." + method + "([" + param + "])";
         } else {
             gremlin.params += "." + method + buildArgs.call(self, arguments[0]);
         }
+
         return gremlin;
     };
 }
@@ -119,6 +130,7 @@ function buildArgs(array, retainArray) {
         }
     }
     argList = argList.slice(0, -1);
+
     return '(' + argList + ')' + append;
 }
 
@@ -126,20 +138,25 @@ function parseArgs(val) {
     if(val === null) {
         return 'null';
     }
+
     //check to see if the arg is referencing the graph ie. g.v(1)
     if(isObject(val) && val.hasOwnProperty('params') && isGraphReference(val.params)){
         return val.params.toString();
     }
+
     if(isGraphReference(val)) {
         return val.toString();
     }
+
     //Cater for ids that are not numbers but pass parseFloat test
     if(isRegexId.call(this, val) || isNaN(parseFloat(val))) {
         return "'" + val + "'";
     }
+
     if(!isNaN(parseFloat(val))) {
          return val.toString();
     }
+
     return val;
 }
 
@@ -200,12 +217,14 @@ Gremlin = (function () {
             tempTypeArr = [],
             tempResultArr = [],
             tempTypeArrLen = 0,
-            len = 0, rest = 1,
+            len = 0,
+            rest = 1,
             mergedObject = {},
             returnObj = {typeDef:{}, result: {}};
 
         if (isArray(obj)) {
             len = obj.length;
+
             for (var i = 0; i < len; i++) {
                 if (obj[i].type == 'map' || obj[i].type == 'list') {
                     tempObj = createTypeDef(obj[i].value);
@@ -231,9 +250,11 @@ Gremlin = (function () {
                 //merge remaining objects
                 tempTypeArrLen = tempTypeArr.length;
                 mergedObject = tempTypeArr[rest - 1];
+
                 for(var j = rest;j < tempTypeArrLen; j++){
                     mergedObject = merge(mergedObject, tempTypeArr[j]);
                 }
+
                 tempResultArr[rest - 1] = mergedObject;
             }
 
@@ -269,9 +290,11 @@ Gremlin = (function () {
 
         for(n = 0; n<l; n++){
             tempObj = results[n];
+
             if (isObject(tempObj)) {
                 returnObj = {};
                 typeObj = {};
+
                 for(var k in tempObj){
                     if (tempObj.hasOwnProperty(k)) {
                         if (isObject(tempObj[k]) && 'type' in tempObj[k]) {
@@ -279,12 +302,15 @@ Gremlin = (function () {
                                 if(!result.typeMapErr){
                                     result.typeMapErr = {};
                                 }
+
                                 console.error('_id:' + tempObj._id + ' => {' + k + ':' + tempObj[k].type + '}');
+
                                 //only capture the first error
                                 if(!(k in result.typeMapErr)){
                                     result.typeMapErr[k] = typeMap[k] + ' <=> ' + tempObj[k].type;
                                 }
                             }
+
                             if (tempObj[k].type == 'map' || tempObj[k].type == 'list') {
                                 //build recursive func to build object
                                 typeObj = createTypeDef(tempObj[k].value);
@@ -308,6 +334,7 @@ Gremlin = (function () {
         result.typeMap = typeMap;
         //This will preserve any locally defined TypeDefs
         this.typeMap = merge(this.typeMap, typeMap);
+
         return result;
     }
 

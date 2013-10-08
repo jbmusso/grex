@@ -51,6 +51,7 @@ module.exports = (function () {
                         if(embedded){
                             if (list) {
                                 obj2 = obj[k];
+
                                 for(var k2 in obj2){
                                     if(obj2.hasOwnProperty(k2)){
                                         if(typeDef[k] && (k2 in typeDef[k])){
@@ -110,6 +111,7 @@ module.exports = (function () {
                 }
             }
         }
+
         return embedded ? tempStr : tempObj;
     }
 
@@ -123,16 +125,19 @@ module.exports = (function () {
             if (!!argLen) {
                 if(action == 'delete'){
                     o._id = arguments[0];
+
                     if (argLen > 1) {
                         o._keys = arguments[1];
                     }
                 } else {
                     if (type == 'edge') {
                         o = isObject(arguments[argLen - 1]) ? arguments[argLen - 1] : {};
+
                         if (argLen == 5 || (argLen == 4 && !isObject(o))) {
                             i = 1;
                             o._id = arguments[0];
                         }
+
                         o._outV = arguments[0 + i];
                         o._inV = arguments[1 + i];
                         o._label = arguments[2 + i];
@@ -155,6 +160,7 @@ module.exports = (function () {
                 push.call(this.newVertices, o);
                 addToTransaction = false;
             }
+
             o._type = type;
 
             if (addToTransaction) {
@@ -233,6 +239,7 @@ module.exports = (function () {
                     //Update the _id for the created Vertices
                     //this filters through the object reference
                     var resultLen = result.length;
+
                     for (var j = 0; j < resultLen; j++) {
                         if('results' in result[j] && '_id' in result[j].results){
                             for(var prop in result[j].results){
@@ -312,6 +319,7 @@ module.exports = (function () {
                 }
             }
         }
+
         options.path += urlPath;
 
         var req = http.request(options, function(res) {
@@ -321,8 +329,10 @@ module.exports = (function () {
             res.on('data', function (chunk) {
                 body += chunk;
             });
+
             res.on('end', function() {
                 o = JSON.parse(body);
+
                 if('success' in o && o.success === false){
                     //send error info with reject
                     if(self.newVertices && !!self.newVertices.length){
@@ -341,6 +351,7 @@ module.exports = (function () {
                     delete o.version;
                     delete o.queryTime;
                     delete o.txProcessed;
+
                     //This occurs after newVertices have been created
                     //and passed in to postData
                     if(!('results' in o) && self.newVertices && !!self.newVertices.length){
@@ -348,9 +359,11 @@ module.exports = (function () {
                         push.apply(o.newVertices, self.newVertices);
                         self.newVertices.length = 0;
                     }
+
                     if('tx' in data){
                         data.tx.length = 0;
                     }
+
                     deferred.resolve(o);
                 }
             });
@@ -359,7 +372,7 @@ module.exports = (function () {
         req.on('error', function(e) {
             console.error('problem with request: ' + e.message);
             deferred.reject(e);
-        })
+        });
 
         // write data to request body
         req.write(payload);
