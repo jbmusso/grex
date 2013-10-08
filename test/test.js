@@ -4,23 +4,29 @@ var gRex = require('../index.js'),
     Vertex = gRex.Vertex,
     Edge = gRex.Edge;
 
-
-beforeEach(function(done){
+before(function(done){
     gRex.connect()
-        .then(function(result){
-            console.log(g);
+        .then(function(result) {
             g = result;
+            console.log(g);
             done();
+        })
+        .fail(function(error) {
+            console.error(error);
         });
 });
 
 describe('Transforms', function(){
     describe('id', function() {
         it("should return all ids", function(done){
-            g.V().id().then(function(result){
+            g.V().id()
+                .then(function(result){
                     result.results.should.have.lengthOf(6);
                     result.results.should.eql([ '3', '2', '1', '6', '5', '4' ]);
                     done();
+                })
+                .fail(function(error) {
+                    console.log(error);
                 });
         });
     });
@@ -137,15 +143,17 @@ describe('Transforms', function(){
             g.V().both().groupCount().cap().orderMap(T.decr)
                 .then(function(result){
                     //console.log(result);
-                    result.results.should.have.lengthOf(6);
-                    result.results.should.eql([ { name: 'lop', lang: 'java', _id: '3', _type: 'vertex' },
-                                                { name: 'marko', age: 29, _id: '1', _type: 'vertex' },
-                                                { name: 'josh', age: 32, _id: '4', _type: 'vertex' },
-                                                { name: 'vadas', age: 27, _id: '2', _type: 'vertex' },
-                                                { name: 'peter', age: 35, _id: '6', _type: 'vertex' },
-                                                { name: 'ripple', lang: 'java', _id: '5', _type: 'vertex' } ]);
-                    done();
-                });
+                result.results.should.have.lengthOf(6);
+                result.results.should.eql([
+                    { name: 'lop', lang: 'java', _id: '3', _type: 'vertex' },
+                    { name: 'marko', age: 29, _id: '1', _type: 'vertex' },
+                    { name: 'josh', age: 32, _id: '4', _type: 'vertex' },
+                    { name: 'vadas', age: 27, _id: '2', _type: 'vertex' },
+                    { name: 'peter', age: 35, _id: '6', _type: 'vertex' },
+                    { name: 'ripple', lang: 'java', _id: '5', _type: 'vertex'}
+                ]);
+                done();
+            });
         });
     });
 });
@@ -192,18 +200,8 @@ describe('Filters', function(){
                 .then(function(result){
                     //console.log(result);
                     result.results.should.have.lengthOf(2);
-                    result.results.should.includeEql({ weight: 0.5,
-                                                       _id: '7',
-                                                       _type: 'edge',
-                                                       _outV: '1',
-                                                       _inV: '2',
-                                                       _label: 'knows' });
-                    result.results.should.includeEql({ weight: 0.4,
-                                                       _id: '9',
-                                                       _type: 'edge',
-                                                       _outV: '1',
-                                                       _inV: '3',
-                                                       _label: 'created' });
+                    result.results.should.includeEql({weight: 0.5, _id: '7', _type: 'edge', _outV: '1', _inV: '2', _label: 'knows'});
+                    result.results.should.includeEql({ weight: 0.4, _id: '9', _type: 'edge', _outV: '1', _inV: '3', _label: 'created' });
                     done();
                 });
         });

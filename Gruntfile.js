@@ -28,10 +28,10 @@ module.exports = function(grunt){
     mochaTest: {
       test: {
         options: {
-          timeout: 10000,
-            reporter: 'spec',
-            require: 'should',
-            globals: 'g'
+          timeout: 2000,
+          reporter: 'spec',
+          require: 'should',
+          globals: 'g'
         },
         src: ['test/*.js']
       }
@@ -57,13 +57,14 @@ module.exports = function(grunt){
   // Load the plugin that provides the "browserify" task.
   grunt.loadNpmTasks('grunt-browserify2');
   // Load the plugin that provides the "mocha/phantomjs" task.
-//  grunt.loadNpmTasks('grunt-mocha');
+  // grunt.loadNpmTasks('grunt-mocha');
   // Add the grunt-mocha-test tasks.
   grunt.loadNpmTasks('grunt-mocha-test');
 
 
   // Default task(s).
-  grunt.registerTask('default', ['jshint', 'grunt-mocha-test', 'browserify2:dev']);
+  grunt.registerTask('default', ['jshint', 'mochaTest', 'browserify2:dev']);
   grunt.registerTask('compile', 'browserify2:compile');
+  grunt.registerTask('test', 'mochaTest');
 
 };
