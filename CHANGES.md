@@ -3,6 +3,10 @@
 - Client version initialised with var g = require('grex');
 - Test CUD
 
+##0.2.5
+- Structural changes
+- Add Contributors to package.json
+
 ## 0.2.4
 - Allow _() to be chained.
 

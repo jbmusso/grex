@@ -1,7 +1,7 @@
 {
   "name": "grex",
   "description": "Client for Rexster Graph Server",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "keywords": [
     "database",
     "graph",
@@ -11,8 +11,12 @@
     "blueprints"
   ],
   "homepage": "https://github.com/entrendipity/grex",
-  "authors": [
-    "Frank Panetta <frank.panetta@entrendipity.com.au>"
+  "author": "Frank Panetta <frank.panetta@entrendipity.com.au>",
+  "contributors": [
+    { 
+      "name": "Jean Baptiste-Musso",
+      "email": "<jbmusso+github@gmail.com>"
+    }
   ],
   "repository": {
     "type": "git",
