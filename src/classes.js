@@ -23,5 +23,23 @@ module.exports = {
 
     Edge: {
         'class': 'Edge.class'
+    },
+
+    'String': {
+        'class': 'String.class'
+    },
+
+    Integer: {
+        'class': 'Integer.class'
+    },
+
+    Geoshape: {
+        'class': 'Geoshape.class'
+    },
+
+    Direction: {
+        'OUT': 'Direction.OUT',
+        'IN': 'Direction.IN',
+        'BOTH': 'Direction.BOTH'
     }
 };

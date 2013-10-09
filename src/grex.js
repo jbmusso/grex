@@ -40,6 +40,9 @@ module.exports = (function(){
         this.dropIndex = qryMain('dropIndex', true);
         this.dropKeyIndex = qryMain('dropKeyIndex', true);
 
+        //Types
+        this.makeType = qryMain('makeType', true);
+
         this.clear =  qryMain('clear', true);
         this.shutdown = qryMain('shutdown', true);
         this.getFeatures = qryMain('getFeatures', true);

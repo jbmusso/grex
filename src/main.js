@@ -17,5 +17,8 @@ module.exports = {
     "T": classes.T,
     "Contains": classes.Contains,
     "Vertex": classes.Vertex,
-    "Edge": classes.Edge
+    "Edge": classes.Edge,
+    "String": classes["String"],
+    "Direction": classes.Direction,
+    "Geoshape": classes.Geoshape
 };

@@ -422,6 +422,16 @@ Gremlin = (function () {
         setProperty: qryMain('setProperty'),
         getProperty: qryMain('getProperty'),
 
+        //Titan specifics
+        name: qryMain('name'),
+        dataType: qryMain('dataType'),
+        indexed: qryMain('indexed'),
+        unique: qryMain('unique'),
+        makePropertyKey: qryMain('makePropertyKey'),
+        group: qryMain('group'),
+        makeEdgeLabel: qryMain('makeEdgeLabel'),
+        query: qryMain('query'),
+
         /*** http ***/
         then: get(),
 
