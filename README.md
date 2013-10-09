@@ -31,19 +31,27 @@ gRex can be loaded as:
      <script type="text/javascript" src="grex.min.js"></script>
     ```
 
+    this exposes gRex as a global variable.
+
 -   a Node.js and CommonJS module available from NPM as the ``grex`` package
 
     ```
     $ npm install grex
     ```
 
-    then in Node or the browser
+    then in Node
 
     ```
     var gRex = require(“grex”);
     ```
 
 -   a RequireJS module
+
+    ```
+    require(['gRex'], function (gRex) {
+        // Do something with gRex
+    });
+    ```
 
 You will notice that in the examples tokens are passed as string (i.e. 'T.gt'). However, gRex also exposes some objects for convenience to make it feel more natural. To access the objects reference them like so:
 

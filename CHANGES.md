@@ -3,6 +3,10 @@
 - Client version initialised with var g = require('grex');
 - Test CUD
 
+##0.3.0
+- Expose gRex as global for browser version.
+- Enable to be used with RequireJS.
+
 ##0.2.5
 - Structural changes
 - Add Contributors to package.json
