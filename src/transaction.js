@@ -117,57 +117,69 @@ module.exports = (function () {
 
     function cud(action, type) {
         return function() {
-            var o = {},
+            // var o = {},
+            var element = Element.create(type),
                 argLen = arguments.length,
                 i = 0,
                 addToTransaction = true;
 
+            console.log("=============");
+            console.log(element, element.constructor.name);
+            console.log(arguments);
+            // console.log("=============");
+
             if (!!argLen) {
                 if(action == 'delete'){
-                    o._id = arguments[0];
+                    element._id = arguments[0];
 
                     if (argLen > 1) {
-                        o._keys = arguments[1];
+                        element._keys = arguments[1];
                     }
                 } else {
                     if (type == 'edge') {
-                        o = isObject(arguments[argLen - 1]) ? arguments[argLen - 1] : {};
+                        element = isObject(arguments[argLen - 1]) ? arguments[argLen - 1] : {}; // to fix
 
-                        if (argLen == 5 || (argLen == 4 && !isObject(o))) {
+                        if (argLen == 5 || (argLen == 4 && !isObject(element))) {
                             i = 1;
-                            o._id = arguments[0];
+                            element._id = arguments[0];
                         }
-                        o._outV = arguments[0 + i].properties;
-                        o._inV = arguments[1 + i].properties;
-                        o._label = arguments[2 + i];
+
+                        element._outV = arguments[0 + i].properties;
+                        element._inV = arguments[1 + i].properties;
+                        element._label = arguments[2 + i];
                     } else {
+                        // Create new Vertex
                         if (isObject(arguments[0])) {
-                            //create new Vertex
-                            o = arguments[0];
-                            push.call(this.newVertices, o);
+                            // Called cud({..})
+                            element.setProperties(arguments[0]);
+                            push.call(this.newVertices, element);
                             addToTransaction = false;
                         } else {
+                            // console.log("hah..");
+                            // Called cud(id, {..})
                             if(argLen == 2){
-                                o = arguments[1];
+                                element.setProperties(arguments[1]);
                             }
-                            o._id = arguments[0];
+
+                            element._id = arguments[0];
                         }
                     }
                 }
             //Allow for no args to be passed
             } else if (type == 'vertex') {
-                push.call(this.newVertices, o);
+                push.call(this.newVertices, element);
                 addToTransaction = false;
             }
 
-            o._type = type;
+            element._type = type;
 
             if (addToTransaction) {
-                o._action = action;
-                push.call(this.txArray, addTypes(o, this.typeMap));
+                element._action = action;
+                push.call(this.txArray, addTypes(element, this.typeMap));
             }
 
-            return new Element(o);
+            // return new Element(o);
+            return element;
         };
     }
 
@@ -304,6 +316,8 @@ module.exports = (function () {
     function postData(urlPath, data, headers){
         var self = this;
         var deferred = q.defer();
+
+        console.log(data);
         var payload = JSON.stringify(data) || '{}';
 
         var options = {
@@ -353,9 +367,9 @@ module.exports = (function () {
                         deferred.reject(o);
                     }
                 } else {
-                    delete o.version;
-                    delete o.queryTime;
-                    delete o.txProcessed;
+                    // delete o.version;
+                    // delete o.queryTime;
+                    // delete o.txProcessed;
 
                     //This occurs after newVertices have been created
                     //and passed in to postData
