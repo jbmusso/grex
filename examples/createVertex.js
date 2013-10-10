@@ -13,6 +13,7 @@ grex.connect({
 
 	t1 = trxn.addVertex({name:'Test1a', age:20});
 	t1.addProperty('name2', 'testa').addProperty('name3', 'test3');
+	t1.setProperty('name2','updated');
 	t2 = trxn.addVertex({name:'Test2a', age:'30'});
 	trxn.addEdge(t1, t2, 'linked', {name:"ALabel", weight:1.2})
 

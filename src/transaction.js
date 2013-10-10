@@ -46,6 +46,10 @@ module.exports = (function () {
             addProperty: function (k, v){
                 this._obj[k] = v;
                 return this;
+            },
+            setProperty: function (k, v){
+                this._obj[k] = v;
+                return this;
             }
         }
         return Node;
