@@ -1,6 +1,7 @@
 var q = require("q"),
     http = require("http"),
-    Utils = require("./utils");
+    Utils = require("./utils"),
+    Element = require("./element");
 
 var typeHash = {
     'integer': 'i',
@@ -36,24 +37,6 @@ module.exports = (function () {
         this.txArray = [];
         this.newVertices = [];
     }
-
-    //Vertex or Edge node
-    var Node = (function(){            
-        function Node(obj) {
-            this._obj = obj;
-        }
-        Node.prototype = {
-            addProperty: function (k, v){
-                this._obj[k] = v;
-                return this;
-            },
-            setProperty: function (k, v){
-                this._obj[k] = v;
-                return this;
-            }
-        }
-        return Node;
-    })();
 
     function addTypes(obj, typeDef, embedded, list){
         var tempObj = {};
@@ -184,7 +167,7 @@ module.exports = (function () {
                 o._action = action;
                 push.call(this.txArray, addTypes(o, this.typeMap));
             }
-            return new Node(o);
+            return new Element(o);
         };
     }
 
@@ -209,6 +192,7 @@ module.exports = (function () {
         //is no need to create a tranasction to delete the any vertices as there
         //were no new vertices successfully created as part of this Transaction
         self.newVertices.length = 0;
+
         if (!self.txArray.length){
             return q.fcall(function () {
                 errObj.message = "Could not complete transaction. Transaction has been rolled back.";
