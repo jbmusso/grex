@@ -1,11 +1,11 @@
 module.exports = Element = (function() {
     // Element are Vertex or Edge
-    function Element(obj) {
-        this._obj = obj;
+    function Element(properties) {
+        this.properties = properties;
     }
 
     Element.prototype.setProperty = function (k, v) {
-        this._obj[k] = v;
+        this.properties[k] = v;
         return this;
     };
 
@@ -23,7 +23,7 @@ module.exports = Element = (function() {
      * property.
      */
     Element.prototype.addProperty = function(k, v) {
-        this._obj[k] = v;
+        this.properties[k] = v;
         return this;
     };
 

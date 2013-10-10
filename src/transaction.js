@@ -118,7 +118,6 @@ module.exports = (function () {
 
         return function() {
             var o = {},
-                vertex,
                 argLen = arguments.length,
                 i = 0,
                 addToTransaction = true;
@@ -138,8 +137,8 @@ module.exports = (function () {
                             i = 1;
                             o._id = arguments[0];
                         }
-                        o._outV = arguments[0 + i]._obj;
-                        o._inV = arguments[1 + i]._obj;
+                        o._outV = arguments[0 + i].properties;
+                        o._inV = arguments[1 + i].properties;
                         o._label = arguments[2 + i];
                     } else {
                         if (isObject(arguments[0])) {
