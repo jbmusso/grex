@@ -114,8 +114,8 @@ module.exports = (function () {
         return embedded ? tempStr : tempObj;
     }
 
-    function cud(action, type) {
 
+    function cud(action, type) {
         return function() {
             var o = {},
                 argLen = arguments.length,
@@ -166,6 +166,7 @@ module.exports = (function () {
                 o._action = action;
                 push.call(this.txArray, addTypes(o, this.typeMap));
             }
+
             return new Element(o);
         };
     }
@@ -221,16 +222,18 @@ module.exports = (function () {
             });
     }
 
-    function post() {
-        return function() {
-            var self = this;
+
+    Trxn.prototype.commit = function post() {
+        var self = this;
+
+        function doCommit() {
             var promises = [];
             var newVerticesLen = self.newVertices.length;
-            var txLen = this.txArray.length;
+            var txLen = self.txArray.length;
 
             if(!!newVerticesLen){
                 for (var i = 0; i < newVerticesLen; i++) {
-                    promises.push(postData.call(self, newVertex, addTypes(self.newVertices[i], self.typeMap),{'Content-Type':'application/vnd.rexster-typed-v1+json'}));
+                    promises.push(postData.call(self, newVertex, addTypes(self.newVertices[i], self.typeMap), {'Content-Type':'application/vnd.rexster-typed-v1+json'}));
                 }
 
                 return q.all(promises).then(function(result){
@@ -284,7 +287,7 @@ module.exports = (function () {
                             self.txArray[k]._inV = self.txArray[k]._inV._id;
                         }
 
-                        if (isObject(this.txArray[k]._outV)) {
+                        if (isObject(self.txArray[k]._outV)) {
                             self.txArray[k]._outV = self.txArray[k]._outV._id;
                         }
                     }
@@ -292,8 +295,11 @@ module.exports = (function () {
 
                 return postData.call(self, batchExt, { tx: self.txArray });
             }
-        };
-    }
+        }
+
+        return doCommit();
+    };
+
 
     function postData(urlPath, data, headers){
         var self = this;
@@ -380,15 +386,18 @@ module.exports = (function () {
         return deferred.promise;
     }
 
-    Trxn.prototype = {
-        addVertex: cud('create', 'vertex'),
-        addEdge: cud('create', 'edge'),
-        removeVertex: cud('delete', 'vertex'),
-        removeEdge: cud('delete', 'edge'),
-        updateVertex: cud('update', 'vertex'),
-        updateEdge: cud('update', 'edge'),
-        commit: post()
-    };
+
+    Trxn.prototype.addVertex = cud('create', 'vertex');
+
+    Trxn.prototype.addEdge = cud('create', 'edge');
+
+    Trxn.prototype.removeVertex = cud('delete', 'vertex');
+
+    Trxn.prototype.removeEdge = cud('delete', 'edge');
+
+    Trxn.prototype.updateVertex = cud('update', 'vertex');
+
+    Trxn.prototype.updateEdge = cud('update', 'edge');
 
     return Trxn;
 })();
