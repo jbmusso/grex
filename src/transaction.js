@@ -29,7 +29,6 @@ var pathBase = '/graphs/';
 var batchExt = '/tp/batch/tx';
 var newVertex = '/vertices';
 
-
 module.exports = (function () {
     function Trxn(options, typeMap) {
         this.OPTS = options;
@@ -38,6 +37,23 @@ module.exports = (function () {
         this.newVertices = [];
     }
 
+    //Vertex or Edge node
+    var Node = (function(){            
+        function Node(obj) {
+            this._obj = obj;
+        }
+        Node.prototype = {
+            addProperty: function (k, v){
+                this._obj[k] = v;
+                return this;
+            },
+            setProperty: function (k, v){
+                this._obj[k] = v;
+                return this;
+            }
+        }
+        return Node;
+    })();
 
     function addTypes(obj, typeDef, embedded, list){
         var tempObj = {};
@@ -116,8 +132,10 @@ module.exports = (function () {
     }
 
     function cud(action, type) {
+
         return function() {
             var o = {},
+                vertex,
                 argLen = arguments.length,
                 i = 0,
                 addToTransaction = true;
@@ -137,9 +155,8 @@ module.exports = (function () {
                             i = 1;
                             o._id = arguments[0];
                         }
-
-                        o._outV = arguments[0 + i];
-                        o._inV = arguments[1 + i];
+                        o._outV = arguments[0 + i]._obj;
+                        o._inV = arguments[1 + i]._obj;
                         o._label = arguments[2 + i];
                     } else {
                         if (isObject(arguments[0])) {
@@ -167,8 +184,7 @@ module.exports = (function () {
                 o._action = action;
                 push.call(this.txArray, addTypes(o, this.typeMap));
             }
-
-            return o;
+            return new Node(o);
         };
     }
 

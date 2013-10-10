@@ -1,4 +1,4 @@
-var grex = require('../src/grex.js');
+var grex = require('../index.js');
 var t1, t2;
 var trxn;
 
@@ -12,6 +12,8 @@ grex.connect({
 	trxn = g.begin({name:'string',age:'integer', weight:'float'});
 
 	t1 = trxn.addVertex({name:'Test1a', age:20});
+	t1.addProperty('name2', 'testa').addProperty('name3', 'test3');
+	t1.setProperty('name2','updated');
 	t2 = trxn.addVertex({name:'Test2a', age:'30'});
 	trxn.addEdge(t1, t2, 'linked', {name:"ALabel", weight:1.2})
 
