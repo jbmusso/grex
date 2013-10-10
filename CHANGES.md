@@ -3,11 +3,14 @@
 - Client version initialised with var g = require('grex');
 - Test CUD
 
-##0.3.0
+## 0.3.1
+- Add support for addProperty and setProperty for Vertex and Edge
+
+## 0.3.0
 - Expose gRex as global for browser version.
 - Enable to be used with RequireJS.
 
-##0.2.5
+## 0.2.5
 - Structural changes
 - Add Contributors to package.json
 
