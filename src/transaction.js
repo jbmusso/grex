@@ -171,7 +171,6 @@ module.exports = (function () {
                 addToTransaction = false;
             }
 
-            element._type = type;
 
             if (addToTransaction) {
                 element._action = action;

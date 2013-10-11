@@ -70,6 +70,7 @@ var Vertex = (function (){
 
     function Vertex() {
         console.log("Constructor Vertex");
+        this._type = "vertex";
         Element.apply(this, arguments); // Call parent constructor
     }
 
@@ -86,6 +87,7 @@ var Edge = (function (){
 
     function Edge() {
         console.log("Constructor Edge");
+        this._type = "edge";
         this._outV = null;
         this._inV = null;
         this._label = null;
