@@ -1,5 +1,6 @@
 var q = require("q"),
     http = require("http"),
+    request = require("request"),
     Utils = require("./utils"),
     Element = require("./element"),
     ActionHandler = require("./actionhandler");
@@ -27,10 +28,6 @@ var isArray = Utils.isArray;
 var push = Array.prototype.push;
 
 
-var pathBase = '/graphs/';
-var batchExt = '/tp/batch/tx';
-var newVertex = '/vertices';
-
 module.exports = (function () {
     function Trxn(options, typeMap) {
         this.OPTS = options;
@@ -40,6 +37,8 @@ module.exports = (function () {
     }
 
     function addTypes(obj, typeDef, embedded, list){
+        console.log("Adding types");
+
         var tempObj = {};
         var tempStr = '';
         var obj2, idx = 0;
@@ -169,7 +168,7 @@ module.exports = (function () {
         //unsuccessful. On fail throw error to indicate that transaction was
         //unsuccessful and that the new vertices created were unable to be removed
         //from the database and need to be handled manually.
-        return postData.call(self, batchExt, { tx: self.transactionArray })
+        return postData.call(self, '/tp/batch/tx', { tx: self.transactionArray })
             .then(function(success){
                 errObj.message = "Could not complete transaction. Transaction has been rolled back.";
 
@@ -197,7 +196,9 @@ module.exports = (function () {
                 // We have new vertices to create first!
 
                 for (var i = 0; i < self.pendingVertices.length; i++) {
-                    promises.push(postData.call(self, newVertex, addTypes(self.pendingVertices[i], self.typeMap), {'Content-Type':'application/vnd.rexster-typed-v1+json'}));
+                    console.log("With Rexster specific header");
+
+                    promises.push(postData.call(self, '/vertices', addTypes(self.pendingVertices[i], self.typeMap), {'Content-Type':'application/vnd.rexster-typed-v1+json'}));
                 }
 
                 return q.all(promises).then(function(result){
@@ -237,7 +238,7 @@ module.exports = (function () {
                         }
                     }
 
-                    return postData.call(self, batchExt, { tx: self.transactionArray });
+                    return postData.call(self, '/tp/batch/tx', { tx: self.transactionArray });
 
                 }, function(err){
                     console.error(err);
@@ -259,7 +260,7 @@ module.exports = (function () {
                     }
                 }
 
-                return postData.call(self, batchExt, { tx: self.transactionArray });
+                return postData.call(self, '/tp/batch/tx', { tx: self.transactionArray });
             }
         }
 
@@ -271,19 +272,17 @@ module.exports = (function () {
         var self = this;
         var deferred = q.defer();
 
-        var payload = JSON.stringify(data) || '{}';
+        var url = 'http://' + this.OPTS.host + ':' + this.OPTS.port + '/graphs/' + this.OPTS.graph + urlPath;
 
         var options = {
-            'host': this.OPTS.host,
-            'port': this.OPTS.port,
-            'path': pathBase + this.OPTS.graph,
+            url: url,
+            body: JSON.stringify(data),
             headers: {
-                'Content-Type': 'application/json',
-                'Content-Length': Buffer.byteLength(payload, 'utf8')
-            },
-            'method': 'POST'
+                'Content-Type': 'application/json' // May be superseded
+            }
         };
 
+        // Specify custom headers, if any
         if(headers){
             for(var prop in headers){
                 if(headers.hasOwnProperty(prop)){
@@ -292,63 +291,47 @@ module.exports = (function () {
             }
         }
 
-        options.path += urlPath;
+        request.post(options, function(err, res, body) {
+            if (err) {
+                // Handle any HTTP request error, not Rexster errors
+                console.error('problem with request: ' + err);
+                return deferred.reject(err);
+            }
 
-        var req = http.request(options, function(res) {
-            var body = '';
-            var o = {};
+            body = JSON.parse(body);
 
-            res.on('data', function (chunk) {
-                body += chunk;
-            });
-
-            res.on('end', function() {
-                o = JSON.parse(body);
-
-                if('success' in o && o.success === false){
-                    //send error info with reject
-                    if(self.pendingVertices && !!self.pendingVertices.length){
-                        //This indicates that all new Vertices were created but failed to
-                        //complete the rest of the tranasction so the new Vertices need deleted
-                        rollbackVertices.call(self)
-                            .then(function(result){
-                                deferred.reject(result);
-                            },function(error){
-                                deferred.reject(error);
-                            });
-                    } else {
-                        deferred.reject(o);
-                    }
+            if('success' in body && body.success === false){
+                //send error info with reject
+                if(self.pendingVertices && !!self.pendingVertices.length){
+                    //This indicates that all new Vertices were created but failed to
+                    //complete the rest of the tranasction so the new Vertices need deleted
+                    rollbackVertices.call(self)
+                        .then(function(result){
+                            deferred.reject(result);
+                        },function(error){
+                            deferred.reject(error);
+                        });
                 } else {
-                    // delete o.version;
-                    // delete o.queryTime;
-                    // delete o.txProcessed;
-
-                    //This occurs after pendingVertices have been created
-                    //and passed in to postData
-                    if(!('results' in o) && self.pendingVertices && !!self.pendingVertices.length){
-                        o.pendingVertices = [];
-                        push.apply(o.pendingVertices, self.pendingVertices);
-                        self.pendingVertices.length = 0;
-                    }
-
-                    if('tx' in data){
-                        data.tx.length = 0;
-                    }
-
-                    deferred.resolve(o);
+                    deferred.reject(body);
                 }
-            });
-        });
+            } else {
+                //This occurs after pendingVertices have been created
+                //and passed in to postData
+                if(!('results' in body) && self.pendingVertices && !!self.pendingVertices.length){
+                    body.pendingVertices = [];
+                    push.apply(body.pendingVertices, self.pendingVertices);
+                    self.pendingVertices.length = 0;
+                }
 
-        req.on('error', function(e) {
-            console.error('problem with request: ' + e.message);
-            deferred.reject(e);
-        });
+                if('tx' in data){
+                    data.tx.length = 0;
+                }
 
-        // write data to request body
-        req.write(payload);
-        req.end();
+                deferred.resolve(body);
+            }
+
+            return deferred.resolve(body);
+        });
 
         return deferred.promise;
     }
