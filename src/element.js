@@ -1,10 +1,11 @@
+Utils = require("./utils");
+
 /*
  * Abstract Element class
  */
 var Element = (function() {
     // Element are Vertex or Edge
     function Element() {
-        console.log("Constructor Element");
         this._id = null;
     }
 
@@ -29,7 +30,6 @@ var Element = (function() {
 
     Element.prototype.setProperties = function (properties) {
         for (var key in properties) {
-            // console.log(key, properties, "+++++++++++");
             this.setProperty(key, properties[key]);
         }
         return this;
@@ -69,13 +69,12 @@ var Element = (function() {
 var Vertex = (function (){
 
     function Vertex() {
-        console.log("Constructor Vertex");
         this._type = "vertex";
         Element.apply(this, arguments); // Call parent constructor
     }
 
     // Inherit from Element
-    Vertex.prototype = new Element();
+    Vertex.prototype = Object.create(Element.prototype);
     Vertex.prototype.constructor = Vertex;
 
     return Vertex;
@@ -86,7 +85,6 @@ var Vertex = (function (){
 var Edge = (function (){
 
     function Edge() {
-        console.log("Constructor Edge");
         this._type = "edge";
         this._outV = null;
         this._inV = null;
@@ -96,7 +94,7 @@ var Edge = (function (){
     }
 
     // Inherit from Element
-    Edge.prototype = new Element();
+    Edge.prototype = Object.create(Element.prototype);
     Edge.prototype.constructor = Edge;
 
     return Edge;
@@ -107,7 +105,7 @@ var Edge = (function (){
 exports.Vertex = exports.vertex = Vertex;
 exports.Edge = exports.edge = Edge;
 
-exports.create = function(elementType) {
+exports.build = function(elementType) {
     return new exports[elementType]();
 };
 

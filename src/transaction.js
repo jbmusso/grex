@@ -1,7 +1,8 @@
 var q = require("q"),
     http = require("http"),
     Utils = require("./utils"),
-    Element = require("./element");
+    Element = require("./element"),
+    ActionHandler = require("./actionhandler");
 
 var typeHash = {
     'integer': 'i',
@@ -34,8 +35,8 @@ module.exports = (function () {
     function Trxn(options, typeMap) {
         this.OPTS = options;
         this.typeMap = typeMap;
-        this.txArray = [];
-        this.newVertices = [];
+        this.transactionArray = [];
+        this.pendingVertices = [];
     }
 
     function addTypes(obj, typeDef, embedded, list){
@@ -117,67 +118,18 @@ module.exports = (function () {
 
     function cud(action, type) {
         return function() {
-            // var o = {},
-            var element = Element.create(type),
-                argLen = arguments.length,
-                i = 0,
-                addToTransaction = true;
+            var element = Element.build(type),
+                // Instantiate an actionhandler everytime cud() is called.
+                // TODO: improve this, and pass element to prepareElementFor() instead. Will avoid instantiating a ActionHandler every time.
+                actionhandler = ActionHandler.build(element, this, arguments);
 
-            console.log("=============");
-            console.log(element, element.constructor.name);
-            console.log(arguments);
-            // console.log("=============");
+            actionhandler.handleAction(action);
 
-            if (!!argLen) {
-                if(action == 'delete'){
-                    element._id = arguments[0];
-
-                    if (argLen > 1) {
-                        element._keys = arguments[1];
-                    }
-                } else {
-                    if (type == 'edge') {
-                        element = isObject(arguments[argLen - 1]) ? arguments[argLen - 1] : {}; // to fix
-
-                        if (argLen == 5 || (argLen == 4 && !isObject(element))) {
-                            i = 1;
-                            element._id = arguments[0];
-                        }
-
-                        element._outV = arguments[0 + i].properties;
-                        element._inV = arguments[1 + i].properties;
-                        element._label = arguments[2 + i];
-                    } else {
-                        // Create new Vertex
-                        if (isObject(arguments[0])) {
-                            // Called cud({..})
-                            element.setProperties(arguments[0]);
-                            push.call(this.newVertices, element);
-                            addToTransaction = false;
-                        } else {
-                            // console.log("hah..");
-                            // Called cud(id, {..})
-                            if(argLen == 2){
-                                element.setProperties(arguments[1]);
-                            }
-
-                            element._id = arguments[0];
-                        }
-                    }
-                }
-            //Allow for no args to be passed
-            } else if (type == 'vertex') {
-                push.call(this.newVertices, element);
-                addToTransaction = false;
-            }
-
-
-            if (addToTransaction) {
+            if (actionhandler.addToTransaction) {
                 element._action = action;
-                push.call(this.txArray, addTypes(element, this.typeMap));
+                this.transactionArray.push(addTypes(element, this.typeMap));
             }
 
-            // return new Element(o);
             return element;
         };
     }
@@ -189,22 +141,22 @@ module.exports = (function () {
         //In Error because couldn't create new Vertices. Therefore,
         //roll back all other transactions
         console.error('problem with Transaction');
-        self.txArray.length = 0;
+        self.transactionArray.length = 0; // "clears" array
 
-        for (var i = self.newVertices.length - 1; i >= 0; i--) {
+        for (var i = self.pendingVertices.length - 1; i >= 0; i--) {
             //check if any vertices were created and create a Transaction
             //to delete them from the database
-            if('_id' in self.newVertices[i]){
-                self.removeVertex(self.newVertices[i]._id);
+            if('_id' in self.pendingVertices[i]){
+                self.removeVertex(self.pendingVertices[i]._id);
             }
         }
 
         //This indicates that nothing was able to be created as there
         //is no need to create a tranasction to delete the any vertices as there
         //were no new vertices successfully created as part of this Transaction
-        self.newVertices.length = 0;
+        self.pendingVertices.length = 0;
 
-        if (!self.txArray.length){
+        if (!self.transactionArray.length){
             return q.fcall(function () {
                 errObj.message = "Could not complete transaction. Transaction has been rolled back.";
 
@@ -217,17 +169,17 @@ module.exports = (function () {
         //unsuccessful. On fail throw error to indicate that transaction was
         //unsuccessful and that the new vertices created were unable to be removed
         //from the database and need to be handled manually.
-        return postData.call(self, batchExt, { tx: self.txArray })
+        return postData.call(self, batchExt, { tx: self.transactionArray })
             .then(function(success){
                 errObj.message = "Could not complete transaction. Transaction has been rolled back.";
 
                 return errObj;
             }, function(fail){
                 errObj.message = "Could not complete transaction. Unable to roll back newly created vertices.";
-                errObj.ids = self.txArray.map(function(item){
+                errObj.ids = self.transactionArray.map(function(item){
                     return item._id;
                 });
-                self.txArray.length = 0;
+                self.transactionArray.length = 0;
 
                 return errObj;
             });
@@ -239,27 +191,21 @@ module.exports = (function () {
 
         function doCommit() {
             var promises = [];
-            var newVerticesLen = self.newVertices.length;
-            var txLen = self.txArray.length;
+            var transactionElement;
 
-            if(!!newVerticesLen){
-                for (var i = 0; i < newVerticesLen; i++) {
-                    promises.push(postData.call(self, newVertex, addTypes(self.newVertices[i], self.typeMap), {'Content-Type':'application/vnd.rexster-typed-v1+json'}));
+            if(!!self.pendingVertices.length){
+                // We have new vertices to create first!
+
+                for (var i = 0; i < self.pendingVertices.length; i++) {
+                    promises.push(postData.call(self, newVertex, addTypes(self.pendingVertices[i], self.typeMap), {'Content-Type':'application/vnd.rexster-typed-v1+json'}));
                 }
 
                 return q.all(promises).then(function(result){
                     var inError = false;
                     //Update the _id for the created Vertices
-                    //this filters through the object reference
-                    var resultLen = result.length;
-
-                    for (var j = 0; j < resultLen; j++) {
+                    for (var j = 0; j < result.length; j++) {
                         if('results' in result[j] && '_id' in result[j].results){
-                            for(var prop in result[j].results){
-                                if(result[j].results.hasOwnProperty(prop)){
-                                    self.newVertices[j][prop] = result[j].results[prop];
-                                }
-                            }
+                            self.pendingVertices[j]._id = result[j].results._id;
                         } else {
                             inError = true;
                         }
@@ -275,36 +221,45 @@ module.exports = (function () {
                     }
 
                     //Update any edges that may have referenced the newly created Vertices
-                    for (var k = 0; k < txLen; k++) {
-                        if(self.txArray[k]._type == 'edge' && self.txArray[k]._action == 'create'){
-                            if (isObject(self.txArray[k]._inV)) {
-                                self.txArray[k]._inV = self.txArray[k]._inV._id;
+                    for (var k = 0; k < self.transactionArray.length; k++) {
+                        transactionElement = self.transactionArray[k];
+
+                        if(transactionElement._type == 'edge' && transactionElement._action == 'create'){
+                            // Replace references to Vertex object by references to Vertex _id.
+                            // TODO: Try replacing the following two checks with getters for _inV and _outV in Edge prototype.
+                            if (isObject(transactionElement._inV)) {
+                                transactionElement._inV = transactionElement._inV._id;
                             }
 
-                            if (isObject(self.txArray[k]._outV)) {
-                                self.txArray[k]._outV = self.txArray[k]._outV._id;
+                            if (isObject(transactionElement._outV)) {
+                                transactionElement._outV = transactionElement._outV._id;
                             }
                         }
                     }
 
-                    return postData.call(self, batchExt, { tx: self.txArray });
+                    return postData.call(self, batchExt, { tx: self.transactionArray });
+
                 }, function(err){
                     console.error(err);
                 });
+
             } else {
-                for (var k = 0; k < txLen; k++) {
-                    if(self.txArray[k]._type == 'edge' && self.txArray[k]._action == 'create'){
-                        if (isObject(self.txArray[k]._inV)) {
-                            self.txArray[k]._inV = self.txArray[k]._inV._id;
+                // We don't have new vertices to create, only edges...
+                for (var k = 0; k < self.transactionArray.length; k++) {
+                    transactionElement = self.transactionArray[k];
+
+                    if(transactionElement._type == 'edge' && transactionElement._action == 'create'){
+                        if (isObject(transactionElement._inV)) {
+                            transactionElement._inV = transactionElement._inV._id;
                         }
 
-                        if (isObject(self.txArray[k]._outV)) {
-                            self.txArray[k]._outV = self.txArray[k]._outV._id;
+                        if (isObject(transactionElement._outV)) {
+                            transactionElement._outV = transactionElement._outV._id;
                         }
                     }
                 }
 
-                return postData.call(self, batchExt, { tx: self.txArray });
+                return postData.call(self, batchExt, { tx: self.transactionArray });
             }
         }
 
@@ -316,7 +271,6 @@ module.exports = (function () {
         var self = this;
         var deferred = q.defer();
 
-        console.log(data);
         var payload = JSON.stringify(data) || '{}';
 
         var options = {
@@ -353,7 +307,7 @@ module.exports = (function () {
 
                 if('success' in o && o.success === false){
                     //send error info with reject
-                    if(self.newVertices && !!self.newVertices.length){
+                    if(self.pendingVertices && !!self.pendingVertices.length){
                         //This indicates that all new Vertices were created but failed to
                         //complete the rest of the tranasction so the new Vertices need deleted
                         rollbackVertices.call(self)
@@ -370,12 +324,12 @@ module.exports = (function () {
                     // delete o.queryTime;
                     // delete o.txProcessed;
 
-                    //This occurs after newVertices have been created
+                    //This occurs after pendingVertices have been created
                     //and passed in to postData
-                    if(!('results' in o) && self.newVertices && !!self.newVertices.length){
-                        o.newVertices = [];
-                        push.apply(o.newVertices, self.newVertices);
-                        self.newVertices.length = 0;
+                    if(!('results' in o) && self.pendingVertices && !!self.pendingVertices.length){
+                        o.pendingVertices = [];
+                        push.apply(o.pendingVertices, self.pendingVertices);
+                        self.pendingVertices.length = 0;
                     }
 
                     if('tx' in data){
