@@ -32,12 +32,12 @@ var ActionHandler = (function() {
     };
 
     ActionHandler.build = function(element, transaction, actionArgs) {
-        var preparators = {
+        var handlers = {
             vertex: VertexActionHandler,
             edge: EdgeActionHandler
         };
 
-        return new preparators[element._type](element, transaction, actionArgs);
+        return new handlers[element._type](element, transaction, actionArgs);
     };
 
     return ActionHandler;
@@ -60,7 +60,7 @@ var VertexActionHandler = (function() {
         }
     }
 
-    // Inherit from Element
+    // Inherit from ActionHandler
     VertexActionHandler.prototype = Object.create(ActionHandler.prototype);
     VertexActionHandler.prototype.constructor = ActionHandler;
 
@@ -98,7 +98,7 @@ var EdgeActionHandler = (function() {
         this.edge = this.element;
     }
 
-    // Inherit from Element
+    // Inherit from ActionHandler
     EdgeActionHandler.prototype = Object.create(ActionHandler.prototype);
     EdgeActionHandler.prototype.constructor = ActionHandler;
 
