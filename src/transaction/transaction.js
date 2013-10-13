@@ -1,7 +1,7 @@
-var Element = require("./element"),
+var Element = require("../element"),
     ActionHandler = require("./actionhandler"),
     TransactionCommitter = require("./transactioncommitter"),
-    addTypes = require("./addtypes");
+    addTypes = require("../addtypes");
 
 
 module.exports = (function () {

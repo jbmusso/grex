@@ -1,6 +1,6 @@
 var q = require("q"),
     merge = require("./utils").merge,
-    Transaction = require("./transaction"),
+    Transaction = require("./transaction/transaction"),
     qryMain = require("./gremlin");
 
 

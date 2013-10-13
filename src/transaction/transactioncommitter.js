@@ -1,9 +1,9 @@
 var q = require("q"),
     request = require("request");
 
-var Utils = require("./utils"),
+var Utils = require("../utils"),
     isObject = Utils.isObject,
-    addTypes = require("./addtypes");
+    addTypes = require("../addtypes");
 
 
 module.exports = TransactionCommitter = (function() {
