@@ -1,6 +1,6 @@
 var q = require("q"),
     merge = require("./utils").merge,
-    Trxn = require("./transaction"),
+    Transaction = require("./transaction/transaction"),
     qryMain = require("./gremlin");
 
 
@@ -65,7 +65,9 @@ module.exports = (function(){
     };
 
     gRex.prototype.begin = function (typeMap){
-        return new Trxn(this.OPTS, typeMap ? merge(typeMap, this.typeMap) : this.typeMap);
+        typeMap = typeMap ? merge(typeMap, this.typeMap) : this.typeMap;
+
+        return new Transaction(this.OPTS, typeMap);
     };
 
     return gRex;

@@ -1,11 +1,30 @@
-module.exports = Element = (function() {
+Utils = require("./utils");
+
+/*
+ * Abstract Element class
+ */
+var Element = (function() {
     // Element are Vertex or Edge
-    function Element(properties) {
-        this.properties = properties;
+    function Element() {
+        this._id = null;
     }
 
+
+    Element.prototype.getProperties = function() {
+        var o = {};
+
+        for (var propertyName in this) {
+            if (this.hasOwnProperty(property)) {
+                o[propertyName] = this[propertyName];
+            }
+        }
+
+        return o;
+    };
+
+
     Element.prototype.setProperty = function (k, v) {
-        this.properties[k] = v;
+        this[k] = v;
         return this;
     };
 
@@ -23,7 +42,7 @@ module.exports = Element = (function() {
      * property.
      */
     Element.prototype.addProperty = function(k, v) {
-        this.properties[k] = v;
+        this[k] = v;
         return this;
     };
 
@@ -44,3 +63,50 @@ module.exports = Element = (function() {
     return Element;
 
 })();
+
+
+
+var Vertex = (function (){
+
+    function Vertex() {
+        this._type = "vertex";
+        Element.apply(this, arguments); // Call parent constructor
+    }
+
+    // Inherit from Element
+    Vertex.prototype = Object.create(Element.prototype);
+    Vertex.prototype.constructor = Vertex;
+
+    return Vertex;
+
+})();
+
+
+var Edge = (function (){
+
+    function Edge() {
+        this._type = "edge";
+        this._outV = null;
+        this._inV = null;
+        this._label = null;
+
+        Element.apply(this, arguments); // Call parent constructor
+    }
+
+    // Inherit from Element
+    Edge.prototype = Object.create(Element.prototype);
+    Edge.prototype.constructor = Edge;
+
+    return Edge;
+
+})();
+
+
+exports.Vertex = exports.vertex = Vertex;
+exports.Edge = exports.edge = Edge;
+
+exports.build = function(elementType) {
+    return new exports[elementType]();
+};
+
+module.exports = exports;
