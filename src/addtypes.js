@@ -21,9 +21,6 @@ var typeHash = {
 
 
 module.exports = function addTypes(obj, typeDef, embedded, list){
-    console.log("==addTypes==");
-    console.log(obj, typeDef);
-
     var tempObj = {};
     var tempStr = '';
     var obj2, idx = 0;
@@ -95,8 +92,6 @@ module.exports = function addTypes(obj, typeDef, embedded, list){
             }
         }
     }
-
-    console.log("--end of addTypes--");
 
     return embedded ? tempStr : tempObj;
 };

@@ -7,74 +7,49 @@ var Utils = require("../utils"),
 
 
 module.exports = TransactionCommitter = (function() {
-
+    /*
+     * Constructor
+     *
+     * @param {Transaction} a transaction due for commit
+     */
     function TransactionCommitter(transaction) {
         this.transaction = transaction;
         this.inError = null;
     }
 
-
-    TransactionCommitter.prototype.updateEdges = function() {
-        var transactionElement;
-
-        for (var k = 0; k < this.transaction.pendingElements.length; k++) {
-            transactionElement = this.transaction.pendingElements[k];
-
-            if(transactionElement._type == 'edge' && transactionElement._action == 'create'){
-                // Replace references to Vertex object by references to Vertex _id.
-                // TODO: Try replacing the following two checks with getters for _inV and _outV in Edge prototype.
-                if (isObject(transactionElement._inV)) {
-                    transactionElement._inV = transactionElement._inV._id;
-                }
-
-                if (isObject(transactionElement._outV)) {
-                    transactionElement._outV = transactionElement._outV._id;
-                }
-            }
-        }
-    };
-
-
-    TransactionCommitter.prototype.updatePendingVertices = function(result) {
-        console.log("==updatePendingVertices==");
-        console.log(result);
-
-        var inError = false;
-
-        //Update the _id for the created Vertices
-        for (var j = 0; j < result.length; j++) {
-            if('results' in result[j] && '_id' in result[j].results){
-                this.transaction.pendingVertices[j]._id = result[j].results._id;
-            } else {
-                this.inError = true;
-            }
-        }
-    };
-
-
-    TransactionCommitter.prototype.getPostVerticesPromises = function() {
-        console.log("==getPostVerticesPromises==");
-
-        var promises = [],
-            types,
-            header = {'Content-Type':'application/vnd.rexster-typed-v1+json'};
-
-        for (var i = 0; i < this.transaction.pendingVertices.length; i++) {
-            types = addTypes(this.transaction.pendingVertices[i], this.transaction.typeMap);
-            promises.push(this.postVertices(types, header));
+    /*
+     * Main commit method.
+     *
+     * @see Transaction#commit
+     *
+     * @return {Promise}
+     * @api public
+     */
+    TransactionCommitter.prototype.doCommit = function() {
+        if(!!this.transaction.pendingVertices.length){
+            // We have new vertices to create first!
+            commit = this.commitVertices();
+        } else {
+            commit = this.commitEdges();
         }
 
-        return q.all(promises);
+        return commit;
     };
 
-
+    /*
+     * Post vertices in batch to the database, eventually rolling them back
+     * in case of a failure.
+     *
+     * Internally calls updatePendingVertices() and, in the absence of a
+     * failure, calls updateEdges().
+     *
+     * @return {Promise}
+     * @api private
+     */
     TransactionCommitter.prototype.commitVertices = function() {
-        console.log("==commitVertices==");
-
         var self = this;
 
         return this.getPostVerticesPromises().then(function(result){
-            console.log(result);
             self.updatePendingVertices(result);
 
             if(this.inError){
@@ -96,11 +71,16 @@ module.exports = TransactionCommitter = (function() {
         });
     };
 
-
+    /*
+     * Post edges in batch to the database, replacing _inV and _outV
+     * references to Vertices as references to vertices _id.
+     *
+     * @return {Promise} of posting edges in batch.
+     * @api private
+     */
     TransactionCommitter.prototype.commitEdges = function() {
-        console.log("==commitEdges==");
-
         var transactionElement;
+
         // We don't have new vertices to create, only edges...
         for (var k = 0; k < this.transaction.pendingElements.length; k++) {
             transactionElement = this.transaction.pendingElements[k];
@@ -119,24 +99,17 @@ module.exports = TransactionCommitter = (function() {
         return this.postBatch({ tx: this.transaction.pendingElements });
     };
 
-
-    TransactionCommitter.prototype.doCommit = function() {
-        console.log("==commit==");
-
-        if(!!this.transaction.pendingVertices.length){
-            // We have new vertices to create first!
-            commit = this.commitVertices();
-        } else {
-            commit = this.commitEdges();
-        }
-
-        return commit;
-    };
-
-
+    /*
+     * Post JSON data representing graph elements to the appropriate
+     * Rexster endpoint via http.
+     *
+     * @param {String} urlPath
+     * @param {Object} keys/values representing a graph element
+     * @param {Object} optional 'Content-Type' headers
+     * @return {Promise}
+     * @api private
+     */
     TransactionCommitter.prototype.postData = function(urlPath, data, headers) {
-        console.log("==postData==", data, headers);
-
         var self = this;
         var deferred = q.defer();
 
@@ -205,17 +178,97 @@ module.exports = TransactionCommitter = (function() {
         return deferred.promise;
     };
 
-
+    /*
+     * A convenient method for posting in batch.
+     *
+     * @api private
+     */
     TransactionCommitter.prototype.postBatch = function(data, headers) {
         return this.postData('/tp/batch/tx', data, headers);
     };
 
 
+    /*
+     * A convenient method for posting vertices.
+     *
+     * @api private
+     */
     TransactionCommitter.prototype.postVertices = function(data, headers) {
         return this.postData('/vertices', data, headers);
     };
 
+    /*
+     * For all pending "edges", replace _inV and _outV references to Vertex
+     * object by references to Vertex _id.
+     *
+     * @api private
+     */
+    TransactionCommitter.prototype.updateEdges = function() {
+        var transactionElement;
 
+        for (var k = 0; k < this.transaction.pendingElements.length; k++) {
+            transactionElement = this.transaction.pendingElements[k];
+
+            if(transactionElement._type == 'edge' && transactionElement._action == 'create'){
+                // Replace references to Vertex object by references to Vertex _id.
+                // TODO: Try replacing the following two checks with getters for _inV and _outV in Edge prototype.
+                if (isObject(transactionElement._inV)) {
+                    transactionElement._inV = transactionElement._inV._id;
+                }
+
+                if (isObject(transactionElement._outV)) {
+                    transactionElement._outV = transactionElement._outV._id;
+                }
+            }
+        }
+    };
+
+    /*
+     * Update the _id of vertices pending for creations with ids generated by
+     * the database.
+     *
+     * @param {Array} of element result fetched from the database
+     * @api private
+     */
+    TransactionCommitter.prototype.updatePendingVertices = function(result) {
+        var inError = false;
+
+        //Update the _id for the created Vertices
+        for (var j = 0; j < result.length; j++) {
+            if('results' in result[j] && '_id' in result[j].results){
+                this.transaction.pendingVertices[j]._id = result[j].results._id;
+            } else {
+                this.inError = true;
+            }
+        }
+    };
+
+    /*
+     * For each pending vertices, build and return a "promise for all promise
+     * of creation of each vertex in the database".
+     *
+     * @return {Promise}
+     * @api private
+     */
+    TransactionCommitter.prototype.getPostVerticesPromises = function() {
+        var promises = [],
+            types,
+            header = {'Content-Type':'application/vnd.rexster-typed-v1+json'};
+
+        for (var i = 0; i < this.transaction.pendingVertices.length; i++) {
+            types = addTypes(this.transaction.pendingVertices[i], this.transaction.typeMap);
+            promises.push(this.postVertices(types, header));
+        }
+
+        return q.all(promises);
+    };
+
+    /*
+     * Called when rolling back vertices: for each pending vertices, add a
+     * "removeVertex()" instruction to the transaction.
+     *
+     * @api private
+     */
     TransactionCommitter.prototype.removeVertices = function() {
         for (var i = this.transaction.pendingVertices.length - 1; i >= 0; i--) {
             //check if any vertices were created and create a Transaction
@@ -228,10 +281,14 @@ module.exports = TransactionCommitter = (function() {
         this.transaction.pendingVertices.length = 0;
     };
 
-
+    /*
+     * Remove all pending vertices in batch from the graph database. Internally
+     * calls "postBatch()".
+     *
+     * @return {Object} An error object
+     * @api private
+     */
     TransactionCommitter.prototype.rollbackVertices = function() {
-    //returns an error Object
-    // function rollbackVertices(){
         var self = this;
         var errObj = {
             success: false,
@@ -242,7 +299,6 @@ module.exports = TransactionCommitter = (function() {
         console.error('problem with Transaction');
 
         this.transaction.pendingElements.length = 0; // "clears" array
-
         this.removeVertices();
 
         //This indicates that nothing was able to be created as there

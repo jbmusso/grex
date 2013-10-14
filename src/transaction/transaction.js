@@ -6,8 +6,6 @@ var Element = require("../element"),
 
 module.exports = (function () {
     function Transaction(options, typeMap) {
-        console.log(typeMap);
-
         this.committer = new TransactionCommitter(this);
         this.OPTS = options;
         this.typeMap = typeMap;
