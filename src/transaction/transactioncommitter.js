@@ -10,6 +10,7 @@ module.exports = TransactionCommitter = (function() {
 
     function TransactionCommitter(transaction) {
         this.transaction = transaction;
+        this.inError = null;
     }
 
 
@@ -34,8 +35,9 @@ module.exports = TransactionCommitter = (function() {
     };
 
 
-    TransactionCommitter.prototype.updateVertices = function(result) {
-        console.log("==updateVertices==");
+    TransactionCommitter.prototype.updatePendingVertices = function(result) {
+        console.log("==updatePendingVertices==");
+        console.log(result);
 
         var inError = false;
 
@@ -44,11 +46,9 @@ module.exports = TransactionCommitter = (function() {
             if('results' in result[j] && '_id' in result[j].results){
                 this.transaction.pendingVertices[j]._id = result[j].results._id;
             } else {
-                inError = true;
+                this.inError = true;
             }
         }
-
-        return inError;
     };
 
 
@@ -61,7 +61,7 @@ module.exports = TransactionCommitter = (function() {
 
         for (var i = 0; i < this.transaction.pendingVertices.length; i++) {
             types = addTypes(this.transaction.pendingVertices[i], this.transaction.typeMap);
-            promises.push(this.postData('/vertices', types, header));
+            promises.push(this.postVertices(types, header));
         }
 
         return q.all(promises);
@@ -73,11 +73,11 @@ module.exports = TransactionCommitter = (function() {
 
         var self = this;
 
-        // return this.getPostVerticesPromises().then(function(result){
         return this.getPostVerticesPromises().then(function(result){
-            inError = self.updateVertices(result);
+            console.log(result);
+            self.updatePendingVertices(result);
 
-            if(inError){
+            if(this.inError){
                 return self.rollbackVertices()
                     .then(function(result){
                         throw result;
@@ -89,7 +89,7 @@ module.exports = TransactionCommitter = (function() {
             //Update any edges that may have referenced the newly created Vertices
             self.updateEdges();
 
-            return self.postData('/tp/batch/tx', { tx: self.transaction.pendingElements });
+            return self.postBatch({ tx: self.transaction.pendingElements });
 
         }, function(err){
             console.error(err);
@@ -116,7 +116,7 @@ module.exports = TransactionCommitter = (function() {
             }
         }
 
-        return this.postData('/tp/batch/tx', { tx: this.transaction.pendingElements });
+        return this.postBatch({ tx: this.transaction.pendingElements });
     };
 
 
@@ -206,6 +206,29 @@ module.exports = TransactionCommitter = (function() {
     };
 
 
+    TransactionCommitter.prototype.postBatch = function(data, headers) {
+        return this.postData('/tp/batch/tx', data, headers);
+    };
+
+
+    TransactionCommitter.prototype.postVertices = function(data, headers) {
+        return this.postData('/vertices', data, headers);
+    };
+
+
+    TransactionCommitter.prototype.removeVertices = function() {
+        for (var i = this.transaction.pendingVertices.length - 1; i >= 0; i--) {
+            //check if any vertices were created and create a Transaction
+            //to delete them from the database
+            if('_id' in this.transaction.pendingVertices[i]){
+                this.transaction.removeVertex(this.transaction.pendingVertices[i]._id);
+            }
+        }
+
+        this.transaction.pendingVertices.length = 0;
+    };
+
+
     TransactionCommitter.prototype.rollbackVertices = function() {
     //returns an error Object
     // function rollbackVertices(){
@@ -217,22 +240,16 @@ module.exports = TransactionCommitter = (function() {
         //In Error because couldn't create new Vertices. Therefore,
         //roll back all other transactions
         console.error('problem with Transaction');
-        self.transaction.pendingElements.length = 0; // "clears" array
 
-        for (var i = self.transaction.pendingVertices.length - 1; i >= 0; i--) {
-            //check if any vertices were created and create a Transaction
-            //to delete them from the database
-            if('_id' in self.transaction.pendingVertices[i]){
-                self.transaction.removeVertex(self.transaction.pendingVertices[i]._id);
-            }
-        }
+        this.transaction.pendingElements.length = 0; // "clears" array
+
+        this.removeVertices();
 
         //This indicates that nothing was able to be created as there
         //is no need to create a tranasction to delete the any vertices as there
         //were no new vertices successfully created as part of this Transaction
-        self.transaction.pendingVertices.length = 0;
 
-        if (!self.transaction.pendingElements.length){
+        if (!this.transaction.pendingElements.length){
             return q.fcall(function () {
                 errObj.message = "Could not complete transaction. Transaction has been rolled back.";
 
@@ -245,7 +262,7 @@ module.exports = TransactionCommitter = (function() {
         //unsuccessful. On fail throw error to indicate that transaction was
         //unsuccessful and that the new vertices created were unable to be removed
         //from the database and need to be handled manually.
-        return this.postData('/tp/batch/tx', { tx: self.transaction.pendingElements })
+        return this.postBatch({ tx: this.transaction.pendingElements })
             .then(function(success){
                 errObj.message = "Could not complete transaction. Transaction has been rolled back.";
 
