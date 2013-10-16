@@ -40,6 +40,7 @@
     "grunt-mocha": "~0.4.0",
     "grunt-mocha-test": "~0.6.2",
     "browserify": "~2.34.1",
-    "grunt-browserify": "~1.2.9"
+    "grunt-browserify": "~1.2.9",
+    "should": "~2.0.1"
   }
 }
