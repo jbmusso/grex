@@ -8,7 +8,6 @@ var gRex = require('../index.js'),
 beforeEach(function(done){
     gRex.connect()
         .then(function(result){
-            console.log(g);
             g = result;
             done();
         });

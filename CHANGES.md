@@ -1,13 +1,14 @@
 ## TODO (upcoming releases)
-- Option to not use Transaction to do CUD (ie No need for commit()). eg. g.addVertex().then(); Batch kibble will not required for these calls
-- Client version initialised with var g = require('grex');
-- Test CUD
+- Option to not use Transaction to do CUD (ie No need for commit()). eg. g.addVertex().then(); Batch kibble will not be required for these calls
 
-##0.3.0
+## 0.3.1
+- Add support for addProperty and setProperty for Vertex and Edge
+
+## 0.3.0
 - Expose gRex as global for browser version.
 - Enable to be used with RequireJS.
 
-##0.2.5
+## 0.2.5
 - Structural changes
 - Add Contributors to package.json
 
