@@ -8,7 +8,6 @@ before(function(done){
     gRex.connect()
         .then(function(result) {
             g = result;
-            console.log(g);
             done();
         })
         .fail(function(error) {
@@ -26,7 +25,7 @@ describe('Transforms', function(){
                     done();
                 })
                 .fail(function(error) {
-                    console.log(error);
+                    console.error(error);
                 });
         });
     });

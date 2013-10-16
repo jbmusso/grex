@@ -296,7 +296,7 @@ module.exports = TransactionCommitter = (function() {
         };
         //In Error because couldn't create new Vertices. Therefore,
         //roll back all other transactions
-        console.error('problem with Transaction');
+        console.error('Problem with Transaction. Rolling back vertices...');
 
         this.transaction.txArray.length = 0; // "clears" array
         this.removeVertices();

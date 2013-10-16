@@ -6,7 +6,7 @@ var grex = function(options){
         var db = new gRex(options);
         connect = db.connect();
     } catch(error) {
-        console.log(error);
+        console.error(error);
     }
 
     return connect;

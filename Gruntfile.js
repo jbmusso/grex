@@ -1,7 +1,7 @@
 module.exports = function(grunt){
 
   //Need to work out how to include browserify & uglify
-  //gRex Global in browser 
+  //gRex Global in browser
   //browserify ./index.js --standalone gRex -o ./browser/bundle.js
   //uglifyjs ./browser/bundle.js -o ./browser/grex.min.js
 
@@ -34,7 +34,7 @@ module.exports = function(grunt){
           require: 'should',
           globals: 'g'
         },
-        src: ['test/*.js']
+        src: ['test/**/*.js']
       }
     },
     browserify2: {

@@ -86,9 +86,6 @@ var Edge = (function (){
 
     function Edge() {
         this._type = "edge";
-        this._outV = null;
-        this._inV = null;
-        this._label = null;
 
         Element.apply(this, arguments); // Call parent constructor
     }
