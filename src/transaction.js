@@ -51,7 +51,7 @@ module.exports = (function () {
                 this._obj[k] = v;
                 return this;
             }
-        }
+        };
         return Node;
     })();
 
@@ -376,7 +376,7 @@ module.exports = (function () {
         req.on('error', function(e) {
             console.error('problem with request: ' + e.message);
             deferred.reject(e);
-        })
+        });
 
         // write data to request body
         req.write(payload);
