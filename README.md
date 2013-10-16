@@ -25,7 +25,7 @@ A tool for making and composing asynchronous promises in JavaScript.
 
 gRex can be loaded as:
 
--   a ``<script>`` tag in the browser. Files are located in the browser directory.
+-   a ``<script>`` tag in the browser. Files are located in the client directory.
 
     ```
      <script type="text/javascript" src="grex.min.js"></script>
