@@ -1,7 +1,6 @@
 var Element = require("../element"),
-    ActionHandler = require("./actionhandler"),
-    TransactionCommitter = require("./transactioncommitter"),
-    addTypes = require("../addtypes");
+    ActionHandler = require("./actionhandler").ActionHandler,
+    TransactionCommitter = require("./transactioncommitter");
 
 
 module.exports = (function () {
@@ -9,7 +8,7 @@ module.exports = (function () {
         this.committer = new TransactionCommitter(this);
         this.OPTS = options;
         this.typeMap = typeMap;
-        this.pendingElements = [];
+        this.txArray = [];
         this.pendingVertices = [];
     }
 
@@ -21,12 +20,7 @@ module.exports = (function () {
                 // TODO: improve this, and pass element to prepareElementFor() instead. Will avoid instantiating a ActionHandler every time.
                 actionhandler = ActionHandler.build(element, this, arguments);
 
-            actionhandler.handleAction(action);
-
-            if (actionhandler.addToTransaction) {
-                element._action = action;
-                this.pendingElements.push(addTypes(element, this.typeMap));
-            }
+            element = actionhandler.handleAction(action); //returns "element"
 
             return element;
         };

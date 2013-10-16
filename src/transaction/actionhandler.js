@@ -1,5 +1,6 @@
 var Utils = require("../utils"),
-    isObject = Utils.isObject;
+    isObject = Utils.isObject,
+    addTypes = require("../addtypes");
 
 /*
  * Handle create/update/delete actions for Graph elements (vertices or edges)
@@ -17,16 +18,37 @@ var ActionHandler = (function() {
         this.addToTransaction = true;
     }
 
-
+    /*
+     * @return {Element}
+     */
     ActionHandler.prototype.handleAction = function(action) {
+        var typedElement;
         this[action]();
+
+        if (this.addToTransaction) {
+            this.element._action = action;
+            typedElement = addTypes(this.element, this.transaction.typeMap);
+
+            this.transaction.txArray.push(typedElement);
+        }
+
+        return this.element;
     };
 
     // This method is common to Vertex and Edge.
     ActionHandler.prototype.delete = function() {
-        this.element._id = this.actionArgs[0];
+        var _id;
 
-        if (this.actionArgs > 1) {
+        if (isObject(this.actionArgs[0])) {
+            _id = this.actionArgs[0]._id;
+        } else {
+            // arg is a Number
+            _id = this.actionArgs[0];
+        }
+        this.element._id = _id;
+
+        // Indicates that an array of property keys was passed: this will not remove the element but only remove these keys.
+        if (this.actionArgs.length > 1) {
             this.element._keys = this.actionArgs[1];
         }
     };
@@ -55,7 +77,7 @@ var VertexActionHandler = (function() {
 
         // Allow for no actionArgs to be passed
         if (this.actionArgs.length === 0) {
-            this.transaction.pendingVertices.push(element);
+            this.transaction.pendingVertices.push(this.element);
             this.addToTransaction = false;
         }
     }
@@ -103,26 +125,40 @@ var EdgeActionHandler = (function() {
     EdgeActionHandler.prototype.constructor = ActionHandler;
 
 
-    function createUpdateEdge() {
+    EdgeActionHandler.prototype.create = function() {
         var argOffset = 0;
 
         if (this.actionArgs.length === 5) {
-            // Called g.add|updateVertex(id, _outV, _inV, label, properties)
+            // Called g.addEdge(id, _outV, _inV, label, properties)
             argOffset = 1;
             this.edge._id = this.actionArgs[0];
-        }
+        } // else g.addEdge(_outV, _inV, label, properties) was called, leave _id to null (default factory value).
 
         this.edge._outV = this.actionArgs[0 + argOffset];
         this.edge._inV = this.actionArgs[1 + argOffset];
         this.edge._label = this.actionArgs[2 + argOffset];
-    }
+        this.edge.setProperties(this.actionArgs[3 + argOffset]);
+    };
 
-    EdgeActionHandler.prototype.create = createUpdateEdge;
-    EdgeActionHandler.prototype.update = createUpdateEdge;
+    /*
+     * Note that it is not possible to update an edge _inV, _outV and _label
+     * properties.
+     */
+    EdgeActionHandler.prototype.update = function() {
+        // g.updateEdge(id, properties) was called
+        this.edge._id = this.actionArgs[0];
+        this.edge.setProperties(this.actionArgs[1]);
+    };
 
     return EdgeActionHandler;
 
 })();
 
+/*
+ * Exports
+ */
+exports.VertexActionHandler = VertexActionHandler;
+exports.EdgeActionHandler = EdgeActionHandler;
+exports.ActionHandler = ActionHandler;
 
-module.exports = ActionHandler;
+module.exports = exports;
