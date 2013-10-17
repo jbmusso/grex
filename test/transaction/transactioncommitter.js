@@ -15,18 +15,19 @@ before(function(done){
 });
 
 
-describe('Transaction', function() {
-    describe('when adding a Vertex', function() {
-        var addedVertex;
-        var alice, bob;
+var alice, bob;
+var james, waldo;
 
-        it('should add a vertex in the graph database', function(done) {
+describe('Transaction', function() {
+    describe('when adding elements to the graph', function() {
+        it('should add a vertex in a transaction', function(done) {
             var tx = g.begin();
 
             alice = tx.addVertex({name: "Alice"});
 
             tx.commit()
             .then(function(result) {
+                result.should.have.property('success', true);
                 done();
             });
         });
@@ -35,13 +36,40 @@ describe('Transaction', function() {
             var tx = g.begin();
 
             bob = tx.addVertex({name: 'Bob'});
-            tx.addEdge(5543345, alice, bob, 'likes', {since: 'now'});
+            tx.addEdge(20, alice, bob, 'likes', {since: 'now'});
 
             tx.commit()
             .then(function(result) {
+                result.should.have.property('txProcessed', 1);
+                result.should.have.property('success', true);
                 done();
             });
 
+        });
+
+        it('should add 2 vertices in a transaction', function(done) {
+            var tx = g.begin();
+
+            james = tx.addVertex({name: 'James'});
+            waldo = tx.addVertex({name: 'Waldo'});
+
+            tx.commit()
+            .then(function(result) {
+                result.should.have.property('success', true);
+                done();
+            });
+        });
+
+        // Clean up: remove james and waldo from the database
+        after(function(done) {
+            var tx = g.begin()
+            tx.removeVertex(james._id);
+            tx.removeVertex(waldo._id);
+
+            tx.commit()
+            .then(function(){
+                done();
+            });
         });
     });
 
@@ -72,10 +100,9 @@ describe('Transaction', function() {
         });
     });
 
-
     // Currently bugged?
     // @see https://groups.google.com/forum/#!topic/gremlin-users/i0Uci2yZoaQ
-    describe.skip('when updating an edge', function() {
+    describe('when updating an edge', function() {
         before(function(done) {
             g.V('name', 'Jess').outE('likes')
             .then(function(result) {
@@ -94,7 +121,6 @@ describe('Transaction', function() {
 
             tx.commit()
             .then(function(result) {
-                // console.log(result);
                 done();
             })
             .fail(function(error) {
