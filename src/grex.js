@@ -34,18 +34,21 @@ module.exports = (function(){
         //Indexing
         this.createIndex = qryMain('createIndex', true);
         this.createKeyIndex = qryMain('createKeyIndex', true);
-        this.getIndices =  qryMain('getIndices', true);
-        this.getIndexedKeys =  qryMain('getIndexedKeys', true);
-        this.getIndex =  qryMain('getIndex', true);
+        this.getIndices = qryMain('getIndices', true);
+        this.getIndexedKeys = qryMain('getIndexedKeys', true);
+        this.getIndex = qryMain('getIndex', true);
         this.dropIndex = qryMain('dropIndex', true);
         this.dropKeyIndex = qryMain('dropKeyIndex', true);
 
         //Types
-        this.makeType = qryMain('makeType', true);
+        this.makeKey = qryMain('makeKey', true);
 
         this.clear =  qryMain('clear', true);
         this.shutdown = qryMain('shutdown', true);
         this.getFeatures = qryMain('getFeatures', true);
+
+        // Titan specifics
+        this.getTypes = qryMain('getTypes', true);
 
         this.connect = function(){
             return q.fcall(function() {

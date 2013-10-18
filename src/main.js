@@ -20,5 +20,7 @@ module.exports = {
     "Edge": classes.Edge,
     "String": classes["String"],
     "Direction": classes.Direction,
-    "Geoshape": classes.Geoshape
+    "Geoshape": classes.Geoshape,
+    "TitanKey": classes.TitanKey,
+    "TitanLabel": classes.TitanLabel
 };

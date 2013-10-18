@@ -41,5 +41,13 @@ module.exports = {
         'OUT': 'Direction.OUT',
         'IN': 'Direction.IN',
         'BOTH': 'Direction.BOTH'
+    },
+
+    TitanKey: {
+        'class': 'TitanKey.class'
+    },
+
+    TitanLabel : {
+        'class': 'TitanLabel.class'
     }
 };
