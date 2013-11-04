@@ -396,7 +396,7 @@ Gremlin = (function () {
         getProperty: qryMain('getProperty'),
 
         /*** http ***/
-        then: get(),
+        get: get(),
 
     };
 

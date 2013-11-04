@@ -27,4 +27,9 @@ grex.connect({
 	    console.error(err)
 	});
 
+	//OR
+	trxn.commit(function(err, result){
+	    console.log("Added new vertices successfully. -> ", result);            
+	});
+
 });

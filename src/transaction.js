@@ -234,7 +234,7 @@ module.exports = (function () {
     }
 
     function post() {
-        return function() {
+        return function(callback) {
             var self = this;
             var promises = [];
             var newVerticesLen = self.newVertices.length;
@@ -284,7 +284,7 @@ module.exports = (function () {
                         }
                     }
 
-                    return postData.call(self, batchExt, { tx: self.txArray });
+                    return postData.call(self, batchExt, { tx: self.txArray }).then().nodeify(callback);
                 }, function(err){
                     console.error(err);
                 });
@@ -301,7 +301,7 @@ module.exports = (function () {
                     }
                 }
 
-                return postData.call(self, batchExt, { tx: self.txArray });
+                return postData.call(self, batchExt, { tx: self.txArray }).then().nodeify(callback);
             }
         };
     }
