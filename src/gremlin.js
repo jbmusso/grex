@@ -153,8 +153,8 @@ Gremlin = (function () {
     }
 
     function get() {
-        return function(success, error){
-            return getData.call(this).then(success, error);
+        return function(callback){
+            return getData.call(this).then().nodeify(callback);
         };
     }
 
