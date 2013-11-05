@@ -430,8 +430,12 @@ __Example 13: Create with database generated id's__
 var trxn = g.begin();
 var v1, v2;
 
-v1 = trxn.addVertex({name:'Frank'});
+v1 = trxn.addVertex({name:'frank'});
 v2 = trxn.addVertex({name:'Luca'});
+
+v1.addProperty('status','new');
+v1.setProperty('name','Frank');
+
 trxn.addEdge(v1, v2, 'knows', {since:"2003/06/01"})
 
 v1 = trxn.addVertex({name:'Stephen'});
