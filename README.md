@@ -27,7 +27,7 @@ gRex can be loaded as:
 
 -   a ``<script>`` tag in the browser. Files are located in the client directory.
 
-    ```
+    ```javscript
      <script type="text/javascript" src="grex.min.js"></script>
     ```
 
@@ -55,38 +55,37 @@ gRex can be loaded as:
 
 You will notice that in the examples tokens are passed as string (i.e. 'T.gt'). However, gRex also exposes some objects for convenience to make it feel more natural. To access the objects reference them like so:
 
-```
-var T = gRex.T;
-var Contains = gRex.Contains;
-var Vertex = gRex.Vertex;
-var Edge = gRex.Edge;
-```
+    var T = gRex.T;
+    var Contains = gRex.Contains;
+    var Vertex = gRex.Vertex;
+    var Edge = gRex.Edge;
+
+
+
 You can now use these objects in place of the string representation in your queries.
 
 ## Connnecting to a database
-
-```
-//connect takes options object and returns a Promise
-gRex.connect({ 'database': 'myGraphDB', 
+```javascript
+    //connect takes options object and returns a Promise
+    gRex.connect({ 'database': 'myGraphDB', 
             'host': 'my.host.com',
             'port': 8000 }).then(function(graphDB){
 
-    //once connected the return value is a reference to the graph
-    trxn = graphDB.begin();
+      //once connected the return value is a reference to the graph
+      trxn = graphDB.begin();
 
-    t1 = trxn.addVertex({name:'Test1a'});
-    t2 = trxn.addVertex({name:'Test2a'});
-    trxn.addEdge(t1, t2, 'linked', {name:"ALabel"})
+      t1 = trxn.addVertex({name:'Test1a'});
+      t2 = trxn.addVertex({name:'Test2a'});
+      trxn.addEdge(t1, t2, 'linked', {name:"ALabel"})
 
-    trxn.commit().then(function(result){
-        console.log("Added new vertices successfully. -> ", result);            
-    }, function(err) {
-        console.error(err)
+      trxn.commit().then(function(result){
+          console.log("Added new vertices successfully. -> ", result);            
+      }, function(err) {
+          console.error(err)
+      });
+
     });
-
-});
 ```
-
 ## Introduction
 
 gRex tries to implement Gremlin syntax as closely as possible. However, there are some differences.
@@ -134,14 +133,24 @@ This can remain as false, if IDs are number. If IDs are not numbers (i.e. alpha-
 g.setOptions({ host: 'myDomain', graph: 'myOrientdb', idRegex: /^[0-9]+:[0-9]+$/ });
 ```
 
-__N.B.:__ gRex uses the [Q](http://documentup.com/kriskowal/q/) module to return a Promise when making Ajax calls. All requests are invoked with ``then()`` and the callback is captured by ``then(result, error);``. However, this is not the case when performing Create, Update and Deletes of Vertices or Edges. These actions are batched to reduce the number of calls to the server. In order to send these type of requests a Transaction must be created by calling ``var trxn = g.begin();``. Updates are made against this object. Once all updates are done, invoke ``trxn.commit().then(result, error);`` to commit your changes. See examples below.
+###Running Gremlin queries
+gRex uses the [Q](http://documentup.com/kriskowal/q/) module to return a Promise when making Ajax calls. GET requests are invoked with ``get()`` and the callback is captured by ``then(success, error);``. However, if you prefer Node style callbacks, simply pass the callback to ``get()``.
 
-__Calls invoked with then()__
+__Example: Calls invoked in Promise style callback__
 ```
-g.V('name', 'marko').out().then(function(result){console.log(result)}, function(err){console.log(err)});
+g.V('name', 'marko').out().get().then(function(result){console.log(result)}, function(err){console.log(err)});
+```
+__Example: Calls invoked with Node style callback__
+```
+g.V('name', 'marko').out().get(function(err, result) { 
+    if(err) return err;
+    console.log(result);
+});
+```
 
-g.createIndex('my-index', 'Vertex.class').then(function(result){console.log(result)}, function(err){console.log(err)});
-```
+When performing Create, Update and Deletes of Vertices or Edges. These actions are batched to reduce the number of calls to the server. In order to send these types of requests a Transaction must be created by calling ``var trxn = g.begin();``. Updates are made against this object. Once all updates are done, invoke ``trxn.commit().then(result, error);`` to commit your changes. See examples below.
+
+Again, if you prefer the Node style callback, simply pass the callback to ``commit()``.
 
 __Creating, updating or deleting Vetices or Edges. Use commit() to commit changes.__
 ```
@@ -158,8 +167,16 @@ gRex>     trxn.updateVertex(100, {k2: 'v4'});
 gRex>     trxn.removeVertex(100, ['k2', 'k3']);
 
 gRex>     trxn.removeVertex(200);
-
+```
+__then use the Promise style callback__
+```
 gRex>     trxn.commit().then(function(result){console.log(result)}, function(err){console.log(err)});
+```
+__OR__ 
+
+__the Node style callback__
+```        
+gRex>     trxn.commit(function(err, result){ if(err) return err; console.log(result) });
 ```
 
 ## Property Data Types

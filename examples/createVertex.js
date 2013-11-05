@@ -28,8 +28,8 @@ grex.connect({
 	});
 
 	//OR
-	trxn.commit(function(err, result){
-	    console.log("Added new vertices successfully. -> ", result);            
-	});
+	// trxn.commit(function(err, result){
+	//     console.log("Added new vertices successfully. -> ", result);            
+	// });
 
 });

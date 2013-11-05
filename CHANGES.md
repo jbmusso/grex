@@ -1,6 +1,9 @@
 ## TODO (upcoming releases)
 - Option to not use Transaction to do CUD (ie No need for commit()). eg. g.addVertex().then(); Batch kibble will not be required for these calls
 
+## 0.4.0
+- Nodeify callbacks
+
 ## 0.3.2
 - Fixed Gruntfile and dev dependencies
 
