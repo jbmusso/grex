@@ -489,6 +489,12 @@ trxn.commit().then
 
 Frank Panetta  - [Follow @entrendipity](https://twitter.com/intent/follow?screen_name=entrendipity)
 
+##Contributors
+
+Jean Baptiste-Musso - [gulthor](https://github.com/gulthor)
+
+Andreas Richter - [richtera](https://github.com/richtera)
+
 ##License
 ###The MIT License (MIT)
 
