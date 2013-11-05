@@ -1,12 +1,17 @@
 var classes = require("./classes");
 var gRex = require("./grex");
 
-var grex = function(options){
+var grex = function(options, callback){
     try {
+        if(typeof options === 'function'){
+            callback = options;
+            options = undefined;
+        }
         var db = new gRex(options);
-        connect = db.connect();
+        connect = db.connect().then().nodeify(callback);
     } catch(error) {
-        console.log(error);
+        return callback(error);
+        console.error(error);
     }
 
     return connect;

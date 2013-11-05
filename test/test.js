@@ -6,11 +6,21 @@ var gRex = require('../index.js'),
 
 
 beforeEach(function(done){
-    gRex.connect()
+    gRex.connect({
+            'host': 'localhost',
+            'port': 8182,
+            'graph': 'tinkergraph',
+            'idRegex': false // OrientDB id regex -> /^[0-9]+:[0-9]+$/
+        })
         .then(function(result){
             g = result;
             done();
         });
+
+    // gRex.connect(function(err, result){
+    //         g = result;
+    //         done();
+    //     });
 });
 
 describe('Transforms', function(){
@@ -26,7 +36,7 @@ describe('Transforms', function(){
     });
 
      describe('id', function() {
-        it("should return all ids", function(done){
+        it("Promise should return all ids", function(done){
             g.V().id().get().then(function(result){
                 result.results.should.have.lengthOf(6);
                 result.results.should.eql([ '3', '2', '1', '6', '5', '4' ]);

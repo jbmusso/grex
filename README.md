@@ -66,11 +66,11 @@ You can now use these objects in place of the string representation in your quer
 
 ## Connnecting to a database
 ```javascript
-    //connect takes options object and returns a Promise
+    //connect takes optional Options object and returns a Promise
     gRex.connect({ 'database': 'myGraphDB', 
-            'host': 'my.host.com',
-            'port': 8000 }).then(function(graphDB){
-
+                   'host': 'my.host.com',
+                   'port': 8000 })
+    .then(function(graphDB){
       //once connected the return value is a reference to the graph
       trxn = graphDB.begin();
 
@@ -83,7 +83,28 @@ You can now use these objects in place of the string representation in your quer
       }, function(err) {
           console.error(err)
       });
+    });
+```
+__N.B.__ You can also use ``connect()`` with _Node style callbacks_. For example:
+```javascript
+    //connect takes optional Options object and Node style callback
+    gRex.connect({ 'database': 'myGraphDB', 
+                   'host': 'my.host.com',
+                   'port': 8000 }, function(err, graphDB){
+      
+      if(err) console.error(err);
+      
+      //once connected the return value is a reference to the graph
+      trxn = graphDB.begin();
 
+      t1 = trxn.addVertex({name:'Test1a'});
+      t2 = trxn.addVertex({name:'Test2a'});
+      trxn.addEdge(t1, t2, 'linked', {name:"ALabel"})
+
+      trxn.commit(function(err, result){
+          if(err) console.error(err);
+          console.log("Added new vertices successfully. -> ", result);            
+      });
     });
 ```
 ## Introduction
@@ -130,7 +151,10 @@ Graph database name
 This can remain as false, if IDs are number. If IDs are not numbers (i.e. alpha-numeric or string), but still pass parseFloat() test, then idRegex must be set. This property will enable gRex to distinguish between an ID and a float expression.
 
 ```
-g.setOptions({ host: 'myDomain', graph: 'myOrientdb', idRegex: /^[0-9]+:[0-9]+$/ });
+g.setOptions({ host: 'myDomain', 
+               graph: 'myOrientdb', 
+               idRegex: /^[0-9]+:[0-9]+$/ 
+             });
 ```
 
 ###Running Gremlin queries
@@ -138,12 +162,17 @@ gRex uses the [Q](http://documentup.com/kriskowal/q/) module to return a Promise
 
 __Example: Calls invoked with Promise style callback__
 ```
-g.V('name', 'marko').out().get().then(function(result){console.log(result)}, function(err){console.log(err)});
+g.V('name', 'marko').out().get().then(function(result){
+                                        console.log(result);
+                                      }, 
+                                      function(err){
+                                        console.error(err);
+                                      });
 ```
 __Example: Calls invoked with Node style callback__
 ```
 g.V('name', 'marko').out().get(function(err, result) { 
-    if(err) return err;
+    if(err) console.error(err);
     console.log(result);
 });
 ```
@@ -172,13 +201,21 @@ __EITHER__
 
 _Promise style callback_
 ```
-gRex>     trxn.commit().then(function(result){console.log(result)}, function(err){console.log(err)});
+gRex>     trxn.commit()
+              .then(function(result){
+                 console.log(result); 
+              }, function(err){
+                    console.error(err);
+                 });
 ```
 __OR__ 
 
 _Node style callback_
 ```        
-gRex>     trxn.commit(function(err, result){ if(err) return err; console.log(result) });
+gRex>     trxn.commit(function(err, result){ 
+             if(err) console.error(err);
+                console.log(result);
+             });
 ```
 
 ## Property Data Types
