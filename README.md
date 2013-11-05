@@ -136,7 +136,7 @@ g.setOptions({ host: 'myDomain', graph: 'myOrientdb', idRegex: /^[0-9]+:[0-9]+$/
 ###Running Gremlin queries
 gRex uses the [Q](http://documentup.com/kriskowal/q/) module to return a Promise when making Ajax calls. GET requests are invoked with ``get()`` and the callback is captured by ``then(success, error);``. However, if you prefer Node style callbacks, simply pass the callback to ``get()``.
 
-__Example: Calls invoked in Promise style callback__
+__Example: Calls invoked with Promise style callback__
 ```
 g.V('name', 'marko').out().get().then(function(result){console.log(result)}, function(err){console.log(err)});
 ```
@@ -147,10 +147,10 @@ g.V('name', 'marko').out().get(function(err, result) {
     console.log(result);
 });
 ```
+###Working with the Database
+Create, Update and Delete actions are batched to reduce the number of calls to the server. In order to send these types of requests, a Transaction must be created by calling ``var trxn = g.begin();``. Make changes to your data against this object. Once all changes are done, invoke ``trxn.commit()`` to commit your changes.
 
-When performing Create, Update and Deletes of Vertices or Edges. These actions are batched to reduce the number of calls to the server. In order to send these types of requests a Transaction must be created by calling ``var trxn = g.begin();``. Updates are made against this object. Once all updates are done, invoke ``trxn.commit().then(result, error);`` to commit your changes. See examples below.
-
-Again, if you prefer the Node style callback, simply pass the callback to ``commit()``.
+Again, both the Promise style and Node style callbacks are available with ``commit()``.
 
 __Creating, updating or deleting Vetices or Edges. Use commit() to commit changes.__
 ```
@@ -168,13 +168,15 @@ gRex>     trxn.removeVertex(100, ['k2', 'k3']);
 
 gRex>     trxn.removeVertex(200);
 ```
-__then use the Promise style callback__
+__EITHER__ 
+
+_Promise style callback_
 ```
 gRex>     trxn.commit().then(function(result){console.log(result)}, function(err){console.log(err)});
 ```
 __OR__ 
 
-__the Node style callback__
+_Node style callback_
 ```        
 gRex>     trxn.commit(function(err, result){ if(err) return err; console.log(result) });
 ```
