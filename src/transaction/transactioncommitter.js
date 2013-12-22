@@ -2,7 +2,6 @@ var q = require("q"),
     request = require("request");
 
 var Utils = require("../utils"),
-    isObject = Utils.isObject,
     addTypes = require("../addtypes");
 
 
@@ -86,11 +85,11 @@ module.exports = TransactionCommitter = (function() {
             transactionElement = this.transaction.txArray[k];
 
             if(transactionElement._type == 'edge' && transactionElement._action == 'create'){
-                if (isObject(transactionElement._inV)) {
+                if (_.isObject(transactionElement._inV)) {
                     transactionElement._inV = transactionElement._inV._id;
                 }
 
-                if (isObject(transactionElement._outV)) {
+                if (_.isObject(transactionElement._outV)) {
                     transactionElement._outV = transactionElement._outV._id;
                 }
             }
@@ -212,11 +211,11 @@ module.exports = TransactionCommitter = (function() {
             if(transactionElement._type == 'edge' && transactionElement._action == 'create'){
                 // Replace references to Vertex object by references to Vertex _id.
                 // TODO: Try replacing the following two checks with getters for _inV and _outV in Edge prototype.
-                if (isObject(transactionElement._inV)) {
+                if (_.isObject(transactionElement._inV)) {
                     transactionElement._inV = transactionElement._inV._id;
                 }
 
-                if (isObject(transactionElement._outV)) {
+                if (_.isObject(transactionElement._outV)) {
                     transactionElement._outV = transactionElement._outV._id;
                 }
             }

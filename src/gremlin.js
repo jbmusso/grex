@@ -1,9 +1,8 @@
 var http = require("http");
 var q = require("q");
+var _ = require("underscore");
 
 var Utils = require("./utils");
-var isObject = Utils.isObject;
-var isArray = Utils.isArray;
 var isClosure = Utils.isClosure;
 var isGraphReference = Utils.isGraphReference;
 var isRegexId = Utils.isRegexId;
@@ -26,7 +25,7 @@ function qryMain(method, reset){
             args = arguments;
             gremlin.params += '.' + method + buildArgs.call(self, args, true);
         } else {
-            args = isArray(arguments[0]) ? arguments[0] : arguments;
+            args = _.isArray(arguments[0]) ? arguments[0] : arguments;
 
             //cater for idx param 2
             if(method == 'idx' && args.length > 1){
@@ -69,7 +68,7 @@ function qryPipes(method){
         var self = this,
             gremlin = self._buildGremlin(this.params),
             args = [],
-            isArr = isArray(arguments[0]),
+            isArr = _.isArray(arguments[0]),
             argsLen = isArr ? arguments[0].length : arguments.length;
 
         gremlin.params += "." + method + "(";
@@ -93,7 +92,7 @@ function qryCollection(method){
             gremlin = this._buildGremlin(this.params),
             param = '';
 
-        if(isArray(arguments[0])){
+        if(_.isArray(arguments[0])){
             for (var _i = 0, argsLen = arguments[0].length; _i < argsLen; _i++) {
                 param += arguments[0][_i].params;
                 param += ",";
@@ -117,13 +116,13 @@ function buildArgs(array, retainArray) {
     for (var _i = 0, l = array.length; _i < l; _i++) {
         if(isClosure(array[_i])){
             append += array[_i];
-        } else if (isObject(array[_i]) && array[_i].hasOwnProperty('verbatim')) {
+        } else if (_.isObject(array[_i]) && array[_i].hasOwnProperty('verbatim')) {
             argList += array[_i].verbatim + ",";
-        } else if (isObject(array[_i]) && !(array[_i].hasOwnProperty('params') && isGraphReference(array[_i].params))) {
+        } else if (_.isObject(array[_i]) && !(array[_i].hasOwnProperty('params') && isGraphReference(array[_i].params))) {
             jsonString = JSON.stringify(array[_i]);
             jsonString = jsonString.replace('{', '[');
             argList += jsonString.replace('}', ']') + ",";
-        } else if(retainArray && isArray(array[_i])) {
+        } else if(retainArray && _.isArray(array[_i])) {
             argList += "[" + parseArgs.call(self, array[_i]) + "],";
         } else {
             argList += parseArgs.call(self, array[_i]) + ",";
@@ -140,7 +139,7 @@ function parseArgs(val) {
     }
 
     //check to see if the arg is referencing the graph ie. g.v(1)
-    if(isObject(val) && val.hasOwnProperty('params') && isGraphReference(val.params)){
+    if(_.isObject(val) && val.hasOwnProperty('params') && isGraphReference(val.params)){
         return val.params.toString();
     }
 
@@ -222,7 +221,7 @@ Gremlin = (function () {
             mergedObject = {},
             returnObj = {typeDef:{}, result: {}};
 
-        if (isArray(obj)) {
+        if (_.isArray(obj)) {
             len = obj.length;
 
             for (var i = 0; i < len; i++) {
@@ -246,7 +245,7 @@ Gremlin = (function () {
                 }
             }
 
-            if(rest > 1 && isObject(tempTypeArr[rest])){
+            if(rest > 1 && _.isObject(tempTypeArr[rest])){
                 //merge remaining objects
                 tempTypeArrLen = tempTypeArr.length;
                 mergedObject = tempTypeArr[rest - 1];
@@ -291,13 +290,13 @@ Gremlin = (function () {
         for(n = 0; n<l; n++){
             tempObj = results[n];
 
-            if (isObject(tempObj)) {
+            if (_.isObject(tempObj)) {
                 returnObj = {};
                 typeObj = {};
 
                 for(var k in tempObj){
                     if (tempObj.hasOwnProperty(k)) {
-                        if (isObject(tempObj[k]) && 'type' in tempObj[k]) {
+                        if (_.isObject(tempObj[k]) && 'type' in tempObj[k]) {
                             if(!!typeMap[k] && typeMap[k] != tempObj[k].type){
                                 if(!result.typeMapErr){
                                     result.typeMapErr = {};

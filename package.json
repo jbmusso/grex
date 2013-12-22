@@ -27,7 +27,8 @@
   },
   "dependencies": {
     "q": "0.9.x",
-    "request": "~2.27.0"
+    "request": "~2.27.0",
+    "underscore": "~1.5.2"
   },
   "license": "MIT",
   "engines": {

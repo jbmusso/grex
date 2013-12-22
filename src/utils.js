@@ -1,12 +1,7 @@
+var _ = require("underscore");
+
 var graphRegex = /^T\.(gt|gte|eq|neq|lte|lt|decr|incr|notin|in)$|^Contains\.(IN|NOT_IN)$|^g\.|^Vertex(\.class)$|^Edge(\.class)$|^String(\.class)$|^Integer(\.class)$|^Geoshape(\.class)$|^Direction\.(OUT|IN|BOTH)$|^TitanKey(\.class)$|^TitanLabel(\.class)$/;
 var closureRegex = /^\{.*\}$/;
-
-var toString = Object.prototype.toString;
-
-
-function isString(o) {
-    return toString.call(o) === '[object String]';
-}
 
 module.exports = {
     //obj1 over writes obj2
@@ -27,22 +22,14 @@ module.exports = {
     },
 
     isRegexId: function (id) {
-        return !!this.OPTS.idRegex && isString(id) && this.OPTS.idRegex.test(id);
+        return !!this.OPTS.idRegex && _.isString(id) && this.OPTS.idRegex.test(id);
     },
 
     isGraphReference: function (val) {
-        return isString(val) && graphRegex.test(val);
-    },
-
-    isObject: function (o) {
-        return toString.call(o) === '[object Object]';
+        return _.isString(val) && graphRegex.test(val);
     },
 
     isClosure: function (val) {
-        return isString(val) && closureRegex.test(val);
-    },
-
-    isArray: function (o) {
-        return toString.call(o) === '[object Array]';
+        return _.isString(val) && closureRegex.test(val);
     }
 };

@@ -1,6 +1,4 @@
-var Utils = require("./utils"),
-    isObject = Utils.isObject,
-    isArray = Utils.isArray;
+var _ = require("underscore");
 
 var typeHash = {
     'integer': 'i',
@@ -28,7 +26,7 @@ module.exports = function addTypes(obj, typeDef, embedded, list){
     for(var k in obj){
         if(obj.hasOwnProperty(k)){
             if(typeDef){
-                if ((k in typeDef) && isObject(typeDef[k])) {
+                if ((k in typeDef) && _.isObject(typeDef[k])) {
                     if(embedded){
                         if (list) {
                             obj2 = obj[k];
@@ -47,7 +45,7 @@ module.exports = function addTypes(obj, typeDef, embedded, list){
                     } else {
                         tempObj[k] = '(map,(' + addTypes(obj[k], typeDef[k], true) + '))';
                     }
-                } else if ((k in typeDef) && isArray(typeDef[k])) {
+                } else if ((k in typeDef) && _.isArray(typeDef[k])) {
                     if(embedded){
                         tempStr += '(list,(' + addTypes(obj[k], typeDef[k], true, true) + '))';
                         tempStr = tempStr.replace(')(', '),(');
@@ -62,9 +60,9 @@ module.exports = function addTypes(obj, typeDef, embedded, list){
                                 tempStr += '(' + typeHash[typeDef[idx]] + ',' + obj[k] + ')';
                             } else {
                                 idx = typeDef.length - 1;
-                                if (isObject(typeDef[idx])) {
+                                if (_.isObject(typeDef[idx])) {
                                     tempStr += ',(map,(' + addTypes(obj[k], typeDef[idx], true) + '))';
-                                } else if (isArray(typeDef[idx])){
+                                } else if (_.isArray(typeDef[idx])){
                                     tempStr += ',(list,(' + addTypes(obj[k], typeDef[idx], true, true) + '))';
                                 } else {
                                   tempStr += '(' + typeHash[typeDef[idx]] + ',' + obj[k] + ')';

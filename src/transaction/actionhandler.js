@@ -1,5 +1,4 @@
 var Utils = require("../utils"),
-    isObject = Utils.isObject,
     addTypes = require("../addtypes");
 
 /*
@@ -39,7 +38,7 @@ var ActionHandler = (function() {
     ActionHandler.prototype.delete = function() {
         var _id;
 
-        if (isObject(this.actionArgs[0])) {
+        if (_.isObject(this.actionArgs[0])) {
             _id = this.actionArgs[0]._id;
         } else {
             // arg is a Number
@@ -88,7 +87,7 @@ var VertexActionHandler = (function() {
 
 
     function createUpdateVertex() {
-        if (isObject(this.actionArgs[0])) {
+        if (_.isObject(this.actionArgs[0])) {
             // Called cud({..}), ie. user is expecting the graph database to autogenerate _id
             this.vertex.setProperties(this.actionArgs[0]);
             this.transaction.pendingVertices.push(this.vertex);
