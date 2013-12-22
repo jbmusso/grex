@@ -1,5 +1,5 @@
 var ElementFactory = require("../elementfactory"),
-    ActionHandler = require("./actionhandler").ActionHandler,
+    ActionHandler = require("./actionhandlers/actionhandler"),
     TransactionCommitter = require("./transactioncommitter");
 
 
