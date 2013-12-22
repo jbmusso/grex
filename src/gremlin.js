@@ -9,10 +9,6 @@ var isRegexId = Utils.isRegexId;
 var merge = Utils.merge;
 
 
-var pathBase = '/graphs/';
-var gremlinExt = '/tp/gremlin?script=';
-
-
 function qryMain(method, reset){
     return function(){
         var self = this,
@@ -161,7 +157,7 @@ function parseArgs(val) {
 
 
 
-Gremlin = (function () {
+var Gremlin = (function () {
     function Gremlin(gRex) {
         this.gRex = gRex;
         this.OPTS = gRex.OPTS;
@@ -180,7 +176,7 @@ Gremlin = (function () {
         var options = {
             'host': this.OPTS.host,
             'port': this.OPTS.port,
-            'path': pathBase + this.OPTS.graph + gremlinExt + encodeURIComponent(this.params) + '&rexster.showTypes=true',
+            'path': '/graphs/' + this.OPTS.graph + '/tp/gremlin?script=' + encodeURIComponent(this.params) + '&rexster.showTypes=true',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'
             },

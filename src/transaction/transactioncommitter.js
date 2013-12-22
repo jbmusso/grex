@@ -5,7 +5,7 @@ var Utils = require("../utils"),
     addTypes = require("../addtypes");
 
 
-module.exports = TransactionCommitter = (function() {
+module.exports = (function() {
     /*
      * Constructor
      *
