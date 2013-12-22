@@ -7,7 +7,7 @@ grex.connect({
                 'port': 8182,
                 'graph': 'orientdbsample',
                 'idRegex': /^[0-9]+:[0-9]+$/
-            }).then(function(g){
+            },function(err, g){
 
 	trxn = g.begin({name:'string',age:'integer', weight:'float'});
 

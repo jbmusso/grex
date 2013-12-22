@@ -25,9 +25,9 @@ A tool for making and composing asynchronous promises in JavaScript.
 
 gRex can be loaded as:
 
--   a ``<script>`` tag in the browser. Files are located in the browser directory.
+-   a ``<script>`` tag in the browser. Files are located in the client directory.
 
-    ```
+    ```javscript
      <script type="text/javascript" src="grex.min.js"></script>
     ```
 
@@ -55,38 +55,58 @@ gRex can be loaded as:
 
 You will notice that in the examples tokens are passed as string (i.e. 'T.gt'). However, gRex also exposes some objects for convenience to make it feel more natural. To access the objects reference them like so:
 
-```
-var T = gRex.T;
-var Contains = gRex.Contains;
-var Vertex = gRex.Vertex;
-var Edge = gRex.Edge;
-```
+    var T = gRex.T;
+    var Contains = gRex.Contains;
+    var Vertex = gRex.Vertex;
+    var Edge = gRex.Edge;
+
+
+
 You can now use these objects in place of the string representation in your queries.
 
 ## Connnecting to a database
+```javascript
+    //connect takes optional Options object and returns a Promise
+    gRex.connect({ 'database': 'myGraphDB', 
+                   'host': 'my.host.com',
+                   'port': 8000 })
+    .then(function(graphDB){
+      //once connected the return value is a reference to the graph
+      trxn = graphDB.begin();
 
-```
-//connect takes options object and returns a Promise
-gRex.connect({ 'database': 'myGraphDB', 
-            'host': 'my.host.com',
-            'port': 8000 }).then(function(graphDB){
+      t1 = trxn.addVertex({name:'Test1a'});
+      t2 = trxn.addVertex({name:'Test2a'});
+      trxn.addEdge(t1, t2, 'linked', {name:"ALabel"})
 
-    //once connected the return value is a reference to the graph
-    trxn = graphDB.begin();
-
-    t1 = trxn.addVertex({name:'Test1a'});
-    t2 = trxn.addVertex({name:'Test2a'});
-    trxn.addEdge(t1, t2, 'linked', {name:"ALabel"})
-
-    trxn.commit().then(function(result){
-        console.log("Added new vertices successfully. -> ", result);            
-    }, function(err) {
-        console.error(err)
+      trxn.commit().then(function(result){
+          console.log("Added new vertices successfully. -> ", result);            
+      }, function(err) {
+          console.error(err)
+      });
     });
-
-});
 ```
+__N.B.__ You can also use ``connect()`` with _Node style callbacks_. For example:
+```javascript
+    //connect takes optional Options object and Node style callback
+    gRex.connect({ 'database': 'myGraphDB', 
+                   'host': 'my.host.com',
+                   'port': 8000 }, function(err, graphDB){
+      
+      if(err) console.error(err);
+      
+      //once connected the return value is a reference to the graph
+      trxn = graphDB.begin();
 
+      t1 = trxn.addVertex({name:'Test1a'});
+      t2 = trxn.addVertex({name:'Test2a'});
+      trxn.addEdge(t1, t2, 'linked', {name:"ALabel"})
+
+      trxn.commit(function(err, result){
+          if(err) console.error(err);
+          console.log("Added new vertices successfully. -> ", result);            
+      });
+    });
+```
 ## Introduction
 
 gRex tries to implement Gremlin syntax as closely as possible. However, there are some differences.
@@ -131,17 +151,35 @@ Graph database name
 This can remain as false, if IDs are number. If IDs are not numbers (i.e. alpha-numeric or string), but still pass parseFloat() test, then idRegex must be set. This property will enable gRex to distinguish between an ID and a float expression.
 
 ```
-g.setOptions({ host: 'myDomain', graph: 'myOrientdb', idRegex: /^[0-9]+:[0-9]+$/ });
+g.setOptions({ host: 'myDomain', 
+               graph: 'myOrientdb', 
+               idRegex: /^[0-9]+:[0-9]+$/ 
+             });
 ```
 
-__N.B.:__ gRex uses the [Q](http://documentup.com/kriskowal/q/) module to return a Promise when making Ajax calls. All requests are invoked with ``then()`` and the callback is captured by ``then(result, error);``. However, this is not the case when performing Create, Update and Deletes of Vertices or Edges. These actions are batched to reduce the number of calls to the server. In order to send these type of requests a Transaction must be created by calling ``var trxn = g.begin();``. Updates are made against this object. Once all updates are done, invoke ``trxn.commit().then(result, error);`` to commit your changes. See examples below.
+###Running Gremlin queries
+gRex uses the [Q](http://documentup.com/kriskowal/q/) module to return a Promise when making Ajax calls. GET requests are invoked with ``get()`` and the callback is captured by ``then(success, error);``. However, if you prefer Node style callbacks, simply pass the callback to ``get()``.
 
-__Calls invoked with then()__
+__Example: Calls invoked with Promise style callback__
 ```
-g.V('name', 'marko').out().then(function(result){console.log(result)}, function(err){console.log(err)});
+g.V('name', 'marko').out().get().then(function(result){
+                                        console.log(result);
+                                      }, 
+                                      function(err){
+                                        console.error(err);
+                                      });
+```
+__Example: Calls invoked with Node style callback__
+```
+g.V('name', 'marko').out().get(function(err, result) { 
+    if(err) console.error(err);
+    console.log(result);
+});
+```
+###Working with the Database
+Create, Update and Delete actions are batched to reduce the number of calls to the server. In order to send these types of requests, a Transaction must be created by calling ``var trxn = g.begin();``. Make changes to your data against this object. Once all changes are done, invoke ``trxn.commit()`` to commit your changes.
 
-g.createIndex('my-index', 'Vertex.class').then(function(result){console.log(result)}, function(err){console.log(err)});
-```
+Again, both the Promise style and Node style callbacks are available with ``commit()``.
 
 __Creating, updating or deleting Vetices or Edges. Use commit() to commit changes.__
 ```
@@ -158,8 +196,26 @@ gRex>     trxn.updateVertex(100, {k2: 'v4'});
 gRex>     trxn.removeVertex(100, ['k2', 'k3']);
 
 gRex>     trxn.removeVertex(200);
+```
+__EITHER__ 
 
-gRex>     trxn.commit().then(function(result){console.log(result)}, function(err){console.log(err)});
+_Promise style callback_
+```
+gRex>     trxn.commit()
+              .then(function(result){
+                 console.log(result); 
+              }, function(err){
+                    console.error(err);
+                 });
+```
+__OR__ 
+
+_Node style callback_
+```        
+gRex>     trxn.commit(function(err, result){ 
+             if(err) console.error(err);
+                console.log(result);
+             });
 ```
 
 ## Property Data Types
@@ -374,8 +430,12 @@ __Example 13: Create with database generated id's__
 var trxn = g.begin();
 var v1, v2;
 
-v1 = trxn.addVertex({name:'Frank'});
+v1 = trxn.addVertex({name:'frank'});
 v2 = trxn.addVertex({name:'Luca'});
+
+v1.addProperty('status','new');
+v1.setProperty('name','Frank');
+
 trxn.addEdge(v1, v2, 'knows', {since:"2003/06/01"})
 
 v1 = trxn.addVertex({name:'Stephen'});
@@ -428,6 +488,12 @@ trxn.commit().then
 ## Author
 
 Frank Panetta  - [Follow @entrendipity](https://twitter.com/intent/follow?screen_name=entrendipity)
+
+##Contributors
+
+Jean Baptiste-Musso - [gulthor](https://github.com/gulthor)
+
+Andreas Richter - [richtera](https://github.com/richtera)
 
 ##License
 ###The MIT License (MIT)
