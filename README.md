@@ -27,7 +27,7 @@ gRex can be loaded as:
 
 -   a ``<script>`` tag in the browser. Files are located in the client directory.
 
-    ```javscript
+    ```javascript
      <script type="text/javascript" src="grex.min.js"></script>
     ```
 
@@ -67,7 +67,7 @@ You can now use these objects in place of the string representation in your quer
 ## Connnecting to a database
 ```javascript
     //connect takes optional Options object and returns a Promise
-    gRex.connect({ 'database': 'myGraphDB', 
+    gRex.connect({ 'database': 'myGraphDB',
                    'host': 'my.host.com',
                    'port': 8000 })
     .then(function(graphDB){
@@ -79,7 +79,7 @@ You can now use these objects in place of the string representation in your quer
       trxn.addEdge(t1, t2, 'linked', {name:"ALabel"})
 
       trxn.commit().then(function(result){
-          console.log("Added new vertices successfully. -> ", result);            
+          console.log("Added new vertices successfully. -> ", result);
       }, function(err) {
           console.error(err)
       });
@@ -88,12 +88,12 @@ You can now use these objects in place of the string representation in your quer
 __N.B.__ You can also use ``connect()`` with _Node style callbacks_. For example:
 ```javascript
     //connect takes optional Options object and Node style callback
-    gRex.connect({ 'database': 'myGraphDB', 
+    gRex.connect({ 'database': 'myGraphDB',
                    'host': 'my.host.com',
                    'port': 8000 }, function(err, graphDB){
-      
+
       if(err) console.error(err);
-      
+
       //once connected the return value is a reference to the graph
       trxn = graphDB.begin();
 
@@ -103,7 +103,7 @@ __N.B.__ You can also use ``connect()`` with _Node style callbacks_. For example
 
       trxn.commit(function(err, result){
           if(err) console.error(err);
-          console.log("Added new vertices successfully. -> ", result);            
+          console.log("Added new vertices successfully. -> ", result);
       });
     });
 ```
@@ -112,7 +112,7 @@ __N.B.__ You can also use ``connect()`` with _Node style callbacks_. For example
 gRex tries to implement Gremlin syntax as closely as possible. However, there are some differences.
 
 * All method calls require brackets __()__, even if there are no arguments.
-* __Closures__ do not translate to javascript. Closures need to passed in as a string argument to gRex methods. 
+* __Closures__ do not translate to javascript. Closures need to passed in as a string argument to gRex methods.
 
     ```
     g.v(1).out().gather("{it.size()}");
@@ -151,9 +151,9 @@ Graph database name
 This can remain as false, if IDs are number. If IDs are not numbers (i.e. alpha-numeric or string), but still pass parseFloat() test, then idRegex must be set. This property will enable gRex to distinguish between an ID and a float expression.
 
 ```
-g.setOptions({ host: 'myDomain', 
-               graph: 'myOrientdb', 
-               idRegex: /^[0-9]+:[0-9]+$/ 
+g.setOptions({ host: 'myDomain',
+               graph: 'myOrientdb',
+               idRegex: /^[0-9]+:[0-9]+$/
              });
 ```
 
@@ -164,14 +164,14 @@ __Example: Calls invoked with Promise style callback__
 ```
 g.V('name', 'marko').out().get().then(function(result){
                                         console.log(result);
-                                      }, 
+                                      },
                                       function(err){
                                         console.error(err);
                                       });
 ```
 __Example: Calls invoked with Node style callback__
 ```
-g.V('name', 'marko').out().get(function(err, result) { 
+g.V('name', 'marko').out().get(function(err, result) {
     if(err) console.error(err);
     console.log(result);
 });
@@ -197,22 +197,22 @@ gRex>     trxn.removeVertex(100, ['k2', 'k3']);
 
 gRex>     trxn.removeVertex(200);
 ```
-__EITHER__ 
+__EITHER__
 
 _Promise style callback_
 ```
 gRex>     trxn.commit()
               .then(function(result){
-                 console.log(result); 
+                 console.log(result);
               }, function(err){
                     console.error(err);
                  });
 ```
-__OR__ 
+__OR__
 
 _Node style callback_
-```        
-gRex>     trxn.commit(function(err, result){ 
+```
+gRex>     trxn.commit(function(err, result){
              if(err) console.error(err);
                 console.log(result);
              });
@@ -289,8 +289,8 @@ Both List and Map Types can have embedded list and map types.
 To use a Type definition, just pass it to the ``begin`` function of a transaction.
 
 ```
-var typeDef = { active: 'boolean', 
-                items: ['string', 'string', 'boolean', 'integer'], 
+var typeDef = { active: 'boolean',
+                items: ['string', 'string', 'boolean', 'integer'],
                 address: { number: 'integer', street: 'string', city: 'string', occupantNames:['string']}
             };
 var trxn = new g.begin(typeDef);
@@ -315,7 +315,7 @@ gremlin>  g.v(1, 4).out('knows', 'created').in
 
 gRex>     g.v(1, 4).out('knows', 'created').in();
 
-gRex>     g.v([1, 4]).out(['knows', 'created']).in(); 
+gRex>     g.v([1, 4]).out(['knows', 'created']).in();
 
 ```
 
@@ -353,7 +353,7 @@ gRex>     g.V().and(g._().both("knows"), g._().both("created"))
 
 gremlin>  g.v(1).outE.or(_().has('id', T.eq, "9"), _().has('weight', T.lt, 0.6f))
 
-gRex>     g.v(1).outE().or(g._().has('id', 'T.eq', 9), g._().has('weight', 'T.lt', '0.6f')); 
+gRex>     g.v(1).outE().or(g._().has('id', 'T.eq', 9), g._().has('weight', 'T.lt', '0.6f'));
 ```
 
 __Example 6: groupBy__
@@ -391,9 +391,9 @@ gRex>     g.idx("my-index").put("name", "marko", g.v(1))
 __Example 10: Retrieving indexed Element__
 
 ```
-gremlin>  g.idx("my-index")[[name:"marko"]]  
+gremlin>  g.idx("my-index")[[name:"marko"]]
 
-gRex>     g.idx("my-index", {name:"marko"});  
+gRex>     g.idx("my-index", {name:"marko"});
 ```
 
 __Example 11: Drop index__
@@ -443,19 +443,19 @@ v2 = trxn.addVertex({name:'James'});
 trxn.addEdge(v2, v1, 'knows', {since:"2000/01/01"})
 
 trxn.commit().then(function(result){
-    console.log("New vertices -> ", result);            
+    console.log("New vertices -> ", result);
 }, function(err) {
     console.error(err)
-}); 
+});
 
 //This will return a JSON object with an array called newVertices. For example:
- 
+
 { success: true,
-  newVertices: 
+  newVertices:
    [ { name: 'Frank', _id: '#8:334', _type: 'vertex' },
      { name: 'Luca', _id: '#8:336', _type: 'vertex' },
      { name: 'Stephen', _id: '#8:335', _type: 'vertex' },
-     { name: 'James', _id: '#8:337', _type: 'vertex' } ] 
+     { name: 'James', _id: '#8:337', _type: 'vertex' } ]
 }
 ```
 
@@ -491,7 +491,7 @@ Frank Panetta  - [Follow @entrendipity](https://twitter.com/intent/follow?screen
 
 ##Contributors
 
-Jean Baptiste-Musso - [gulthor](https://github.com/gulthor)
+Jean-Baptiste Musso - [gulthor](https://github.com/gulthor)
 
 Andreas Richter - [richtera](https://github.com/richtera)
 
