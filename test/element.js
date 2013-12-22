@@ -1,17 +1,20 @@
-var Element = require("../src/element");
+var ElementFactory = require("../src/elementfactory");
+
+var Vertex = require("../src/elements/vertex");
+var Edge = require("../src/elements/edge");
 
 var edge, vertex;
 
 describe('Element classes', function() {
     describe('Element building', function() {
         it('should build an Element of Vertex class', function() {
-            vertex = Element.build("vertex");
-            vertex.should.be.instanceof(Element.Vertex);
+            vertex = ElementFactory.build("vertex");
+            vertex.should.be.instanceof(Vertex);
         });
 
         it('should build an Element of Edge class', function() {
-            edge = Element.build("edge");
-            edge.should.be.instanceof(Element.Edge);
+            edge = ElementFactory.build("edge");
+            edge.should.be.instanceof(Edge);
             edge.should.have.property('_type', 'edge');
         });
     });
