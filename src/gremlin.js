@@ -7,8 +7,6 @@ var isClosure = Utils.isClosure;
 var isGraphReference = Utils.isGraphReference;
 var isRegexId = Utils.isRegexId;
 
-var createTypeDefinition = require("./createtypedefinition");
-
 
 function queryMain(method, reset){
     return function(){
@@ -160,6 +158,7 @@ var Gremlin = (function () {
         this.gRex = gRex;
         this.options = gRex.options;
         this.params = 'g';
+        this.resultFormatter = gRex.resultFormatter;
     }
 
     Gremlin.prototype.get = function(callback) {
@@ -193,63 +192,8 @@ var Gremlin = (function () {
     };
 
 
-    Gremlin.prototype.transformResults = function(results){
-        var typeMap = {};
-        var typeObject,
-            returnObject;
-
-        var result = {
-            success: true,
-            results: [],
-            typeMap: {}
-        };
-
-        _.each(results, function(element) {
-            if (_.isObject(element)) {
-                returnObject = {};
-                typeObject = {};
-
-                _.forOwn(element, function(v, k) {
-                    if (_.isObject(v) && 'type' in v) {
-                        if(!!typeMap[k] && typeMap[k] != v.type){
-                            // An error occured
-                            if(!result.typeMapErr){
-                                result.typeMapErr = {};
-                            }
-
-                            console.error('_id:' + element._id + ' => {' + k + ':' + v.type + '}');
-
-                            //only capture the first error
-                            if(!(k in result.typeMapErr)){
-                                result.typeMapErr[k] = typeMap[k] + ' <=> ' + v.type;
-                            }
-                        }
-
-                        if (v.type == 'map' || v.type == 'list') {
-                            //build recursive func to build object
-                            typeObject = createTypeDefinition(v.value);
-                            typeMap[k] = typeObject.typeDef;
-                            returnObject[k] = typeObject.result;
-                        } else {
-                            typeMap[k] = v.type;
-                            returnObject[k] = v.value;
-                        }
-                    } else {
-                        returnObject[k] = v;
-                    }
-                });
-
-                result.results.push(returnObject);
-            } else {
-                result.results.push(element);
-            }
-        });
-
-        result.typeMap = typeMap;
-        //This will preserve any locally defined TypeDefs
-        this.typeMap = _.extend(this.typeMap, typeMap);
-
-        return result;
+    Gremlin.prototype.transformResults = function(results) {
+        return this.resultFormatter.formatResults(results);
     };
 
     Gremlin.prototype._buildGremlin = function (queryString) {

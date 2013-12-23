@@ -4,6 +4,8 @@ var q = require("q"),
     Transaction = require("./transaction/transaction"),
     queryMain = require("./gremlin");
 
+var ResultFormatter = require("./resultformatter");
+
 
 module.exports = (function(){
     function Grex(options) {
@@ -15,6 +17,7 @@ module.exports = (function(){
         });
 
         this.typeMap = {};
+        this.resultFormatter = new ResultFormatter();
     }
 
     Grex.prototype.connect = function(){
