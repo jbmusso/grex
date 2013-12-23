@@ -6,7 +6,7 @@ var ElementFactory = require("../elementfactory"),
 module.exports = (function () {
     function Transaction(options, typeMap) {
         this.committer = new TransactionCommitter(this);
-        this.OPTS = options;
+        this.options = options;
         this.typeMap = typeMap;
         this.txArray = [];
         this.pendingVertices = [];

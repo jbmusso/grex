@@ -159,7 +159,7 @@ function parseArguments(val) {
 var Gremlin = (function () {
     function Gremlin(gRex) {
         this.gRex = gRex;
-        this.OPTS = gRex.OPTS;
+        this.options = gRex.options;
         this.params = 'g';
     }
 
@@ -170,8 +170,8 @@ var Gremlin = (function () {
     Gremlin.prototype.getData = function() {
         var deferred = q.defer();
 
-        var uri = '/graphs/' + this.OPTS.graph + '/tp/gremlin?script=' + encodeURIComponent(this.params) + '&rexster.showTypes=true';
-        var url = 'http://' + this.OPTS.host + ':' + this.OPTS.port + uri;
+        var uri = '/graphs/' + this.options.graph + '/tp/gremlin?script=' + encodeURIComponent(this.params) + '&rexster.showTypes=true';
+        var url = 'http://' + this.options.host + ':' + this.options.port + uri;
 
         var options = {
             url: url,

@@ -6,21 +6,15 @@ var q = require("q"),
 
 
 module.exports = (function(){
-    function Grex(options){
-        var self = this;
-        //default options
-        this.OPTS = {
+    function Grex(options) {
+        this.options = _.defaults(options || {
             'host': 'localhost',
             'port': 8182,
             'graph': 'tinkergraph',
             'idRegex': false // OrientDB id regex -> /^[0-9]+:[0-9]+$/
-        };
+        });
 
         this.typeMap = {};
-
-        if(options){
-            this.setOptions(options);
-        }
     }
 
     Grex.prototype.connect = function(){
@@ -58,17 +52,10 @@ module.exports = (function(){
     // Titan specifics
     Grex.prototype.getTypes = queryMain('getTypes', true);
 
-
-    Grex.prototype.setOptions = function(options) {
-        _.forOwn(options, function(value, name) {
-            this.OPTS[name] = value;
-        }, this);
-    };
-
     Grex.prototype.begin = function (typeMap) {
         typeMap = typeMap ? merge(typeMap, this.typeMap) : this.typeMap;
 
-        return new Transaction(this.OPTS, typeMap);
+        return new Transaction(this.options, typeMap);
     };
 
     return Grex;

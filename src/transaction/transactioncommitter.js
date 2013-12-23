@@ -109,7 +109,7 @@ module.exports = (function() {
         var self = this;
         var deferred = q.defer();
 
-        var url = 'http://' + this.transaction.OPTS.host + ':' + this.transaction.OPTS.port + '/graphs/' + this.transaction.OPTS.graph + urlPath;
+        var url = 'http://' + this.transaction.options.host + ':' + this.transaction.options.port + '/graphs/' + this.transaction.options.graph + urlPath;
 
         var options = {
             url: url,

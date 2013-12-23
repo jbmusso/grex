@@ -6,12 +6,7 @@ var gRex = require('../index.js'),
 
 
 before(function(done){
-    gRex.connect({
-            'host': 'localhost',
-            'port': 8182,
-            'graph': 'tinkergraph',
-            'idRegex': false // OrientDB id regex -> /^[0-9]+:[0-9]+$/
-        })
+    gRex.connect()
         .then(function(result){
             g = result;
             done();
@@ -19,11 +14,6 @@ before(function(done){
         .fail(function(error) {
             console.error(error);
         });
-
-    // gRex.connect(function(err, result){
-    //         g = result;
-    //         done();
-    //     });
 });
 
 describe('Transforms', function(){

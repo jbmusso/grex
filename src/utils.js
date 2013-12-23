@@ -22,7 +22,7 @@ module.exports = {
     },
 
     isRegexId: function (id) {
-        return !!this.OPTS.idRegex && _.isString(id) && this.OPTS.idRegex.test(id);
+        return !!this.options.idRegex && _.isString(id) && this.options.idRegex.test(id);
     },
 
     isGraphReference: function (val) {
