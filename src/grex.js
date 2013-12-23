@@ -2,7 +2,7 @@ var q = require("q"),
     _ = require("lodash"),
     merge = require("./utils").merge,
     Transaction = require("./transaction/transaction"),
-    qryMain = require("./gremlin");
+    queryMain = require("./gremlin");
 
 
 module.exports = (function(){
@@ -22,34 +22,34 @@ module.exports = (function(){
             this.setOptions(options);
         }
 
-        this.V = qryMain('V', true);
-        this._ = qryMain('_', true);
-        this.E = qryMain('E', true);
-        this.V =  qryMain('V', true);
+        this.V = queryMain('V', true);
+        this._ = queryMain('_', true);
+        this.E = queryMain('E', true);
+        this.V =  queryMain('V', true);
 
         //Methods
-        this.e = qryMain('e', true);
-        this.idx = qryMain('idx', true);
-        this.v = qryMain('v', true);
+        this.e = queryMain('e', true);
+        this.idx = queryMain('idx', true);
+        this.v = queryMain('v', true);
 
         //Indexing
-        this.createIndex = qryMain('createIndex', true);
-        this.createKeyIndex = qryMain('createKeyIndex', true);
-        this.getIndices = qryMain('getIndices', true);
-        this.getIndexedKeys = qryMain('getIndexedKeys', true);
-        this.getIndex = qryMain('getIndex', true);
-        this.dropIndex = qryMain('dropIndex', true);
-        this.dropKeyIndex = qryMain('dropKeyIndex', true);
+        this.createIndex = queryMain('createIndex', true);
+        this.createKeyIndex = queryMain('createKeyIndex', true);
+        this.getIndices = queryMain('getIndices', true);
+        this.getIndexedKeys = queryMain('getIndexedKeys', true);
+        this.getIndex = queryMain('getIndex', true);
+        this.dropIndex = queryMain('dropIndex', true);
+        this.dropKeyIndex = queryMain('dropKeyIndex', true);
 
         //Types
-        this.makeKey = qryMain('makeKey', true);
+        this.makeKey = queryMain('makeKey', true);
 
-        this.clear =  qryMain('clear', true);
-        this.shutdown = qryMain('shutdown', true);
-        this.getFeatures = qryMain('getFeatures', true);
+        this.clear =  queryMain('clear', true);
+        this.shutdown = queryMain('shutdown', true);
+        this.getFeatures = queryMain('getFeatures', true);
 
         // Titan specifics
-        this.getTypes = qryMain('getTypes', true);
+        this.getTypes = queryMain('getTypes', true);
 
         this.connect = function(){
             return q.fcall(function() {

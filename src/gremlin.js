@@ -9,7 +9,7 @@ var isRegexId = Utils.isRegexId;
 var merge = Utils.merge;
 
 
-function qryMain(method, reset){
+function queryMain(method, reset){
     return function(){
         var gremlin = reset ? new Gremlin(this) : this._buildGremlin(this.params),
             args = '',
@@ -18,7 +18,7 @@ function qryMain(method, reset){
         //cater for select array parameters
         if(method == 'select'){
             args = arguments;
-            gremlin.params += '.' + method + buildArgs.call(this, args, true);
+            gremlin.params += '.' + method + buildArguments.call(this, args, true);
         } else {
             args = _.isArray(arguments[0]) ? arguments[0] : arguments;
 
@@ -26,14 +26,14 @@ function qryMain(method, reset){
             if(method == 'idx' && args.length > 1){
                 for (var k in args[1]){
                     appendArg = k + ":";
-                    appendArg += parseArgs.call(this, args[1][k]);
+                    appendArg += parseArguments.call(this, args[1][k]);
                 }
 
                 appendArg = "[["+ appendArg + "]]";
                 args.length = 1;
             }
 
-            gremlin.params += '.' + method + buildArgs.call(this, args);
+            gremlin.params += '.' + method + buildArguments.call(this, args);
         }
 
         gremlin.params += appendArg;
@@ -42,12 +42,12 @@ function qryMain(method, reset){
     };
 }
 
-module.exports = qryMain;
+module.exports = queryMain;
 
 
 //[i] => index & [1..2] => range
 //Do not pass in method name, just string arg
-function qryIndex(){
+function queryIndex(){
     return function(arg) {
         var gremlin = this._buildGremlin(this.params);
         gremlin.params += '['+ arg.toString() + ']';
@@ -58,7 +58,7 @@ function qryIndex(){
 
 
 //and | or | put  => g.v(1).outE().or(g._().has('id', 'T.eq', 9), g._().has('weight', 'T.lt', '0.6f'))
-function qryPipes(method){
+function queryPipes(method){
     return function() {
         var gremlin = this._buildGremlin(this.params),
             args = [],
@@ -68,7 +68,7 @@ function qryPipes(method){
         gremlin.params += "." + method + "(";
 
         for (var _i = 0; _i < argsLen; _i++) {
-            gremlin.params += isArr ? arguments[0][_i].params || parseArgs.call(this, arguments[0][_i]) : arguments[_i].params || parseArgs.call(this, arguments[_i]);
+            gremlin.params += isArr ? arguments[0][_i].params || parseArguments.call(this, arguments[0][_i]) : arguments[_i].params || parseArguments.call(this, arguments[_i]);
             gremlin.params += ",";
         }
 
@@ -80,7 +80,7 @@ function qryPipes(method){
 }
 
 //retain & except => g.V().retain([g.v(1), g.v(2), g.v(3)])
-function qryCollection(method){
+function queryCollection(method){
     return function() {
         var gremlin = this._buildGremlin(this.params),
             param = '';
@@ -93,14 +93,14 @@ function qryCollection(method){
 
             gremlin.params += "." + method + "([" + param + "])";
         } else {
-            gremlin.params += "." + method + buildArgs.call(this, arguments[0]);
+            gremlin.params += "." + method + buildArguments.call(this, arguments[0]);
         }
 
         return gremlin;
     };
 }
 
-function buildArgs(array, retainArray) {
+function buildArguments(array, retainArray) {
     var argList = '',
         append = '',
         jsonString = '';
@@ -115,9 +115,9 @@ function buildArgs(array, retainArray) {
             jsonString = jsonString.replace('{', '[');
             argList += jsonString.replace('}', ']') + ",";
         } else if(retainArray && _.isArray(v)) {
-            argList += "[" + parseArgs.call(this, v) + "],";
+            argList += "[" + parseArguments.call(this, v) + "],";
         } else {
-            argList += parseArgs.call(this, v) + ",";
+            argList += parseArguments.call(this, v) + ",";
         }
     }, this);
 
@@ -126,7 +126,7 @@ function buildArgs(array, retainArray) {
     return '(' + argList + ')' + append;
 }
 
-function parseArgs(val) {
+function parseArguments(val) {
     if(val === null) {
         return 'null';
     }
@@ -193,7 +193,7 @@ var Gremlin = (function () {
         return deferred.promise;
     }
 
-    function createTypeDef(obj){
+    function createTypeDefinition(obj){
         var tempObj = {},
             tempTypeObj = {},
             tempResultObj = {},
@@ -210,7 +210,7 @@ var Gremlin = (function () {
 
             for (var i = 0; i < len; i++) {
                 if (obj[i].type == 'map' || obj[i].type == 'list') {
-                    tempObj = createTypeDef(obj[i].value);
+                    tempObj = createTypeDefinition(obj[i].value);
                     tempTypeArr[i] = tempObj.typeDef;
                     tempResultArr[i] = tempObj.result;
                 } else {
@@ -248,7 +248,7 @@ var Gremlin = (function () {
 
             _.forOwn(obj, function(v, k) {
                 if (v.type == 'map' || v.type == 'list'){
-                    tempObj = createTypeDef(v.value);
+                    tempObj = createTypeDefinition(v.value);
                     tempTypeObj[k] = tempObj.typeDef;
                     tempResultObj[k] = tempObj.result;
                 } else {
@@ -295,7 +295,7 @@ var Gremlin = (function () {
 
                         if (v.type == 'map' || v.type == 'list') {
                             //build recursive func to build object
-                            typeObj = createTypeDef(v.value);
+                            typeObj = createTypeDefinition(v.value);
                             typeMap[k] = typeObj.typeDef;
                             returnObj[k] = typeObj.result;
                         } else {
@@ -321,115 +321,115 @@ var Gremlin = (function () {
     }
 
     Gremlin.prototype = {
-        _buildGremlin: function (qryString){
-            this.params = qryString;
+        _buildGremlin: function (queryString){
+            this.params = queryString;
             return this;
         },
 
         /*** Transform ***/
-        _: qryMain('_'),
-        both: qryMain('both'),
-        bothE: qryMain('bothE'),
-        bothV: qryMain('bothV'),
-        cap: qryMain('cap'),
-        gather: qryMain('gather'),
-        id: qryMain('id'),
-        'in': qryMain('in'),
-        inE: qryMain('inE'),
-        inV: qryMain('inV'),
-        property: qryMain('property'),
-        label: qryMain('label'),
-        map: qryMain('map'),
-        memoize: qryMain('memoize'),
-        order: qryMain('order'),
-        out: qryMain('out'),
-        outE: qryMain('outE'),
-        outV: qryMain('outV'),
-        path: qryMain('path'),
-        scatter: qryMain('scatter'),
-        select: qryMain('select'),
-        transform: qryMain('transform'),
-        orderMap: qryMain('orderMap'),
+        _: queryMain('_'),
+        both: queryMain('both'),
+        bothE: queryMain('bothE'),
+        bothV: queryMain('bothV'),
+        cap: queryMain('cap'),
+        gather: queryMain('gather'),
+        id: queryMain('id'),
+        'in': queryMain('in'),
+        inE: queryMain('inE'),
+        inV: queryMain('inV'),
+        property: queryMain('property'),
+        label: queryMain('label'),
+        map: queryMain('map'),
+        memoize: queryMain('memoize'),
+        order: queryMain('order'),
+        out: queryMain('out'),
+        outE: queryMain('outE'),
+        outV: queryMain('outV'),
+        path: queryMain('path'),
+        scatter: queryMain('scatter'),
+        select: queryMain('select'),
+        transform: queryMain('transform'),
+        orderMap: queryMain('orderMap'),
 
         /*** Filter ***/
-        index: qryIndex(), //index(i)
-        range: qryIndex(), //range('[i..j]')
-        and:  qryPipes('and'),
-        back:  qryMain('back'),
-        dedup: qryMain('dedup'),
-        except: qryCollection('except'),
-        filter: qryMain('filter'),
-        has: qryMain('has'),
-        hasNot: qryMain('hasNot'),
-        interval: qryMain('interval'),
-        or: qryPipes('or'),
-        random: qryMain('random'),
-        retain: qryCollection('retain'),
-        simplePath: qryMain('simplePath'),
+        index: queryIndex(), //index(i)
+        range: queryIndex(), //range('[i..j]')
+        and:  queryPipes('and'),
+        back:  queryMain('back'),
+        dedup: queryMain('dedup'),
+        except: queryCollection('except'),
+        filter: queryMain('filter'),
+        has: queryMain('has'),
+        hasNot: queryMain('hasNot'),
+        interval: queryMain('interval'),
+        or: queryPipes('or'),
+        random: queryMain('random'),
+        retain: queryCollection('retain'),
+        simplePath: queryMain('simplePath'),
 
         /*** Side Effect ***/
         // aggregate //Not implemented
-        as: qryMain('as'),
-        groupBy: qryMain('groupBy'),
-        groupCount: qryMain('groupCount'), //Not Fully Implemented ??
-        optional: qryMain('optional'),
-        sideEffect: qryMain('sideEffect'),
+        as: queryMain('as'),
+        groupBy: queryMain('groupBy'),
+        groupCount: queryMain('groupCount'), //Not Fully Implemented ??
+        optional: queryMain('optional'),
+        sideEffect: queryMain('sideEffect'),
 
-        linkBoth: qryMain('linkBoth'),
-        linkIn: qryMain('linkIn'),
-        linkOut: qryMain('linkOut'),
+        linkBoth: queryMain('linkBoth'),
+        linkIn: queryMain('linkIn'),
+        linkOut: queryMain('linkOut'),
         // store //Not implemented
         // table //Not implemented
         // tree //Not implemented
 
         /*** Branch ***/
-        copySplit: qryPipes('copySplit'),
-        exhaustMerge: qryMain('exhaustMerge'),
-        fairMerge: qryMain('fairMerge'),
-        ifThenElse: qryMain('ifThenElse'), //g.v(1).out().ifThenElse('{it.name=='josh'}','{it.age}','{it.name}')
-        loop: qryMain('loop'),
+        copySplit: queryPipes('copySplit'),
+        exhaustMerge: queryMain('exhaustMerge'),
+        fairMerge: queryMain('fairMerge'),
+        ifThenElse: queryMain('ifThenElse'), //g.v(1).out().ifThenElse('{it.name=='josh'}','{it.age}','{it.name}')
+        loop: queryMain('loop'),
 
         /*** Methods ***/
         //fill //Not implemented
-        count: qryMain('count'),
-        iterate: qryMain('iterate'),
-        next: qryMain('next'),
-        toList: qryMain('toList'),
-        keys: qryMain('keys'),
-        remove: qryMain('remove'),
-        values: qryMain('values'),
-        put: qryPipes('put'),
+        count: queryMain('count'),
+        iterate: queryMain('iterate'),
+        next: queryMain('next'),
+        toList: queryMain('toList'),
+        keys: queryMain('keys'),
+        remove: queryMain('remove'),
+        values: queryMain('values'),
+        put: queryPipes('put'),
 
-        getPropertyKeys: qryMain('getPropertyKeys'),
-        setProperty: qryMain('setProperty'),
-        getProperty: qryMain('getProperty'),
+        getPropertyKeys: queryMain('getPropertyKeys'),
+        setProperty: queryMain('setProperty'),
+        getProperty: queryMain('getProperty'),
 
         //Titan specifics
-        name: qryMain('name'),
-        dataType: qryMain('dataType'),
-        indexed: qryMain('indexed'),
-        unique: qryMain('unique'),
-        makePropertyKey: qryMain('makePropertyKey'),
-        group: qryMain('group'),
-        makeEdgeLabel: qryMain('makeEdgeLabel'),
-        query: qryMain('query'),
+        name: queryMain('name'),
+        dataType: queryMain('dataType'),
+        indexed: queryMain('indexed'),
+        unique: queryMain('unique'),
+        makePropertyKey: queryMain('makePropertyKey'),
+        group: queryMain('group'),
+        makeEdgeLabel: queryMain('makeEdgeLabel'),
+        query: queryMain('query'),
 
         //Titan v0.4.0 specifics
-        single: qryMain('single'),
-        list: qryMain('list'),
-        oneToMany: qryMain('oneToMany'), // replaces unique(Direction.IN)
-        manyToOne: qryMain('manyToOne'), // replaces unique(Direction.OUT)
-        oneToOne: qryMain('oneToOne'),   // replaces unique(Direction.IN).unique(Direction.OUT)
-        makeKey: qryMain('makeKey'),
-        makeLabel: qryMain('makeLabel'),
-        make: qryMain('make'),
-        sortKey: qryMain('sortKey'),
-        signature: qryMain('signature'),
-        unidirected: qryMain('unidirected'),
+        single: queryMain('single'),
+        list: queryMain('list'),
+        oneToMany: queryMain('oneToMany'), // replaces unique(Direction.IN)
+        manyToOne: queryMain('manyToOne'), // replaces unique(Direction.OUT)
+        oneToOne: queryMain('oneToOne'),   // replaces unique(Direction.IN).unique(Direction.OUT)
+        makeKey: queryMain('makeKey'),
+        makeLabel: queryMain('makeLabel'),
+        make: queryMain('make'),
+        sortKey: queryMain('sortKey'),
+        signature: queryMain('signature'),
+        unidirected: queryMain('unidirected'),
 
-        createKeyIndex: qryMain('createKeyIndex'),
-        getIndexes: qryMain('getIndexes'),
-        hasIndex: qryMain('hasIndex'),
+        createKeyIndex: queryMain('createKeyIndex'),
+        getIndexes: queryMain('getIndexes'),
+        hasIndex: queryMain('hasIndex'),
 
         /*** http ***/
         get: get(),
