@@ -11,15 +11,14 @@ var merge = Utils.merge;
 
 function qryMain(method, reset){
     return function(){
-        var self = this,
-            gremlin = reset ? new Gremlin(this) : self._buildGremlin(self.params),
+        var gremlin = reset ? new Gremlin(this) : this._buildGremlin(this.params),
             args = '',
             appendArg = '';
 
         //cater for select array parameters
         if(method == 'select'){
             args = arguments;
-            gremlin.params += '.' + method + buildArgs.call(self, args, true);
+            gremlin.params += '.' + method + buildArgs.call(this, args, true);
         } else {
             args = _.isArray(arguments[0]) ? arguments[0] : arguments;
 
@@ -27,14 +26,14 @@ function qryMain(method, reset){
             if(method == 'idx' && args.length > 1){
                 for (var k in args[1]){
                     appendArg = k + ":";
-                    appendArg += parseArgs.call(self, args[1][k]);
+                    appendArg += parseArgs.call(this, args[1][k]);
                 }
 
                 appendArg = "[["+ appendArg + "]]";
                 args.length = 1;
             }
 
-            gremlin.params += '.' + method + buildArgs.call(self, args);
+            gremlin.params += '.' + method + buildArgs.call(this, args);
         }
 
         gremlin.params += appendArg;
@@ -61,8 +60,7 @@ function qryIndex(){
 //and | or | put  => g.v(1).outE().or(g._().has('id', 'T.eq', 9), g._().has('weight', 'T.lt', '0.6f'))
 function qryPipes(method){
     return function() {
-        var self = this,
-            gremlin = self._buildGremlin(this.params),
+        var gremlin = this._buildGremlin(this.params),
             args = [],
             isArr = _.isArray(arguments[0]),
             argsLen = isArr ? arguments[0].length : arguments.length;
@@ -70,7 +68,7 @@ function qryPipes(method){
         gremlin.params += "." + method + "(";
 
         for (var _i = 0; _i < argsLen; _i++) {
-            gremlin.params += isArr ? arguments[0][_i].params || parseArgs.call(self, arguments[0][_i]) : arguments[_i].params || parseArgs.call(self, arguments[_i]);
+            gremlin.params += isArr ? arguments[0][_i].params || parseArgs.call(this, arguments[0][_i]) : arguments[_i].params || parseArgs.call(this, arguments[_i]);
             gremlin.params += ",";
         }
 
@@ -84,8 +82,7 @@ function qryPipes(method){
 //retain & except => g.V().retain([g.v(1), g.v(2), g.v(3)])
 function qryCollection(method){
     return function() {
-        var self = this,
-            gremlin = this._buildGremlin(this.params),
+        var gremlin = this._buildGremlin(this.params),
             param = '';
 
         if(_.isArray(arguments[0])){
@@ -96,7 +93,7 @@ function qryCollection(method){
 
             gremlin.params += "." + method + "([" + param + "])";
         } else {
-            gremlin.params += "." + method + buildArgs.call(self, arguments[0]);
+            gremlin.params += "." + method + buildArgs.call(this, arguments[0]);
         }
 
         return gremlin;
@@ -171,7 +168,6 @@ var Gremlin = (function () {
     }
 
     function getData() {
-        var self = this;
         var deferred = q.defer();
 
         var uri = '/graphs/' + this.OPTS.graph + '/tp/gremlin?script=' + encodeURIComponent(this.params) + '&rexster.showTypes=true';
@@ -189,10 +185,10 @@ var Gremlin = (function () {
                 return deferred.reject(err);
             }
 
-            var results = transformResults.call(self.gRex, JSON.parse(body).results);
+            var results = transformResults.call(this.gRex, JSON.parse(body).results);
 
             return deferred.resolve(results);
-        });
+        }.bind(this));
 
         return deferred.promise;
     }
