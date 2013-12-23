@@ -3,12 +3,12 @@ gRex
 
 [Gremlin](https://github.com/tinkerpop/gremlin/wiki) inspired [Rexster Graph Server](https://github.com/tinkerpop/rexster/wiki) client for NodeJS and the browser.
 
-## Dependancies
+## Dependencies
 
 __batch kibble__ (Rexster extension)
 
 Move the batch-kibble-XXX.jar, located in the modules ``lib`` folder, to the ``/ext`` folder under the rexster server directory.
-Add an ``allow`` tag to the database extensions configuration in the rexster.xml file.
+Add an ``allow`` tag to the database extensions configuration in the `rexster.xml` file.
 
     <extensions>
         <allows>
@@ -17,9 +17,7 @@ Add an ``allow`` tag to the database extensions configuration in the rexster.xml
         </allows>
     </extensions>
 
-[__Q__](http://documentup.com/kriskowal/q/)
-
-A tool for making and composing asynchronous promises in JavaScript.
+Batch kibble is currently required for handling transactions over http. It will be removed when transactions will be handled by the gremlin extension.
 
 ## Usage
 
@@ -42,7 +40,7 @@ gRex can be loaded as:
     then in Node
 
     ```
-    var gRex = require(“grex”);
+    var gRex = require('grex');
     ```
 
 -   a RequireJS module
@@ -64,7 +62,7 @@ You will notice that in the examples tokens are passed as string (i.e. 'T.gt'). 
 
 You can now use these objects in place of the string representation in your queries.
 
-## Connnecting to a database
+## Connecting to a database
 ```javascript
     //connect takes optional Options object and returns a Promise
     gRex.connect({ 'database': 'myGraphDB',
@@ -119,7 +117,7 @@ gRex tries to implement Gremlin syntax as closely as possible. However, there ar
 
     g.v(1).out().ifThenElse("{it.name=='josh'}{it.age}{it.name}");
     ```
-* __Comparators__ and __Float__'s are not native javascript Types so need to be passed in as a string to gRex methods. Floats need to be suffixed with a 'f'.
+* __Comparators__ and __Float__'s are not native javascript Types so they need to be passed in as a string to gRex methods. Floats need to be suffixed with a 'f'.
 
     ```
     g.v(1).outE().has("weight", "T.gte", "0.5f").property("weight")
