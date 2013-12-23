@@ -1,5 +1,5 @@
 var ElementFactory = require("../elementfactory"),
-    ActionHandler = require("./actionhandlers/actionhandler"),
+    ActionHandlerFactory = require("./actionhandlers/actionhandlerfactory"),
     TransactionCommitter = require("./transactioncommitter");
 
 
@@ -18,7 +18,7 @@ module.exports = (function () {
             var element = ElementFactory.build(type),
                 // Instantiate an actionhandler everytime cud() is called.
                 // TODO: improve this, and pass element to prepareElementFor() instead. Will avoid instantiating a ActionHandler every time.
-                actionhandler = ActionHandler.build(element, this, arguments);
+                actionhandler = ActionHandlerFactory.build(element, this, arguments);
 
             element = actionhandler.handleAction(action); //returns "element"
 

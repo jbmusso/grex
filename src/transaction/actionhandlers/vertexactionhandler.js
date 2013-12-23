@@ -1,4 +1,5 @@
 var inherits = require("inherits");
+var _ = require("lodash");
 
 var ActionHandler = require("./actionhandler");
 

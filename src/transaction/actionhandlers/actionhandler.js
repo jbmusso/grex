@@ -51,14 +51,6 @@ module.exports = (function() {
     }
   };
 
-  ActionHandler.build = function(element, transaction, actionArgs) {
-    var handlers = {
-      vertex: VertexActionHandler,
-      edge: EdgeActionHandler
-    };
-
-    return new handlers[element._type](element, transaction, actionArgs);
-  };
 
   return ActionHandler;
 
