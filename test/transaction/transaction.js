@@ -2,11 +2,10 @@
 
 var gRex = require('../../index.js'),
     Transaction = require("../../src/transaction/transaction"),
-    Element = require("../../src/element"),
+    Vertex = require("../../src/elements/vertex"),
+    Edge = require("../../src/elements/edge"),
     T = gRex.T,
-    Contains = gRex.Contains,
-    Vertex = gRex.Vertex,
-    Edge = gRex.Edge;
+    Contains = gRex.Contains;
 
 var transaction;
 
@@ -30,15 +29,6 @@ describe('Transaction', function() {
     });
 
     describe('Transaction methods', function() {
-        it('should have 6 valid create/update/delete methods for vertices and edges', function() {
-            transaction.addVertex.should.be.a("function");
-            transaction.addEdge.should.be.a("function");
-            transaction.removeVertex.should.be.a("function");
-            transaction.removeEdge.should.be.a("function");
-            transaction.updateVertex.should.be.a("function");
-            transaction.updateEdge.should.be.a("function");
-        });
-
         var vertex, edge;
 
         describe('#addVertex()', function() {
@@ -48,7 +38,7 @@ describe('Transaction', function() {
                 });
 
                 it('should return a vertex pending for addition', function() {
-                    vertex.should.be.an.instanceof(Element.Vertex);
+                    vertex.should.be.an.instanceof(Vertex);
                 });
 
                 it('should not be added to the transaction', function() {
@@ -74,7 +64,7 @@ describe('Transaction', function() {
                 });
 
                 it('should return a vertex', function() {
-                    vertex.should.be.an.instanceof(Element.Vertex);
+                    vertex.should.be.an.instanceof(Vertex);
                 });
 
                 it('should be added to the transaction', function() {
@@ -103,7 +93,7 @@ describe('Transaction', function() {
                 });
 
                 it('should return a vertex', function() {
-                    vertex.should.be.an.instanceof(Element.Vertex);
+                    vertex.should.be.an.instanceof(Vertex);
                 });
 
                 it('should not be added to the transaction', function() {
@@ -129,7 +119,7 @@ describe('Transaction', function() {
                 });
 
                 it('should return a vertex', function() {
-                    vertex.should.be.an.instanceof(Element.Vertex);
+                    vertex.should.be.an.instanceof(Vertex);
                 });
 
                 it('should be added to the transaction', function() {
@@ -154,7 +144,7 @@ describe('Transaction', function() {
                 });
 
                 it('should return an edge', function() {
-                    edge.should.be.an.instanceof(Element.Edge);
+                    edge.should.be.an.instanceof(Edge);
                 });
 
                 it('should be added to the transaction', function() {
@@ -186,7 +176,7 @@ describe('Transaction', function() {
                 });
 
                 it('should return an edge', function() {
-                    edge.should.be.an.instanceof(Element.Edge);
+                    edge.should.be.an.instanceof(Edge);
                 });
 
                 it('should be added to the transaction', function() {
@@ -226,7 +216,7 @@ describe('Transaction', function() {
                 });
 
                 it('should return an edge', function() {
-                    edge.should.be.an.instanceof(Element.Edge);
+                    edge.should.be.an.instanceof(Edge);
                 });
 
                 it('should have a numerical _id', function() {
@@ -257,7 +247,7 @@ describe('Transaction', function() {
                 });
 
                 it('should return a vertex', function() {
-                    vertex.should.be.an.instanceof(Element.Vertex);
+                    vertex.should.be.an.instanceof(Vertex);
                 });
 
                 it('should be added to the transaction', function() {
@@ -285,7 +275,7 @@ describe('Transaction', function() {
                 });
 
                 it('should return a vertex', function() {
-                    vertex.should.be.an.instanceof(Element.Vertex);
+                    vertex.should.be.an.instanceof(Vertex);
                 });
 
                 it('should be added to the transaction', function() {
@@ -311,7 +301,7 @@ describe('Transaction', function() {
                 });
 
                 it('should return an edge', function() {
-                    edge.should.be.an.instanceof(Element.Edge);
+                    edge.should.be.an.instanceof(Edge);
                 });
 
                 it('should be added to the transaction', function() {
@@ -339,7 +329,7 @@ describe('Transaction', function() {
                 });
 
                 it('should return an edge', function() {
-                    edge.should.be.an.instanceof(Element.Edge);
+                    edge.should.be.an.instanceof(Edge);
                 });
 
                 it('should be added to the transaction', function() {
