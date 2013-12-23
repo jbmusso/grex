@@ -1,6 +1,6 @@
 var request = require("request");
 var q = require("q");
-var _ = require("underscore");
+var _ = require("lodash");
 
 var Utils = require("./utils");
 var isClosure = Utils.isClosure;

@@ -1,4 +1,4 @@
-var _ = require("underscore");
+var _ = require("lodash");
 
 var typeHash = {
     'integer': 'i',

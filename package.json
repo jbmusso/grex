@@ -28,8 +28,8 @@
   "dependencies": {
     "q": "0.9.x",
     "request": "~2.27.0",
-    "underscore": "~1.5.2",
-    "inherits": "~2.0.1"
+    "inherits": "~2.0.1",
+    "lodash": "~2.4.1"
   },
   "license": "MIT",
   "engines": {
