@@ -144,11 +144,11 @@ function parseArgs(val) {
     }
 
     //Cater for ids that are not numbers but pass parseFloat test
-    if(isRegexId.call(this, val) || isNaN(parseFloat(val))) {
+    if(isRegexId.call(this, val) || _.isNaN(parseFloat(val))) {
         return "'" + val + "'";
     }
 
-    if(!isNaN(parseFloat(val))) {
+    if(!_.isNaN(parseFloat(val))) {
          return val.toString();
     }
 
