@@ -1,4 +1,4 @@
-var http = require("http");
+var request = require("request");
 var q = require("q");
 var _ = require("underscore");
 
@@ -173,33 +173,25 @@ var Gremlin = (function () {
     function getData() {
         var self = this;
         var deferred = q.defer();
+
+        var uri = '/graphs/' + this.OPTS.graph + '/tp/gremlin?script=' + encodeURIComponent(this.params) + '&rexster.showTypes=true';
+        var url = 'http://' + this.OPTS.host + ':' + this.OPTS.port + uri;
+
         var options = {
-            'host': this.OPTS.host,
-            'port': this.OPTS.port,
-            'path': '/graphs/' + this.OPTS.graph + '/tp/gremlin?script=' + encodeURIComponent(this.params) + '&rexster.showTypes=true',
+            url: url,
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            'method': 'GET'
+            }
         };
 
-        http.get(options, function(res) {
-            var body = '';
-            var typeMap = {};
-            var tempObj = {};
-            var returnObj = {};
-            var resultObj = { results: [], typeMap: {} };
-            var n;
-            res.on('data', function(results) {
-                body += results;
-            });
+        request.get(options, function(err, res, body) {
+            if (err) {
+                return deferred.reject(err);
+            }
 
-            res.on('end', function() {
-                deferred.resolve(transformResults.call(self.gRex, JSON.parse(body).results));
-            });
+            var results = transformResults.call(self.gRex, JSON.parse(body).results);
 
-        }).on('error', function(e) {
-            deferred.reject(e);
+            return deferred.resolve(results);
         });
 
         return deferred.promise;
