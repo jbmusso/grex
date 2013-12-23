@@ -184,7 +184,7 @@ var Gremlin = (function () {
                 return deferred.reject(err);
             }
 
-            var results = transformResults.call(this.gRex, JSON.parse(body).results);
+            var results = this.transformResults(JSON.parse(body).results);
 
             return deferred.resolve(results);
         }.bind(this));
@@ -193,27 +193,31 @@ var Gremlin = (function () {
     };
 
 
-    function transformResults(results){
+    Gremlin.prototype.transformResults = function(results){
         var typeMap = {};
-        var typeObj,
-            graphElement,
-            returnObj;
+        var typeObject,
+            returnObject;
 
-        var result = { success: true, results: [], typeMap: {} };
+        var result = {
+            success: true,
+            results: [],
+            typeMap: {}
+        };
 
-        _.each(results, function(graphElement) {
-            if (_.isObject(graphElement)) {
-                returnObj = {};
-                typeObj = {};
+        _.each(results, function(element) {
+            if (_.isObject(element)) {
+                returnObject = {};
+                typeObject = {};
 
-                _.forOwn(graphElement, function(v, k) {
+                _.forOwn(element, function(v, k) {
                     if (_.isObject(v) && 'type' in v) {
                         if(!!typeMap[k] && typeMap[k] != v.type){
+                            // An error occured
                             if(!result.typeMapErr){
                                 result.typeMapErr = {};
                             }
 
-                            console.error('_id:' + graphElement._id + ' => {' + k + ':' + v.type + '}');
+                            console.error('_id:' + element._id + ' => {' + k + ':' + v.type + '}');
 
                             //only capture the first error
                             if(!(k in result.typeMapErr)){
@@ -223,21 +227,21 @@ var Gremlin = (function () {
 
                         if (v.type == 'map' || v.type == 'list') {
                             //build recursive func to build object
-                            typeObj = createTypeDefinition(v.value);
-                            typeMap[k] = typeObj.typeDef;
-                            returnObj[k] = typeObj.result;
+                            typeObject = createTypeDefinition(v.value);
+                            typeMap[k] = typeObject.typeDef;
+                            returnObject[k] = typeObject.result;
                         } else {
                             typeMap[k] = v.type;
-                            returnObj[k] = v.value;
+                            returnObject[k] = v.value;
                         }
                     } else {
-                        returnObj[k] = v;
+                        returnObject[k] = v;
                     }
                 });
 
-                result.results.push(returnObj);
+                result.results.push(returnObject);
             } else {
-                result.results.push(graphElement);
+                result.results.push(element);
             }
         });
 
@@ -246,7 +250,7 @@ var Gremlin = (function () {
         this.typeMap = _.extend(this.typeMap, typeMap);
 
         return result;
-    }
+    };
 
     Gremlin.prototype._buildGremlin = function (queryString) {
         this.params = queryString;
