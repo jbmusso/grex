@@ -1,3 +1,5 @@
+var _ = require('lodash');
+
 /*
 * Abstract Element class
 */
@@ -10,11 +12,9 @@ module.exports = (function() {
   Element.prototype.getProperties = function() {
     var o = {};
 
-    for (var propertyName in this) {
-        if (this.hasOwnProperty(property)) {
-            o[propertyName] = this[propertyName];
-        }
-    }
+    _.each(this, function(property, propertyName) {
+      o[propertyName] = this[propertyName];
+    }, this);
 
     return o;
   };
@@ -26,7 +26,7 @@ module.exports = (function() {
 
   Element.prototype.setProperties = function (properties) {
     for (var key in properties) {
-        this.setProperty(key, properties[key]);
+      this.setProperty(key, properties[key]);
     }
     return this;
   };
@@ -50,7 +50,7 @@ module.exports = (function() {
    */
   Element.prototype.addProperties = function (properties) {
     for (var key in properties) {
-        this.addProperty(key, properties[key]);
+      this.addProperty(key, properties[key]);
     }
     return this;
   };
