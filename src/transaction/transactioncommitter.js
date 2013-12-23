@@ -1,5 +1,6 @@
-var q = require("q"),
-    request = require("request");
+var q = require("q");
+var request = require("request");
+var _ = require("lodash");
 
 var Utils = require("../utils"),
     addTypes = require("../addtypes");
