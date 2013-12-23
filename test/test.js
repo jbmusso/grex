@@ -5,7 +5,7 @@ var gRex = require('../index.js'),
     Edge = gRex.Edge;
 
 
-beforeEach(function(done){
+before(function(done){
     gRex.connect({
             'host': 'localhost',
             'port': 8182,
