@@ -24,12 +24,12 @@ module.exports = function(grunt){
     mochaTest: {
       test: {
         options: {
-          timeout: 10000,
+          timeout: 2000,
             reporter: 'spec',
             require: 'should',
             globals: 'g'
         },
-        src: ['test/*.js']
+        src: ['test/**/*.js']
       }
     },
     browserify: {
@@ -38,7 +38,7 @@ module.exports = function(grunt){
         dest: 'client/bundle.js',
         options: {
           standalone: 'gRex',
-          debug: false        
+          debug: false
         }
       }
     }
