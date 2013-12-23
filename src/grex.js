@@ -6,7 +6,7 @@ var q = require("q"),
 
 
 module.exports = (function(){
-    function gRex(options){
+    function Grex(options){
         var self = this;
         //default options
         this.OPTS = {
@@ -21,54 +21,55 @@ module.exports = (function(){
         if(options){
             this.setOptions(options);
         }
-
-        this.V = queryMain('V', true);
-        this._ = queryMain('_', true);
-        this.E = queryMain('E', true);
-        this.V =  queryMain('V', true);
-
-        //Methods
-        this.e = queryMain('e', true);
-        this.idx = queryMain('idx', true);
-        this.v = queryMain('v', true);
-
-        //Indexing
-        this.createIndex = queryMain('createIndex', true);
-        this.createKeyIndex = queryMain('createKeyIndex', true);
-        this.getIndices = queryMain('getIndices', true);
-        this.getIndexedKeys = queryMain('getIndexedKeys', true);
-        this.getIndex = queryMain('getIndex', true);
-        this.dropIndex = queryMain('dropIndex', true);
-        this.dropKeyIndex = queryMain('dropKeyIndex', true);
-
-        //Types
-        this.makeKey = queryMain('makeKey', true);
-
-        this.clear =  queryMain('clear', true);
-        this.shutdown = queryMain('shutdown', true);
-        this.getFeatures = queryMain('getFeatures', true);
-
-        // Titan specifics
-        this.getTypes = queryMain('getTypes', true);
-
-        this.connect = function(){
-            return q.fcall(function() {
-                return self;
-            });
-        };
     }
 
-    gRex.prototype.setOptions = function(options) {
+    Grex.prototype.connect = function(){
+        return q.fcall(function() {
+            return this;
+        }.bind(this));
+    };
+
+    Grex.prototype.V = queryMain('V', true);
+    Grex.prototype._ = queryMain('_', true);
+    Grex.prototype.E = queryMain('E', true);
+    Grex.prototype.V =  queryMain('V', true);
+
+    //Methods
+    Grex.prototype.e = queryMain('e', true);
+    Grex.prototype.idx = queryMain('idx', true);
+    Grex.prototype.v = queryMain('v', true);
+
+    //Indexing
+    Grex.prototype.createIndex = queryMain('createIndex', true);
+    Grex.prototype.createKeyIndex = queryMain('createKeyIndex', true);
+    Grex.prototype.getIndices = queryMain('getIndices', true);
+    Grex.prototype.getIndexedKeys = queryMain('getIndexedKeys', true);
+    Grex.prototype.getIndex = queryMain('getIndex', true);
+    Grex.prototype.dropIndex = queryMain('dropIndex', true);
+    Grex.prototype.dropKeyIndex = queryMain('dropKeyIndex', true);
+
+    //Types
+    Grex.prototype.makeKey = queryMain('makeKey', true);
+
+    Grex.prototype.clear =  queryMain('clear', true);
+    Grex.prototype.shutdown = queryMain('shutdown', true);
+    Grex.prototype.getFeatures = queryMain('getFeatures', true);
+
+    // Titan specifics
+    Grex.prototype.getTypes = queryMain('getTypes', true);
+
+
+    Grex.prototype.setOptions = function(options) {
         _.forOwn(options, function(value, name) {
             this.OPTS[name] = value;
         }, this);
     };
 
-    gRex.prototype.begin = function (typeMap) {
+    Grex.prototype.begin = function (typeMap) {
         typeMap = typeMap ? merge(typeMap, this.typeMap) : this.typeMap;
 
         return new Transaction(this.OPTS, typeMap);
     };
 
-    return gRex;
+    return Grex;
 })();
