@@ -10,8 +10,8 @@ var grex = function(options, callback){
         var db = new gRex(options);
         connect = db.connect().then().nodeify(callback);
     } catch(error) {
-        return callback(error);
         console.error(error);
+        return callback(error);
     }
 
     return connect;
@@ -23,7 +23,7 @@ module.exports = {
     "Contains": classes.Contains,
     "Vertex": classes.Vertex,
     "Edge": classes.Edge,
-    "String": classes["String"],
+    "String": classes.String,
     "Direction": classes.Direction,
     "Geoshape": classes.Geoshape,
     "TitanKey": classes.TitanKey,
