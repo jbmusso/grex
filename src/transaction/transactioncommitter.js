@@ -79,22 +79,18 @@ module.exports = (function() {
      * @api private
      */
     TransactionCommitter.prototype.commitEdges = function() {
-        var transactionElement;
-
         // We don't have new vertices to create, only edges...
-        for (var k = 0; k < this.transaction.txArray.length; k++) {
-            transactionElement = this.transaction.txArray[k];
-
-            if(transactionElement._type == 'edge' && transactionElement._action == 'create'){
-                if (_.isObject(transactionElement._inV)) {
-                    transactionElement._inV = transactionElement._inV._id;
+        _.each(this.transaction.txArray, function(graphElement) {
+            if (graphElement._type == 'edge' && graphElement._action == 'create'){
+                if (_.isObject(graphElement._inV)) {
+                    graphElement._inV = graphElement._inV._id;
                 }
 
-                if (_.isObject(transactionElement._outV)) {
-                    transactionElement._outV = transactionElement._outV._id;
+                if (_.isObject(graphElement._outV)) {
+                    graphElement._outV = graphElement._outV._id;
                 }
             }
-        }
+        });
 
         return this.postBatch({ tx: this.transaction.txArray });
     };
@@ -124,12 +120,10 @@ module.exports = (function() {
         };
 
         // Specify custom headers, if any
-        if(headers){
-            for(var prop in headers){
-                if(headers.hasOwnProperty(prop)){
-                    options.headers[prop] = headers[prop];
-                }
-            }
+        if (headers) {
+            _.forOwn(headers, function(value, name) {
+                options.headers[name] = value;
+            });
         }
 
         request.post(options, function(err, res, body) {
@@ -204,23 +198,19 @@ module.exports = (function() {
      * @api private
      */
     TransactionCommitter.prototype.updateEdges = function() {
-        var transactionElement;
-
-        for (var k = 0; k < this.transaction.txArray.length; k++) {
-            transactionElement = this.transaction.txArray[k];
-
-            if(transactionElement._type == 'edge' && transactionElement._action == 'create'){
+        _.each(this.transaction.txArray, function(graphElement) {
+            if  (graphElement._type == 'edge' && graphElement._action == 'create'){
                 // Replace references to Vertex object by references to Vertex _id.
                 // TODO: Try replacing the following two checks with getters for _inV and _outV in Edge prototype.
-                if (_.isObject(transactionElement._inV)) {
-                    transactionElement._inV = transactionElement._inV._id;
+                if (_.isObject(graphElement._inV)) {
+                    graphElement._inV = graphElement._inV._id;
                 }
 
-                if (_.isObject(transactionElement._outV)) {
-                    transactionElement._outV = transactionElement._outV._id;
+                if (_.isObject(graphElement._outV)) {
+                    graphElement._outV = graphElement._outV._id;
                 }
             }
-        }
+        });
     };
 
     /*
@@ -230,17 +220,17 @@ module.exports = (function() {
      * @param {Array} of element result fetched from the database
      * @api private
      */
-    TransactionCommitter.prototype.updatePendingVertices = function(result) {
+    TransactionCommitter.prototype.updatePendingVertices = function(results) {
         var inError = false;
 
         //Update the _id for the created Vertices
-        for (var j = 0; j < result.length; j++) {
-            if('results' in result[j] && '_id' in result[j].results){
-                this.transaction.pendingVertices[j]._id = result[j].results._id;
+        _.each(results, function(result, j) {
+            if('results' in result && '_id' in result.results){
+                this.transaction.pendingVertices[j]._id = result.results._id;
             } else {
                 this.inError = true;
             }
-        }
+        }, this);
     };
 
     /*
@@ -252,13 +242,12 @@ module.exports = (function() {
      */
     TransactionCommitter.prototype.getPostVerticesPromises = function() {
         var promises = [],
-            types,
             header = {'Content-Type':'application/vnd.rexster-typed-v1+json'};
 
-        for (var i = 0; i < this.transaction.pendingVertices.length; i++) {
-            types = addTypes(this.transaction.pendingVertices[i], this.transaction.typeMap);
+        _.each(this.transaction.pendingVertices, function(vertex) {
+            var types = addTypes(vertex, this.transaction.typeMap);
             promises.push(this.postVertices(types, header));
-        }
+        }, this);
 
         return q.all(promises);
     };
@@ -270,13 +259,13 @@ module.exports = (function() {
      * @api private
      */
     TransactionCommitter.prototype.removeVertices = function() {
-        for (var i = this.transaction.pendingVertices.length - 1; i >= 0; i--) {
-            //check if any vertices were created and create a Transaction
-            //to delete them from the database
-            if('_id' in this.transaction.pendingVertices[i]){
-                this.transaction.removeVertex(this.transaction.pendingVertices[i]._id);
+        _.each(this.transaction.pendingVertices, function(vertex) {
+            // check if any vertices were created and create a Transaction
+            // to delete them from the database
+            if ('_id' in vertex){
+                this.transaction.removeVertex(vertex._id);
             }
-        }
+        });
 
         this.transaction.pendingVertices.length = 0;
     };

@@ -1,4 +1,5 @@
 var q = require("q"),
+    _ = require("lodash"),
     merge = require("./utils").merge,
     Transaction = require("./transaction/transaction"),
     qryMain = require("./gremlin");
@@ -57,17 +58,13 @@ module.exports = (function(){
         };
     }
 
-    gRex.prototype.setOptions = function (options){
-        if(!!options){
-            for (var k in options){
-                if(options.hasOwnProperty(k)){
-                    this.OPTS[k] = options[k];
-                }
-            }
-        }
+    gRex.prototype.setOptions = function(options) {
+        _.forOwn(options, function(value, name) {
+            this.OPTS[name] = value;
+        }, this);
     };
 
-    gRex.prototype.begin = function (typeMap){
+    gRex.prototype.begin = function (typeMap) {
         typeMap = typeMap ? merge(typeMap, this.typeMap) : this.typeMap;
 
         return new Transaction(this.OPTS, typeMap);

@@ -104,26 +104,26 @@ function qryCollection(method){
 }
 
 function buildArgs(array, retainArray) {
-    var self = this,
-        argList = '',
+    var argList = '',
         append = '',
         jsonString = '';
 
-    for (var _i = 0, l = array.length; _i < l; _i++) {
-        if(isClosure(array[_i])){
-            append += array[_i];
-        } else if (_.isObject(array[_i]) && array[_i].hasOwnProperty('verbatim')) {
-            argList += array[_i].verbatim + ",";
-        } else if (_.isObject(array[_i]) && !(array[_i].hasOwnProperty('params') && isGraphReference(array[_i].params))) {
-            jsonString = JSON.stringify(array[_i]);
+    _.each(array, function(v) {
+        if(isClosure(v)){
+            append += v;
+        } else if (_.isObject(v) && v.hasOwnProperty('verbatim')) {
+            argList += v.verbatim + ",";
+        } else if (_.isObject(v) && !(v.hasOwnProperty('params') && isGraphReference(v.params))) {
+            jsonString = JSON.stringify(v);
             jsonString = jsonString.replace('{', '[');
             argList += jsonString.replace('}', ']') + ",";
-        } else if(retainArray && _.isArray(array[_i])) {
-            argList += "[" + parseArgs.call(self, array[_i]) + "],";
+        } else if(retainArray && _.isArray(v)) {
+            argList += "[" + parseArgs.call(this, v) + "],";
         } else {
-            argList += parseArgs.call(self, array[_i]) + ",";
+            argList += parseArgs.call(this, v) + ",";
         }
-    }
+    }, this);
+
     argList = argList.slice(0, -1);
 
     return '(' + argList + ')' + append;
@@ -249,18 +249,18 @@ var Gremlin = (function () {
             returnObj.typeDef = tempTypeArr;
             returnObj.result = tempResultArr;
         } else {
-            for(var k in obj){
-                if (obj.hasOwnProperty(k)) {
-                    if(obj[k].type == 'map' || obj[k].type == 'list'){
-                        tempObj = createTypeDef(obj[k].value);
-                        tempTypeObj[k] = tempObj.typeDef;
-                        tempResultObj[k] = tempObj.result;
-                    } else {
-                        tempTypeObj[k] = obj[k].type;
-                        tempResultObj[k] = obj[k].value;
-                    }
+
+            _.forOwn(obj, function(v, k) {
+                if (v.type == 'map' || v.type == 'list'){
+                    tempObj = createTypeDef(v.value);
+                    tempTypeObj[k] = tempObj.typeDef;
+                    tempResultObj[k] = tempObj.result;
+                } else {
+                    tempTypeObj[k] = v.type;
+                    tempResultObj[k] = v.value;
                 }
-            }
+            });
+
             returnObj.typeDef = tempTypeObj;
             returnObj.result = tempResultObj;
 
@@ -271,52 +271,51 @@ var Gremlin = (function () {
 
     function transformResults(results){
         var typeMap = {};
-        var typeObj, tempObj, returnObj;
+        var typeObj,
+            graphElement,
+            returnObj;
+
         var result = { success: true, results: [], typeMap: {} };
-        var n, l = results ? results.length : 0;
 
-        for(n = 0; n<l; n++){
-            tempObj = results[n];
-
-            if (_.isObject(tempObj)) {
+        _.each(results, function(graphElement) {
+            if (_.isObject(graphElement)) {
                 returnObj = {};
                 typeObj = {};
 
-                for(var k in tempObj){
-                    if (tempObj.hasOwnProperty(k)) {
-                        if (_.isObject(tempObj[k]) && 'type' in tempObj[k]) {
-                            if(!!typeMap[k] && typeMap[k] != tempObj[k].type){
-                                if(!result.typeMapErr){
-                                    result.typeMapErr = {};
-                                }
-
-                                console.error('_id:' + tempObj._id + ' => {' + k + ':' + tempObj[k].type + '}');
-
-                                //only capture the first error
-                                if(!(k in result.typeMapErr)){
-                                    result.typeMapErr[k] = typeMap[k] + ' <=> ' + tempObj[k].type;
-                                }
+                _.forOwn(graphElement, function(v, k) {
+                    if (_.isObject(v) && 'type' in v) {
+                        if(!!typeMap[k] && typeMap[k] != v.type){
+                            if(!result.typeMapErr){
+                                result.typeMapErr = {};
                             }
 
-                            if (tempObj[k].type == 'map' || tempObj[k].type == 'list') {
-                                //build recursive func to build object
-                                typeObj = createTypeDef(tempObj[k].value);
-                                typeMap[k] = typeObj.typeDef;
-                                returnObj[k] = typeObj.result;
-                            } else {
-                                typeMap[k] = tempObj[k].type;
-                                returnObj[k] = tempObj[k].value;
+                            console.error('_id:' + graphElement._id + ' => {' + k + ':' + v.type + '}');
+
+                            //only capture the first error
+                            if(!(k in result.typeMapErr)){
+                                result.typeMapErr[k] = typeMap[k] + ' <=> ' + v.type;
                             }
-                        } else {
-                            returnObj[k] = tempObj[k];
                         }
+
+                        if (v.type == 'map' || v.type == 'list') {
+                            //build recursive func to build object
+                            typeObj = createTypeDef(v.value);
+                            typeMap[k] = typeObj.typeDef;
+                            returnObj[k] = typeObj.result;
+                        } else {
+                            typeMap[k] = v.type;
+                            returnObj[k] = v.value;
+                        }
+                    } else {
+                        returnObj[k] = v;
                     }
-                }
+                });
+
                 result.results.push(returnObj);
             } else {
-                result.results.push(tempObj);
+                result.results.push(graphElement);
             }
-        }
+        });
 
         result.typeMap = typeMap;
         //This will preserve any locally defined TypeDefs
