@@ -279,8 +279,8 @@ var Gremlin = (function () {
     Gremlin.prototype.orderMap = queryMain('orderMap');
 
     /*** Filter ***/
-    Gremlin.prototype.index = queryIndex(), //index(i;
-    Gremlin.prototype.range = queryIndex(), //range('[i..j]';
+    Gremlin.prototype.index = queryIndex(); //index(i)
+    Gremlin.prototype.range = queryIndex(); //range('[i..j]')
     Gremlin.prototype.and = queryPipes('and');
     Gremlin.prototype.back = queryMain('back');
     Gremlin.prototype.dedup = queryMain('dedup');
@@ -298,7 +298,7 @@ var Gremlin = (function () {
     // Gremlin.prototype.aggregate //Not implemented
     Gremlin.prototype.as = queryMain('as');
     Gremlin.prototype.groupBy = queryMain('groupBy');
-    Gremlin.prototype.groupCount = queryMain('groupCount'), //Not FullyImplemented ??;
+    Gremlin.prototype.groupCount = queryMain('groupCount'); //Not FullyImplemented ??
     Gremlin.prototype.optional = queryMain('optional');
     Gremlin.prototype.sideEffect = queryMain('sideEffect');
 
@@ -344,9 +344,9 @@ var Gremlin = (function () {
     //Titan v0.4.0 specifics
     Gremlin.prototype.single = queryMain('single');
     Gremlin.prototype.list = queryMain('list');
-    Gremlin.prototype.oneToMany = queryMain('oneToMany'), // replaces uniqueDirection.IN);
-    Gremlin.prototype.manyToOne = queryMain('manyToOne'), // replaces uniqueDirection.OUT);
-    Gremlin.prototype.oneToOne = queryMain('oneToOne'),   // replaces uniqueDirection.IN).unique(Direction.OUT);
+    Gremlin.prototype.oneToMany = queryMain('oneToMany'); // replaces uniqueDirection.IN)
+    Gremlin.prototype.manyToOne = queryMain('manyToOne'); // replaces uniqueDirection.OUT)
+    Gremlin.prototype.oneToOne = queryMain('oneToOne');   // replaces uniqueDirection.IN).unique(Direction.OUT)
     Gremlin.prototype.makeKey = queryMain('makeKey');
     Gremlin.prototype.makeLabel = queryMain('makeLabel');
     Gremlin.prototype.make = queryMain('make');
