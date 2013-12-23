@@ -3,6 +3,7 @@
 
 ## 0.4.0
 - Nodeify callbacks
+- Refactor transactions
 
 ## 0.3.2
 - Fixed Gruntfile and dev dependencies
@@ -34,7 +35,7 @@
 ## 0.2.1
 - Fixed bug on createVertex transaction
 - added T.in and T.notin
- 
+
 ## 0.2.0
 
  - get() call removed
