@@ -4,23 +4,6 @@ var graphRegex = /^T\.(gt|gte|eq|neq|lte|lt|decr|incr|notin|in)$|^Contains\.(IN|
 var closureRegex = /^\{.*\}$/;
 
 module.exports = {
-    //obj1 over writes obj2
-    merge: function (obj1, obj2) {
-        for(var p in obj2) {
-            try  {
-                if(obj1.hasOwnProperty(p)) {
-                    obj1[p] = merge(obj1[p], obj2[p]);
-                } else {
-                    obj1[p] = obj2[p];
-                }
-            } catch (e) {
-                obj1[p] = obj2[p];
-            }
-        }
-
-        return obj1;
-    },
-
     isRegexId: function (id) {
         return !!this.options.idRegex && _.isString(id) && this.options.idRegex.test(id);
     },

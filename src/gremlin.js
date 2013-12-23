@@ -6,7 +6,6 @@ var Utils = require("./utils");
 var isClosure = Utils.isClosure;
 var isGraphReference = Utils.isGraphReference;
 var isRegexId = Utils.isRegexId;
-var merge = Utils.merge;
 
 var createTypeDefinition = require("./createtypedefinition");
 
@@ -244,7 +243,7 @@ var Gremlin = (function () {
 
         result.typeMap = typeMap;
         //This will preserve any locally defined TypeDefs
-        this.typeMap = merge(this.typeMap, typeMap);
+        this.typeMap = _.extend(this.typeMap, typeMap);
 
         return result;
     }
