@@ -40,7 +40,7 @@ describe('Transforms', function(){
 
      describe('id', function() {
         it("Promise should return all ids", function(done){
-            g.V().id().get().then(function(result){
+            g.V().id().get(function(err, result){
                 result.results.should.have.lengthOf(6);
                 result.results.should.eql([ '3', '2', '1', '6', '5', '4' ]);
                 done();

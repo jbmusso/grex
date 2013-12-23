@@ -39,7 +39,7 @@ describe('Transaction', function() {
             tx.addEdge(20, alice, bob, 'likes', {since: 'now'});
 
             tx.commit()
-            .then(function(result) {
+            .done(function(result) {
                 result.should.have.property('txProcessed', 1);
                 result.should.have.property('success', true);
                 done();
@@ -62,7 +62,7 @@ describe('Transaction', function() {
 
         // Clean up: remove james and waldo from the database
         after(function(done) {
-            var tx = g.begin()
+            var tx = g.begin();
             tx.removeVertex(james._id);
             tx.removeVertex(waldo._id);
 
@@ -75,8 +75,7 @@ describe('Transaction', function() {
 
     describe('when updating a vertex', function() {
         before(function(done) {
-            g.V('name', 'Alice')
-            .then(function(result) {
+            g.V('name', 'Alice').get(function(err, result) {
                 alice = result.results[0];
                 done();
             });
@@ -104,13 +103,8 @@ describe('Transaction', function() {
     // @see https://groups.google.com/forum/#!topic/gremlin-users/i0Uci2yZoaQ
     describe('when updating an edge', function() {
         before(function(done) {
-            g.V('name', 'Jess').outE('likes')
-            .then(function(result) {
+            g.V('name', 'Jess').outE('likes').get(function(err, result) {
                 updatedEdge = result.results[0];
-                done();
-            })
-            .fail(function(error) {
-                console.error(error);
                 done();
             });
         });
@@ -133,16 +127,14 @@ describe('Transaction', function() {
 
     describe('when deleting two vertices', function() {
         before(function(done) {
-            g.V('name', 'Jess')
-            .then(function(result) {
+            g.V('name', 'Jess').get(function(err, result) {
                 alice = result.results[0];
                 done();
             });
         });
 
         before(function(done) {
-            g.V('name', 'Bob')
-            .then(function(result) {
+            g.V('name', 'Bob').get(function(err, result) {
                 bob = result.results[0];
                 done();
             });
