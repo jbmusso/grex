@@ -8,7 +8,7 @@ module.exports = function(grunt){
         banner: '/*! <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> */\n'
       },
       build: {
-        src: 'client/bundle.js',
+        src: 'client/grex.js',
         dest: 'client/<%= pkg.name %>.min.js'
       }
     },
@@ -24,21 +24,21 @@ module.exports = function(grunt){
     mochaTest: {
       test: {
         options: {
-          timeout: 10000,
+          timeout: 2000,
             reporter: 'spec',
             require: 'should',
             globals: 'g'
         },
-        src: ['test/*.js']
+        src: ['test/**/*.js']
       }
     },
     browserify: {
       build: {
         src: ['index.js'],
-        dest: 'client/bundle.js',
+        dest: 'client/grex.js',
         options: {
           standalone: 'gRex',
-          debug: false        
+          debug: false
         }
       }
     }

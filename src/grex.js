@@ -1,69 +1,65 @@
 var q = require("q"),
+    _ = require("lodash"),
     merge = require("./utils").merge,
-    Trxn = require("./transaction"),
-    qryMain = require("./gremlin");
+    Transaction = require("./transaction/transaction"),
+    queryMain = require("./gremlin");
+
+var ResultFormatter = require("./resultformatter");
 
 
 module.exports = (function(){
-    function gRex(options){
-        var self = this;
-        //default options
-        this.OPTS = {
+    function Grex(options) {
+        this.options = _.defaults(options || {
             'host': 'localhost',
             'port': 8182,
             'graph': 'tinkergraph',
             'idRegex': false // OrientDB id regex -> /^[0-9]+:[0-9]+$/
-        };
+        });
 
         this.typeMap = {};
-
-        if(options){
-            this.setOptions(options);
-        }
-
-        this.V = qryMain('V', true);
-        this._ = qryMain('_', true);
-        this.E = qryMain('E', true);
-        this.V =  qryMain('V', true);
-
-        //Methods
-        this.e = qryMain('e', true);
-        this.idx = qryMain('idx', true);
-        this.v = qryMain('v', true);
-
-        //Indexing
-        this.createIndex = qryMain('createIndex', true);
-        this.createKeyIndex = qryMain('createKeyIndex', true);
-        this.getIndices =  qryMain('getIndices', true);
-        this.getIndexedKeys =  qryMain('getIndexedKeys', true);
-        this.getIndex =  qryMain('getIndex', true);
-        this.dropIndex = qryMain('dropIndex', true);
-        this.dropKeyIndex = qryMain('dropKeyIndex', true);
-
-        this.clear =  qryMain('clear', true);
-        this.shutdown = qryMain('shutdown', true);
-        this.getFeatures = qryMain('getFeatures', true);
-
-        this.connect = function(){
-            return q.fcall(function() {
-                return self;
-            });
-        };
+        this.resultFormatter = new ResultFormatter();
     }
 
-    gRex.prototype.setOptions = function (options){
-        if(!!options){
-            for (var k in options){
-                if(options.hasOwnProperty(k)){
-                    this.OPTS[k] = options[k];
-                }
-            }
-        }
+    Grex.prototype.connect = function(){
+        return q.fcall(function() {
+            return this;
+        }.bind(this));
     };
 
-    gRex.prototype.begin = function (typeMap){
-        return new Trxn(this.OPTS, typeMap ? merge(typeMap, this.typeMap) : this.typeMap);
+    Grex.prototype.V = queryMain('V', true);
+    Grex.prototype._ = queryMain('_', true);
+    Grex.prototype.E = queryMain('E', true);
+    Grex.prototype.V =  queryMain('V', true);
+
+    //Methods
+    Grex.prototype.e = queryMain('e', true);
+    Grex.prototype.idx = queryMain('idx', true);
+    Grex.prototype.v = queryMain('v', true);
+
+    //Indexing
+    Grex.prototype.createIndex = queryMain('createIndex', true);
+    Grex.prototype.createKeyIndex = queryMain('createKeyIndex', true);
+    Grex.prototype.getIndices = queryMain('getIndices', true);
+    Grex.prototype.getIndexedKeys = queryMain('getIndexedKeys', true);
+    Grex.prototype.getIndex = queryMain('getIndex', true);
+    Grex.prototype.dropIndex = queryMain('dropIndex', true);
+    Grex.prototype.dropKeyIndex = queryMain('dropKeyIndex', true);
+
+    //Types
+    Grex.prototype.makeKey = queryMain('makeKey', true);
+
+    Grex.prototype.clear =  queryMain('clear', true);
+    Grex.prototype.shutdown = queryMain('shutdown', true);
+    Grex.prototype.getFeatures = queryMain('getFeatures', true);
+
+    // Titan specifics
+    Grex.prototype.getTypes = queryMain('getTypes', true);
+
+    Grex.prototype.begin = function (typeMap) {
+        typeMap = typeMap ? merge(typeMap, this.typeMap) : this.typeMap;
+
+        return new Transaction(this.options, typeMap);
     };
 
-    return gRex;
+    return Grex;
 })();

@@ -1,12 +1,17 @@
 var classes = require("./classes");
 var gRex = require("./grex");
 
-var grex = function(options){
+var grex = function(options, callback){
     try {
+        if(typeof options === 'function'){
+            callback = options;
+            options = undefined;
+        }
         var db = new gRex(options);
-        connect = db.connect();
+        connect = db.connect().then().nodeify(callback);
     } catch(error) {
-        console.log(error);
+        console.error(error);
+        return callback(error);
     }
 
     return connect;
@@ -17,5 +22,10 @@ module.exports = {
     "T": classes.T,
     "Contains": classes.Contains,
     "Vertex": classes.Vertex,
-    "Edge": classes.Edge
+    "Edge": classes.Edge,
+    "String": classes.String,
+    "Direction": classes.Direction,
+    "Geoshape": classes.Geoshape,
+    "TitanKey": classes.TitanKey,
+    "TitanLabel": classes.TitanLabel
 };

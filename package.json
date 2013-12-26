@@ -1,7 +1,7 @@
 {
   "name": "grex",
   "description": "Client for Rexster Graph Server",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "keywords": [
     "database",
     "graph",
@@ -14,7 +14,7 @@
   "author": "Frank Panetta <frank.panetta@entrendipity.com.au>",
   "contributors": [
     {
-      "name": "Jean Baptiste-Musso",
+      "name": "Jean-Baptiste Musso",
       "email": "<jbmusso+github@gmail.com>"
     },
     {
@@ -26,7 +26,10 @@
     "url": "https://github.com/entrendipity/grex.git"
   },
   "dependencies": {
-    "q": "0.9.x"
+    "q": "0.9.x",
+    "request": "~2.27.0",
+    "inherits": "~2.0.1",
+    "lodash": "~2.4.1"
   },
   "license": "MIT",
   "engines": {
@@ -39,8 +42,8 @@
     "grunt-contrib-jshint": "~0.6.0",
     "grunt-mocha": "~0.4.0",
     "grunt-mocha-test": "~0.6.2",
-    "browserify": "~2.34.1",
-    "grunt-browserify": "~1.2.9",
-    "should": "~2.0.1"
+    "browserify": "~2.35.4",
+    "grunt-browserify": "~1.3.0",
+    "should": "~2.1.1"
   }
 }
