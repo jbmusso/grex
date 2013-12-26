@@ -8,31 +8,31 @@ var isGraphReference = Utils.isGraphReference;
 var isRegexId = Utils.isRegexId;
 
 
-function queryMain(method, reset){
+function queryMain (methodName, reset) {
     return function(){
         var gremlin = reset ? new Gremlin(this) : this._buildGremlin(this.params),
             args = '',
             appendArg = '';
 
         //cater for select array parameters
-        if(method == 'select'){
+        if(methodName == 'select'){
             args = arguments;
-            gremlin.params += '.' + method + buildArguments.call(this, args, true);
+            gremlin.params += '.' + methodName + buildArguments.call(this, args, true);
         } else {
             args = _.isArray(arguments[0]) ? arguments[0] : arguments;
 
             //cater for idx param 2
-            if(method == 'idx' && args.length > 1){
-                for (var k in args[1]){
+            if (methodName == 'idx' && args.length > 1) {
+                _.each(args[1], function(v, k) {
                     appendArg = k + ":";
                     appendArg += parseArguments.call(this, args[1][k]);
-                }
+                }, this);
 
                 appendArg = "[["+ appendArg + "]]";
                 args.length = 1;
             }
 
-            gremlin.params += '.' + method + buildArguments.call(this, args);
+            gremlin.params += '.' + methodName + buildArguments.call(this, args);
         }
 
         gremlin.params += appendArg;
@@ -46,7 +46,7 @@ module.exports = queryMain;
 
 //[i] => index & [1..2] => range
 //Do not pass in method name, just string arg
-function queryIndex(){
+function queryIndex () {
     return function(arg) {
         var gremlin = this._buildGremlin(this.params);
         gremlin.params += '['+ arg.toString() + ']';
@@ -56,20 +56,18 @@ function queryIndex(){
 }
 
 
-//and | or | put  => g.v(1).outE().or(g._().has('id', 'T.eq', 9), g._().has('weight', 'T.lt', '0.6f'))
-function queryPipes(method){
+// and | or | put  => g.v(1).outE().or(g._().has('id', 'T.eq', 9), g._().has('weight', 'T.lt', '0.6f'))
+function queryPipes (methodName) {
     return function() {
-        var gremlin = this._buildGremlin(this.params),
-            args = [],
-            isArr = _.isArray(arguments[0]),
-            argsLen = isArr ? arguments[0].length : arguments.length;
+        var gremlin = this._buildGremlin(this.params);
+        var args = _.isArray(arguments[0]) ? arguments[0] : arguments;
 
-        gremlin.params += "." + method + "(";
+        gremlin.params += "." + methodName + "(";
 
-        for (var _i = 0; _i < argsLen; _i++) {
-            gremlin.params += isArr ? arguments[0][_i].params || parseArguments.call(this, arguments[0][_i]) : arguments[_i].params || parseArguments.call(this, arguments[_i]);
+        _.each(args, function(arg) {
+            gremlin.params += arg.params || parseArguments.call(this, arg);
             gremlin.params += ",";
-        }
+        }, this);
 
         gremlin.params = gremlin.params.slice(0, -1);
         gremlin.params += ")";
@@ -79,27 +77,27 @@ function queryPipes(method){
 }
 
 //retain & except => g.V().retain([g.v(1), g.v(2), g.v(3)])
-function queryCollection(method){
+function queryCollection (methodName) {
     return function() {
         var gremlin = this._buildGremlin(this.params),
             param = '';
 
         if(_.isArray(arguments[0])){
-            for (var _i = 0, argsLen = arguments[0].length; _i < argsLen; _i++) {
-                param += arguments[0][_i].params;
+            _.each(arguments[0], function(arg) {
+                param += arg.params;
                 param += ",";
-            }
+            });
 
-            gremlin.params += "." + method + "([" + param + "])";
+            gremlin.params += "." + methodName + "([" + param + "])";
         } else {
-            gremlin.params += "." + method + buildArguments.call(this, arguments[0]);
+            gremlin.params += "." + methodName + buildArguments.call(this, arguments[0]);
         }
 
         return gremlin;
     };
 }
 
-function buildArguments(array, retainArray) {
+function buildArguments (array, retainArray) {
     var argList = '',
         append = '',
         jsonString = '';
