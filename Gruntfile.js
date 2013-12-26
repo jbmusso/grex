@@ -8,7 +8,7 @@ module.exports = function(grunt){
         banner: '/*! <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> */\n'
       },
       build: {
-        src: 'client/bundle.js',
+        src: 'client/grex.js',
         dest: 'client/<%= pkg.name %>.min.js'
       }
     },
@@ -35,7 +35,7 @@ module.exports = function(grunt){
     browserify: {
       build: {
         src: ['index.js'],
-        dest: 'client/bundle.js',
+        dest: 'client/grex.js',
         options: {
           standalone: 'gRex',
           debug: false
