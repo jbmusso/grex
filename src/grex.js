@@ -14,15 +14,8 @@ module.exports = (function(){
       'idRegex': false // OrientDB id regex -> /^[0-9]+:[0-9]+$/
     });
 
-    this.T = classes.T;
-    this.Contains = classes.Contains;
-    this.Vertex = classes.Vertex;
-    this.Edge = classes.Edge;
-    this.String = classes.String;
-    this.Direction = classes.Direction;
-    this.Geoshape = classes.Geoshape;
-    this.TitanKey = classes.TitanKey;
-    this.TitanLabel = classes.TitanLabel;
+    _.extend(this, classes);
+    this.ClassTypes = classes;
   }
 
   Grex.prototype.connect = function(options, callback) {
