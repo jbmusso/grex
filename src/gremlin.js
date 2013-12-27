@@ -10,7 +10,7 @@ var isRegexId = Utils.isRegexId;
 
 function queryMain (methodName, reset) {
     return function(){
-        var gremlin = reset ? new Gremlin(this) : this._buildGremlin(this.script),
+        var gremlin = reset ? new Gremlin(this) : this,
             args = '',
             appendArg = '';
 
@@ -47,10 +47,9 @@ module.exports = queryMain;
 //Do not pass in method name, just string arg
 function queryIndex () {
     return function(arg) {
-        var gremlin = this._buildGremlin(this.script);
-        gremlin.appendScript('['+ arg.toString() + ']');
+        this.appendScript('['+ arg.toString() + ']');
 
-        return gremlin;
+        return this;
     };
 }
 
@@ -58,28 +57,26 @@ function queryIndex () {
 // and | or | put  => g.v(1).outE().or(g._().has('id', 'T.eq', 9), g._().has('weight', 'T.lt', '0.6f'))
 function queryPipes (methodName) {
     return function() {
-        var gremlin = this._buildGremlin(this.script);
         var args = _.isArray(arguments[0]) ? arguments[0] : arguments;
 
-        gremlin.appendScript("." + methodName + "(");
+        this.appendScript("." + methodName + "(");
 
         _.each(args, function(arg) {
-            gremlin.appendScript(arg.script || parseArguments.call(this, arg));
-            gremlin.appendScript(",");
+            this.appendScript(arg.script || parseArguments.call(this, arg));
+            this.appendScript(",");
         }, this);
 
-        gremlin.script = gremlin.script.slice(0, -1);
-        gremlin.appendScript(")");
+        this.script = this.script.slice(0, -1);
+        this.appendScript(")");
 
-        return gremlin;
+        return this;
     };
 }
 
 //retain & except => g.V().retain([g.v(1), g.v(2), g.v(3)])
 function queryCollection (methodName) {
     return function() {
-        var gremlin = this._buildGremlin(this.script),
-            param = '';
+        var param = '';
 
         if(_.isArray(arguments[0])){
             _.each(arguments[0], function(arg) {
@@ -87,12 +84,12 @@ function queryCollection (methodName) {
                 param += ",";
             });
 
-            gremlin.appendScript("." + methodName + "([" + param + "])");
+            this.appendScript("." + methodName + "([" + param + "])");
         } else {
-            gremlin.appendScript("." + methodName + buildArguments.call(this, arguments[0]));
+            this.appendScript("." + methodName + buildArguments.call(this, arguments[0]));
         }
 
-        return gremlin;
+        return this;
     };
 }
 
@@ -191,11 +188,6 @@ var Gremlin = (function () {
 
     Gremlin.prototype.transformResults = function(results) {
         return this.resultFormatter.formatResults(results);
-    };
-
-    Gremlin.prototype._buildGremlin = function (queryString) {
-        this.script = queryString;
-        return this;
     };
 
     Gremlin.prototype.appendScript = function(script) {
