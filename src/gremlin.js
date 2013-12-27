@@ -8,7 +8,10 @@ var isGraphReference = Utils.isGraphReference;
 var isRegexId = Utils.isRegexId;
 
 
-function queryMain (methodName, reset) {
+function CommandBuilder() {
+}
+
+CommandBuilder.queryMain = function(methodName, reset) {
     return function(){
         var gremlin = reset ? new Gremlin(this) : this,
             args,
@@ -38,24 +41,24 @@ function queryMain (methodName, reset) {
 
         return gremlin;
     };
-}
+};
 
-module.exports = queryMain;
+module.exports = CommandBuilder;
 
 
 //[i] => index & [1..2] => range
 //Do not pass in method name, just string range
-function queryIndex () {
+CommandBuilder.queryIndex = function() {
     return function(range) {
         this.appendScript('['+ range.toString() + ']');
 
         return this;
     };
-}
+};
 
 
 // and | or | put  => g.v(1).outE().or(g._().has('id', 'T.eq', 9), g._().has('weight', 'T.lt', '0.6f'))
-function queryPipes (methodName) {
+CommandBuilder.queryPipes = function(methodName) {
     return function() {
         var args = _.isArray(arguments[0]) ? arguments[0] : arguments;
 
@@ -71,10 +74,10 @@ function queryPipes (methodName) {
 
         return this;
     };
-}
+};
 
 //retain & except => g.V().retain([g.v(1), g.v(2), g.v(3)])
-function queryCollection (methodName) {
+CommandBuilder.queryCollection = function(methodName) {
     return function() {
         var param = '';
 
@@ -91,7 +94,7 @@ function queryCollection (methodName) {
 
         return this;
     };
-}
+};
 
 function buildArguments (array, retainArray) {
     var argList = '',
@@ -195,109 +198,109 @@ var Gremlin = (function () {
     };
 
     /*** Transform ***/
-    Gremlin.prototype._ = queryMain('_');
-    Gremlin.prototype.both = queryMain('both');
-    Gremlin.prototype.bothE = queryMain('bothE');
-    Gremlin.prototype.bothV = queryMain('bothV');
-    Gremlin.prototype.cap = queryMain('cap');
-    Gremlin.prototype.gather = queryMain('gather');
-    Gremlin.prototype.id = queryMain('id');
-    Gremlin.prototype.in = queryMain('in');
-    Gremlin.prototype.inE = queryMain('inE');
-    Gremlin.prototype.inV = queryMain('inV');
-    Gremlin.prototype.property = queryMain('property');
-    Gremlin.prototype.label = queryMain('label');
-    Gremlin.prototype.map = queryMain('map');
-    Gremlin.prototype.memoize = queryMain('memoize');
-    Gremlin.prototype.order = queryMain('order');
-    Gremlin.prototype.out = queryMain('out');
-    Gremlin.prototype.outE = queryMain('outE');
-    Gremlin.prototype.outV = queryMain('outV');
-    Gremlin.prototype.path = queryMain('path');
-    Gremlin.prototype.scatter = queryMain('scatter');
-    Gremlin.prototype.select = queryMain('select');
-    Gremlin.prototype.transform = queryMain('transform');
-    Gremlin.prototype.orderMap = queryMain('orderMap');
+    Gremlin.prototype._ = CommandBuilder.queryMain('_');
+    Gremlin.prototype.both = CommandBuilder.queryMain('both');
+    Gremlin.prototype.bothE = CommandBuilder.queryMain('bothE');
+    Gremlin.prototype.bothV = CommandBuilder.queryMain('bothV');
+    Gremlin.prototype.cap = CommandBuilder.queryMain('cap');
+    Gremlin.prototype.gather = CommandBuilder.queryMain('gather');
+    Gremlin.prototype.id = CommandBuilder.queryMain('id');
+    Gremlin.prototype.in = CommandBuilder.queryMain('in');
+    Gremlin.prototype.inE = CommandBuilder.queryMain('inE');
+    Gremlin.prototype.inV = CommandBuilder.queryMain('inV');
+    Gremlin.prototype.property = CommandBuilder.queryMain('property');
+    Gremlin.prototype.label = CommandBuilder.queryMain('label');
+    Gremlin.prototype.map = CommandBuilder.queryMain('map');
+    Gremlin.prototype.memoize = CommandBuilder.queryMain('memoize');
+    Gremlin.prototype.order = CommandBuilder.queryMain('order');
+    Gremlin.prototype.out = CommandBuilder.queryMain('out');
+    Gremlin.prototype.outE = CommandBuilder.queryMain('outE');
+    Gremlin.prototype.outV = CommandBuilder.queryMain('outV');
+    Gremlin.prototype.path = CommandBuilder.queryMain('path');
+    Gremlin.prototype.scatter = CommandBuilder.queryMain('scatter');
+    Gremlin.prototype.select = CommandBuilder.queryMain('select');
+    Gremlin.prototype.transform = CommandBuilder.queryMain('transform');
+    Gremlin.prototype.orderMap = CommandBuilder.queryMain('orderMap');
 
     /*** Filter ***/
-    Gremlin.prototype.index = queryIndex(); //index(i)
-    Gremlin.prototype.range = queryIndex(); //range('[i..j]')
-    Gremlin.prototype.and = queryPipes('and');
-    Gremlin.prototype.back = queryMain('back');
-    Gremlin.prototype.dedup = queryMain('dedup');
-    Gremlin.prototype.except = queryCollection('except');
-    Gremlin.prototype.filter = queryMain('filter');
-    Gremlin.prototype.has = queryMain('has');
-    Gremlin.prototype.hasNot = queryMain('hasNot');
-    Gremlin.prototype.interval = queryMain('interval');
-    Gremlin.prototype.or = queryPipes('or');
-    Gremlin.prototype.random = queryMain('random');
-    Gremlin.prototype.retain = queryCollection('retain');
-    Gremlin.prototype.simplePath = queryMain('simplePath');
+    Gremlin.prototype.index = CommandBuilder.queryIndex(); //index(i)
+    Gremlin.prototype.range = CommandBuilder.queryIndex(); //range('[i..j]')
+    Gremlin.prototype.and = CommandBuilder.queryPipes('and');
+    Gremlin.prototype.back = CommandBuilder.queryMain('back');
+    Gremlin.prototype.dedup = CommandBuilder.queryMain('dedup');
+    Gremlin.prototype.except = CommandBuilder.queryCollection('except');
+    Gremlin.prototype.filter = CommandBuilder.queryMain('filter');
+    Gremlin.prototype.has = CommandBuilder.queryMain('has');
+    Gremlin.prototype.hasNot = CommandBuilder.queryMain('hasNot');
+    Gremlin.prototype.interval = CommandBuilder.queryMain('interval');
+    Gremlin.prototype.or = CommandBuilder.queryPipes('or');
+    Gremlin.prototype.random = CommandBuilder.queryMain('random');
+    Gremlin.prototype.retain = CommandBuilder.queryCollection('retain');
+    Gremlin.prototype.simplePath = CommandBuilder.queryMain('simplePath');
 
     /*** Side Effect ***/
     // Gremlin.prototype.aggregate //Not implemented
-    Gremlin.prototype.as = queryMain('as');
-    Gremlin.prototype.groupBy = queryMain('groupBy');
-    Gremlin.prototype.groupCount = queryMain('groupCount'); //Not FullyImplemented ??
-    Gremlin.prototype.optional = queryMain('optional');
-    Gremlin.prototype.sideEffect = queryMain('sideEffect');
+    Gremlin.prototype.as = CommandBuilder.queryMain('as');
+    Gremlin.prototype.groupBy = CommandBuilder.queryMain('groupBy');
+    Gremlin.prototype.groupCount = CommandBuilder.queryMain('groupCount'); //Not FullyImplemented ??
+    Gremlin.prototype.optional = CommandBuilder.queryMain('optional');
+    Gremlin.prototype.sideEffect = CommandBuilder.queryMain('sideEffect');
 
-    Gremlin.prototype.linkBoth = queryMain('linkBoth');
-    Gremlin.prototype.linkIn = queryMain('linkIn');
-    Gremlin.prototype.linkOut = queryMain('linkOut');
+    Gremlin.prototype.linkBoth = CommandBuilder.queryMain('linkBoth');
+    Gremlin.prototype.linkIn = CommandBuilder.queryMain('linkIn');
+    Gremlin.prototype.linkOut = CommandBuilder.queryMain('linkOut');
     // Gremlin.prototype.store //Not implemented
     // Gremlin.prototype.table //Not implemented
     // Gremlin.prototype.tree //Not implemented
 
     /*** Branch ***/
-    Gremlin.prototype.copySplit = queryPipes('copySplit');
-    Gremlin.prototype.exhaustMerge = queryMain('exhaustMerge');
-    Gremlin.prototype.fairMerge = queryMain('fairMerge');
-    Gremlin.prototype.ifThenElse = queryMain('ifThenElse'); //g.v(1).out()ifThenElse('{it.name=='josh'}','{it.age}','{it.name}')
-    Gremlin.prototype.loop = queryMain('loop');
+    Gremlin.prototype.copySplit = CommandBuilder.queryPipes('copySplit');
+    Gremlin.prototype.exhaustMerge = CommandBuilder.queryMain('exhaustMerge');
+    Gremlin.prototype.fairMerge = CommandBuilder.queryMain('fairMerge');
+    Gremlin.prototype.ifThenElse = CommandBuilder.queryMain('ifThenElse'); //g.v(1).out()ifThenElse('{it.name=='josh'}','{it.age}','{it.name}')
+    Gremlin.prototype.loop = CommandBuilder.queryMain('loop');
 
     /*** Methods ***/
     // Gremlin.prototype.fill //Not implemented
-    Gremlin.prototype.count = queryMain('count');
-    Gremlin.prototype.iterate = queryMain('iterate');
-    Gremlin.prototype.next = queryMain('next');
-    Gremlin.prototype.toList = queryMain('toList');
-    Gremlin.prototype.keys = queryMain('keys');
-    Gremlin.prototype.remove = queryMain('remove');
-    Gremlin.prototype.values = queryMain('values');
-    Gremlin.prototype.put = queryPipes('put');
+    Gremlin.prototype.count = CommandBuilder.queryMain('count');
+    Gremlin.prototype.iterate = CommandBuilder.queryMain('iterate');
+    Gremlin.prototype.next = CommandBuilder.queryMain('next');
+    Gremlin.prototype.toList = CommandBuilder.queryMain('toList');
+    Gremlin.prototype.keys = CommandBuilder.queryMain('keys');
+    Gremlin.prototype.remove = CommandBuilder.queryMain('remove');
+    Gremlin.prototype.values = CommandBuilder.queryMain('values');
+    Gremlin.prototype.put = CommandBuilder.queryPipes('put');
 
-    Gremlin.prototype.getPropertyKeys = queryMain('getPropertyKeys');
-    Gremlin.prototype.setProperty = queryMain('setProperty');
-    Gremlin.prototype.getProperty = queryMain('getProperty');
+    Gremlin.prototype.getPropertyKeys = CommandBuilder.queryMain('getPropertyKeys');
+    Gremlin.prototype.setProperty = CommandBuilder.queryMain('setProperty');
+    Gremlin.prototype.getProperty = CommandBuilder.queryMain('getProperty');
 
     //Titan specifics
-    Gremlin.prototype.name = queryMain('name');
-    Gremlin.prototype.dataType = queryMain('dataType');
-    Gremlin.prototype.indexed = queryMain('indexed');
-    Gremlin.prototype.unique = queryMain('unique');
-    Gremlin.prototype.makePropertyKey = queryMain('makePropertyKey');
-    Gremlin.prototype.group = queryMain('group');
-    Gremlin.prototype.makeEdgeLabel = queryMain('makeEdgeLabel');
-    Gremlin.prototype.query = queryMain('query');
+    Gremlin.prototype.name = CommandBuilder.queryMain('name');
+    Gremlin.prototype.dataType = CommandBuilder.queryMain('dataType');
+    Gremlin.prototype.indexed = CommandBuilder.queryMain('indexed');
+    Gremlin.prototype.unique = CommandBuilder.queryMain('unique');
+    Gremlin.prototype.makePropertyKey = CommandBuilder.queryMain('makePropertyKey');
+    Gremlin.prototype.group = CommandBuilder.queryMain('group');
+    Gremlin.prototype.makeEdgeLabel = CommandBuilder.queryMain('makeEdgeLabel');
+    Gremlin.prototype.query = CommandBuilder.queryMain('query');
 
     //Titan v0.4.0 specifics
-    Gremlin.prototype.single = queryMain('single');
-    Gremlin.prototype.list = queryMain('list');
-    Gremlin.prototype.oneToMany = queryMain('oneToMany'); // replaces uniqueDirection.IN)
-    Gremlin.prototype.manyToOne = queryMain('manyToOne'); // replaces uniqueDirection.OUT)
-    Gremlin.prototype.oneToOne = queryMain('oneToOne');   // replaces uniqueDirection.IN).unique(Direction.OUT)
-    Gremlin.prototype.makeKey = queryMain('makeKey');
-    Gremlin.prototype.makeLabel = queryMain('makeLabel');
-    Gremlin.prototype.make = queryMain('make');
-    Gremlin.prototype.sortKey = queryMain('sortKey');
-    Gremlin.prototype.signature = queryMain('signature');
-    Gremlin.prototype.unidirected = queryMain('unidirected');
+    Gremlin.prototype.single = CommandBuilder.queryMain('single');
+    Gremlin.prototype.list = CommandBuilder.queryMain('list');
+    Gremlin.prototype.oneToMany = CommandBuilder.queryMain('oneToMany'); // replaces uniqueDirection.IN)
+    Gremlin.prototype.manyToOne = CommandBuilder.queryMain('manyToOne'); // replaces uniqueDirection.OUT)
+    Gremlin.prototype.oneToOne = CommandBuilder.queryMain('oneToOne');   // replaces uniqueDirection.IN).unique(Direction.OUT)
+    Gremlin.prototype.makeKey = CommandBuilder.queryMain('makeKey');
+    Gremlin.prototype.makeLabel = CommandBuilder.queryMain('makeLabel');
+    Gremlin.prototype.make = CommandBuilder.queryMain('make');
+    Gremlin.prototype.sortKey = CommandBuilder.queryMain('sortKey');
+    Gremlin.prototype.signature = CommandBuilder.queryMain('signature');
+    Gremlin.prototype.unidirected = CommandBuilder.queryMain('unidirected');
 
-    Gremlin.prototype.createKeyIndex = queryMain('createKeyIndex');
-    Gremlin.prototype.getIndexes = queryMain('getIndexes');
-    Gremlin.prototype.hasIndex = queryMain('hasIndex');
+    Gremlin.prototype.createKeyIndex = CommandBuilder.queryMain('createKeyIndex');
+    Gremlin.prototype.getIndexes = CommandBuilder.queryMain('getIndexes');
+    Gremlin.prototype.hasIndex = CommandBuilder.queryMain('hasIndex');
 
     return Gremlin;
 })();
