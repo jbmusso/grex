@@ -2,11 +2,8 @@ var request = require("request");
 var q = require("q");
 var _ = require("lodash");
 
-var Utils = require("./utils");
-var isClosure = Utils.isClosure;
-var isGraphReference = Utils.isGraphReference;
-var isRegexId = Utils.isRegexId;
 
+var Argument = require("./argument");
 
 function CommandBuilder() {
 }
@@ -19,7 +16,7 @@ CommandBuilder.queryMain = function(methodName, reset) {
 
         //cater for select array parameters
         if(methodName == 'select'){
-            gremlin.appendScript('.' + methodName + buildArguments.call(this, arguments, true));
+            gremlin.appendScript('.' + methodName + Argument.build.call(this, arguments, true));
         } else {
             args = _.isArray(arguments[0]) ? arguments[0] : arguments;
 
@@ -27,14 +24,14 @@ CommandBuilder.queryMain = function(methodName, reset) {
             if (methodName == 'idx' && args.length > 1) {
                 _.each(args[1], function(v, k) {
                     appendArg = k + ":";
-                    appendArg += parseArguments.call(this, args[1][k]);
+                    appendArg += Argument.parse.call(this, args[1][k]);
                 }, this);
 
                 appendArg = "[["+ appendArg + "]]";
                 args.length = 1;
             }
 
-            gremlin.appendScript('.' + methodName + buildArguments.call(this, args));
+            gremlin.appendScript('.' + methodName + Argument.build.call(this, args));
         }
 
         gremlin.appendScript(appendArg);
@@ -65,7 +62,7 @@ CommandBuilder.queryPipes = function(methodName) {
         this.appendScript("." + methodName + "(");
 
         _.each(args, function(arg) {
-            this.appendScript(arg.script || parseArguments.call(this, arg));
+            this.appendScript(arg.script || Argument.parse.call(this, arg));
             this.appendScript(",");
         }, this);
 
@@ -89,64 +86,13 @@ CommandBuilder.queryCollection = function(methodName) {
 
             this.appendScript("." + methodName + "([" + param + "])");
         } else {
-            this.appendScript("." + methodName + buildArguments.call(this, arguments[0]));
+            this.appendScript("." + methodName + Argument.build.call(this, arguments[0]));
         }
 
         return this;
     };
 };
 
-function buildArguments (array, retainArray) {
-    var argList = '',
-        append = '',
-        jsonString = '';
-
-    _.each(array, function(v) {
-        if(isClosure(v)){
-            append += v;
-        } else if (_.isObject(v) && v.hasOwnProperty('verbatim')) {
-            argList += v.verbatim + ",";
-        } else if (_.isObject(v) && !(v.hasOwnProperty('params') && isGraphReference(v.script))) {
-            jsonString = JSON.stringify(v);
-            jsonString = jsonString.replace('{', '[');
-            argList += jsonString.replace('}', ']') + ",";
-        } else if(retainArray && _.isArray(v)) {
-            argList += "[" + parseArguments.call(this, v) + "],";
-        } else {
-            argList += parseArguments.call(this, v) + ",";
-        }
-    }, this);
-
-    argList = argList.slice(0, -1);
-
-    return '(' + argList + ')' + append;
-}
-
-function parseArguments(val) {
-    if(val === null) {
-        return 'null';
-    }
-
-    //check to see if the arg is referencing the graph ie. g.v(1)
-    if(_.isObject(val) && val.hasOwnProperty('params') && isGraphReference(val.script)){
-        return val.script.toString();
-    }
-
-    if(isGraphReference(val)) {
-        return val.toString();
-    }
-
-    //Cater for ids that are not numbers but pass parseFloat test
-    if(isRegexId.call(this, val) || _.isNaN(parseFloat(val))) {
-        return "'" + val + "'";
-    }
-
-    if(!_.isNaN(parseFloat(val))) {
-         return val.toString();
-    }
-
-    return val;
-}
 
 
 
