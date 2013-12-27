@@ -2,8 +2,7 @@ var q = require("q");
 var request = require("request");
 var _ = require("lodash");
 
-var Utils = require("../utils"),
-    addTypes = require("../addtypes");
+var addTypes = require("../addtypes");
 
 
 module.exports = (function() {
