@@ -16,8 +16,7 @@ function queryMain (methodName, reset) {
 
         //cater for select array parameters
         if(methodName == 'select'){
-            args = arguments;
-            gremlin.script += '.' + methodName + buildArguments.call(this, args, true);
+            gremlin.appendScript('.' + methodName + buildArguments.call(this, arguments, true));
         } else {
             args = _.isArray(arguments[0]) ? arguments[0] : arguments;
 
@@ -32,10 +31,10 @@ function queryMain (methodName, reset) {
                 args.length = 1;
             }
 
-            gremlin.script += '.' + methodName + buildArguments.call(this, args);
+            gremlin.appendScript('.' + methodName + buildArguments.call(this, args));
         }
 
-        gremlin.script += appendArg;
+        gremlin.appendScript(appendArg);
 
         return gremlin;
     };
@@ -49,7 +48,7 @@ module.exports = queryMain;
 function queryIndex () {
     return function(arg) {
         var gremlin = this._buildGremlin(this.script);
-        gremlin.script += '['+ arg.toString() + ']';
+        gremlin.appendScript('['+ arg.toString() + ']');
 
         return gremlin;
     };
@@ -62,15 +61,15 @@ function queryPipes (methodName) {
         var gremlin = this._buildGremlin(this.script);
         var args = _.isArray(arguments[0]) ? arguments[0] : arguments;
 
-        gremlin.script += "." + methodName + "(";
+        gremlin.appendScript("." + methodName + "(");
 
         _.each(args, function(arg) {
-            gremlin.script += arg.script || parseArguments.call(this, arg);
-            gremlin.script += ",";
+            gremlin.appendScript(arg.script || parseArguments.call(this, arg));
+            gremlin.appendScript(",");
         }, this);
 
         gremlin.script = gremlin.script.slice(0, -1);
-        gremlin.script += ")";
+        gremlin.appendScript(")");
 
         return gremlin;
     };
@@ -88,9 +87,9 @@ function queryCollection (methodName) {
                 param += ",";
             });
 
-            gremlin.script += "." + methodName + "([" + param + "])";
+            gremlin.appendScript("." + methodName + "([" + param + "])");
         } else {
-            gremlin.script += "." + methodName + buildArguments.call(this, arguments[0]);
+            gremlin.appendScript("." + methodName + buildArguments.call(this, arguments[0]));
         }
 
         return gremlin;
@@ -197,6 +196,10 @@ var Gremlin = (function () {
     Gremlin.prototype._buildGremlin = function (queryString) {
         this.script = queryString;
         return this;
+    };
+
+    Gremlin.prototype.appendScript = function(script) {
+        this.script += script;
     };
 
     /*** Transform ***/
