@@ -11,7 +11,7 @@ var isRegexId = Utils.isRegexId;
 function queryMain (methodName, reset) {
     return function(){
         var gremlin = reset ? new Gremlin(this) : this,
-            args = '',
+            args,
             appendArg = '';
 
         //cater for select array parameters
@@ -44,10 +44,10 @@ module.exports = queryMain;
 
 
 //[i] => index & [1..2] => range
-//Do not pass in method name, just string arg
+//Do not pass in method name, just string range
 function queryIndex () {
-    return function(arg) {
-        this.appendScript('['+ arg.toString() + ']');
+    return function(range) {
+        this.appendScript('['+ range.toString() + ']');
 
         return this;
     };
@@ -66,7 +66,7 @@ function queryPipes (methodName) {
             this.appendScript(",");
         }, this);
 
-        this.script = this.script.slice(0, -1);
+        this.script = this.script.slice(0, -1); // Remove trailing comma
         this.appendScript(")");
 
         return this;
