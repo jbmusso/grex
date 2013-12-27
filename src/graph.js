@@ -11,34 +11,86 @@ module.exports = (function() {
     this.resultFormatter = new ResultFormatter();
   }
 
-  Graph.prototype.V = CommandBuilder.queryMain('V', true);
-  Graph.prototype._ = CommandBuilder.queryMain('_', true);
-  Graph.prototype.E = CommandBuilder.queryMain('E', true);
-  Graph.prototype.V = CommandBuilder.queryMain('V', true);
+  Graph.prototype.exec = function(methodName, args) {
+    var command = CommandBuilder.queryMain(methodName, true).apply(this, args);
+    return command;
+  };
+
+  Graph.prototype._ = function() {
+    return this.exec('_', arguments);
+  };
+
+  Graph.prototype.E = function() {
+    return this.exec('E', arguments);
+  };
+
+  Graph.prototype.V = function() {
+    return this.exec('V', arguments);
+  };
 
   // Methods
-  Graph.prototype.e = CommandBuilder.queryMain('e', true);
-  Graph.prototype.idx = CommandBuilder.queryMain('idx', true);
-  Graph.prototype.v = CommandBuilder.queryMain('v', true);
+  Graph.prototype.e = function() {
+    return this.exec('e', arguments);
+  };
+
+  Graph.prototype.idx = function() {
+    return this.exec('idx', arguments);
+  };
+
+  Graph.prototype.v = function() {
+    return this.exec('v', arguments);
+  };
 
   // Indexing
-  Graph.prototype.createIndex = CommandBuilder.queryMain('createIndex', true);
-  Graph.prototype.createKeyIndex = CommandBuilder.queryMain('createKeyIndex', true);
-  Graph.prototype.getIndices = CommandBuilder.queryMain('getIndices', true);
-  Graph.prototype.getIndexedKeys = CommandBuilder.queryMain('getIndexedKeys', true);
-  Graph.prototype.getIndex = CommandBuilder.queryMain('getIndex', true);
-  Graph.prototype.dropIndex = CommandBuilder.queryMain('dropIndex', true);
-  Graph.prototype.dropKeyIndex = CommandBuilder.queryMain('dropKeyIndex', true);
+  Graph.prototype.createIndex = function() {
+    return this.exec('createIndex', arguments);
+  };
+
+  Graph.prototype.createKeyIndex = function() {
+    return this.exec('createKeyIndex', arguments);
+  };
+
+  Graph.prototype.getIndices = function() {
+    return this.exec('getIndices', arguments);
+  };
+
+  Graph.prototype.getIndexedKeys = function() {
+    return this.exec('getIndexedKeys', arguments);
+  };
+
+  Graph.prototype.getIndex = function() {
+    return this.exec('getIndex', arguments);
+  };
+
+  Graph.prototype.dropIndex = function() {
+    return this.exec('dropIndex', arguments);
+  };
+
+  Graph.prototype.dropKeyIndex = function() {
+    return this.exec('dropKeyIndex', arguments);
+  };
 
   // Types
-  Graph.prototype.makeKey = CommandBuilder.queryMain('makeKey', true);
+  Graph.prototype.makeKey = function() {
+    return this.exec('makeKey', arguments);
+  };
 
-  Graph.prototype.clear = CommandBuilder.queryMain('clear', true);
-  Graph.prototype.shutdown = CommandBuilder.queryMain('shutdown', true);
-  Graph.prototype.getFeatures = CommandBuilder.queryMain('getFeatures', true);
+  Graph.prototype.clear = function() {
+    return this.exec('clear', arguments);
+  };
+
+  Graph.prototype.shutdown = function() {
+    return this.exec('shutdown', arguments);
+  };
+
+  Graph.prototype.getFeatures = function() {
+    return this.exec('getFeatures', arguments);
+  };
 
   // Titan specifics
-  Graph.prototype.getTypes = CommandBuilder.queryMain('getTypes', true);
+  Graph.prototype.getTypes = function() {
+    return this.exec('getTypes', arguments);
+  };
 
   Graph.prototype.begin = function (typeMap) {
       typeMap = typeMap ? _.extend(typeMap, this.typeMap) : this.typeMap;

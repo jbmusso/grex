@@ -9,7 +9,7 @@ function CommandBuilder() {
 }
 
 CommandBuilder.queryMain = function(methodName, reset) {
-    return function(){
+    return function() {
         var gremlin = reset ? new Gremlin(this) : this,
             args,
             appendArg = '';
@@ -94,8 +94,6 @@ CommandBuilder.queryCollection = function(methodName) {
 };
 
 
-
-
 var Gremlin = (function () {
     function Gremlin(gRex) {
         this.gRex = gRex;
@@ -143,30 +141,104 @@ var Gremlin = (function () {
         this.script += script;
     };
 
+    Gremlin.prototype.execMainCommand = function(methodName, args) {
+        CommandBuilder.queryMain(methodName).apply(this, args);
+        return this;
+    };
+
     /*** Transform ***/
-    Gremlin.prototype._ = CommandBuilder.queryMain('_');
-    Gremlin.prototype.both = CommandBuilder.queryMain('both');
-    Gremlin.prototype.bothE = CommandBuilder.queryMain('bothE');
-    Gremlin.prototype.bothV = CommandBuilder.queryMain('bothV');
-    Gremlin.prototype.cap = CommandBuilder.queryMain('cap');
-    Gremlin.prototype.gather = CommandBuilder.queryMain('gather');
-    Gremlin.prototype.id = CommandBuilder.queryMain('id');
-    Gremlin.prototype.in = CommandBuilder.queryMain('in');
-    Gremlin.prototype.inE = CommandBuilder.queryMain('inE');
-    Gremlin.prototype.inV = CommandBuilder.queryMain('inV');
-    Gremlin.prototype.property = CommandBuilder.queryMain('property');
-    Gremlin.prototype.label = CommandBuilder.queryMain('label');
-    Gremlin.prototype.map = CommandBuilder.queryMain('map');
-    Gremlin.prototype.memoize = CommandBuilder.queryMain('memoize');
-    Gremlin.prototype.order = CommandBuilder.queryMain('order');
-    Gremlin.prototype.out = CommandBuilder.queryMain('out');
-    Gremlin.prototype.outE = CommandBuilder.queryMain('outE');
-    Gremlin.prototype.outV = CommandBuilder.queryMain('outV');
-    Gremlin.prototype.path = CommandBuilder.queryMain('path');
-    Gremlin.prototype.scatter = CommandBuilder.queryMain('scatter');
-    Gremlin.prototype.select = CommandBuilder.queryMain('select');
-    Gremlin.prototype.transform = CommandBuilder.queryMain('transform');
-    Gremlin.prototype.orderMap = CommandBuilder.queryMain('orderMap');
+    Gremlin.prototype._ = function() {
+        return this.execMainCommand('_', arguments);
+    };
+
+    Gremlin.prototype.both = function() {
+        return this.execMainCommand('both', arguments);
+    };
+
+    Gremlin.prototype.bothE = function() {
+        return this.execMainCommand('bothE', arguments);
+    };
+
+    Gremlin.prototype.bothV = function() {
+        return this.execMainCommand('bothV', arguments);
+    };
+
+    Gremlin.prototype.cap = function() {
+        return this.execMainCommand('cap', arguments);
+    };
+
+    Gremlin.prototype.gather = function() {
+        return this.execMainCommand('gather', arguments);
+    };
+
+    Gremlin.prototype.id = function() {
+        return this.execMainCommand('id', arguments);
+    };
+
+    Gremlin.prototype.in = function() {
+        return this.execMainCommand('in', arguments);
+    };
+
+    Gremlin.prototype.inE = function() {
+        return this.execMainCommand('inE', arguments);
+    };
+
+    Gremlin.prototype.inV = function() {
+        return this.execMainCommand('inV', arguments);
+    };
+
+    Gremlin.prototype.property = function() {
+        return this.execMainCommand('property', arguments);
+    };
+
+    Gremlin.prototype.label = function() {
+        return this.execMainCommand('label', arguments);
+    };
+
+    Gremlin.prototype.map = function() {
+        return this.execMainCommand('map', arguments);
+    };
+
+    Gremlin.prototype.memoize = function() {
+        return this.execMainCommand('memoize', arguments);
+    };
+
+    Gremlin.prototype.order = function() {
+        return this.execMainCommand('order', arguments);
+    };
+
+    Gremlin.prototype.out = function() {
+        return this.execMainCommand('out', arguments);
+    };
+
+    Gremlin.prototype.outE = function() {
+        return this.execMainCommand('outE', arguments);
+    };
+
+    Gremlin.prototype.outV = function() {
+        return this.execMainCommand('outV', arguments);
+    };
+
+    Gremlin.prototype.path = function() {
+        return this.execMainCommand('path', arguments);
+    };
+
+    Gremlin.prototype.scatter = function() {
+        return this.execMainCommand('scatter', arguments);
+    };
+
+    Gremlin.prototype.select = function() {
+        return this.execMainCommand('select', arguments);
+    };
+
+    Gremlin.prototype.transform = function() {
+        return this.execMainCommand('transform', arguments);
+    };
+
+    Gremlin.prototype.orderMap = function() {
+        return this.execMainCommand('orderMap', arguments);
+    };
+
 
     /*** Filter ***/
     // index(i)
@@ -175,31 +247,79 @@ var Gremlin = (function () {
     Gremlin.prototype.range = CommandBuilder.queryIndex();
 
     Gremlin.prototype.and = CommandBuilder.queryPipes('and');
-    Gremlin.prototype.back = CommandBuilder.queryMain('back');
-    Gremlin.prototype.dedup = CommandBuilder.queryMain('dedup');
+
+    Gremlin.prototype.back = function() {
+        return this.execMainCommand('back', arguments);
+    };
+
+    Gremlin.prototype.dedup = function() {
+        return this.execMainCommand('dedup', arguments);
+    };
+
     Gremlin.prototype.except = CommandBuilder.queryCollection('except');
-    Gremlin.prototype.filter = CommandBuilder.queryMain('filter');
-    Gremlin.prototype.has = CommandBuilder.queryMain('has');
-    Gremlin.prototype.hasNot = CommandBuilder.queryMain('hasNot');
-    Gremlin.prototype.interval = CommandBuilder.queryMain('interval');
+
+    Gremlin.prototype.filter = function() {
+        return this.execMainCommand('filter', arguments);
+    };
+
+    Gremlin.prototype.has = function() {
+        return this.execMainCommand('has', arguments);
+    };
+
+    Gremlin.prototype.hasNot = function() {
+        return this.execMainCommand('hasNot', arguments);
+    };
+
+    Gremlin.prototype.interval = function() {
+        return this.execMainCommand('interval', arguments);
+    };
+
     Gremlin.prototype.or = CommandBuilder.queryPipes('or');
-    Gremlin.prototype.random = CommandBuilder.queryMain('random');
+
+    Gremlin.prototype.random = function() {
+        return this.execMainCommand('random', arguments);
+    };
+
     Gremlin.prototype.retain = CommandBuilder.queryCollection('retain');
-    Gremlin.prototype.simplePath = CommandBuilder.queryMain('simplePath');
+
+    Gremlin.prototype.simplePath = function() {
+        return this.execMainCommand('simplePath', arguments);
+    };
 
     /*** Side Effect ***/
     // Gremlin.prototype.aggregate // Not implemented
-    Gremlin.prototype.as = CommandBuilder.queryMain('as');
-    Gremlin.prototype.groupBy = CommandBuilder.queryMain('groupBy');
+    Gremlin.prototype.as = function() {
+        return this.execMainCommand('as', arguments);
+    };
+
+    Gremlin.prototype.groupBy = function() {
+        return this.execMainCommand('groupBy', arguments);
+    };
 
     // Not FullyImplemented ??
-    Gremlin.prototype.groupCount = CommandBuilder.queryMain('groupCount');
-    Gremlin.prototype.optional = CommandBuilder.queryMain('optional');
-    Gremlin.prototype.sideEffect = CommandBuilder.queryMain('sideEffect');
+    Gremlin.prototype.groupCount = function() {
+        return this.execMainCommand('groupCount', arguments);
+    };
 
-    Gremlin.prototype.linkBoth = CommandBuilder.queryMain('linkBoth');
-    Gremlin.prototype.linkIn = CommandBuilder.queryMain('linkIn');
-    Gremlin.prototype.linkOut = CommandBuilder.queryMain('linkOut');
+    Gremlin.prototype.optional = function() {
+        return this.execMainCommand('optional', arguments);
+    };
+
+    Gremlin.prototype.sideEffect = function() {
+        return this.execMainCommand('sideEffect', arguments);
+    };
+
+    Gremlin.prototype.linkBoth = function() {
+        return this.execMainCommand('linkBoth', arguments);
+    };
+
+    Gremlin.prototype.linkIn = function() {
+        return this.execMainCommand('linkIn', arguments);
+    };
+
+    Gremlin.prototype.linkOut = function() {
+        return this.execMainCommand('linkOut', arguments);
+    };
 
     // Gremlin.prototype.store // Not implemented
     // Gremlin.prototype.table // Not implemented
@@ -207,60 +327,160 @@ var Gremlin = (function () {
 
     /*** Branch ***/
     Gremlin.prototype.copySplit = CommandBuilder.queryPipes('copySplit');
-    Gremlin.prototype.exhaustMerge = CommandBuilder.queryMain('exhaustMerge');
-    Gremlin.prototype.fairMerge = CommandBuilder.queryMain('fairMerge');
+    Gremlin.prototype.exhaustMerge = function() {
+        return this.execMainCommand('exhaustMerge', arguments);
+    };
+
+    Gremlin.prototype.fairMerge = function() {
+        return this.execMainCommand('fairMerge', arguments);
+    };
 
     //g.v(1).out()ifThenElse('{it.name=='josh'}','{it.age}','{it.name}')
-    Gremlin.prototype.ifThenElse = CommandBuilder.queryMain('ifThenElse');
+    Gremlin.prototype.ifThenElse = function() {
+        return this.execMainCommand('ifThenElse', arguments);
+    };
 
-    Gremlin.prototype.loop = CommandBuilder.queryMain('loop');
+    Gremlin.prototype.loop = function() {
+        return this.execMainCommand('loop', arguments);
+    };
 
     /*** Methods ***/
     // Gremlin.prototype.fill // Not implemented
-    Gremlin.prototype.count = CommandBuilder.queryMain('count');
-    Gremlin.prototype.iterate = CommandBuilder.queryMain('iterate');
-    Gremlin.prototype.next = CommandBuilder.queryMain('next');
-    Gremlin.prototype.toList = CommandBuilder.queryMain('toList');
-    Gremlin.prototype.keys = CommandBuilder.queryMain('keys');
-    Gremlin.prototype.remove = CommandBuilder.queryMain('remove');
-    Gremlin.prototype.values = CommandBuilder.queryMain('values');
+    Gremlin.prototype.count = function() {
+        return this.execMainCommand('count', arguments);
+    };
+
+    Gremlin.prototype.iterate = function() {
+        return this.execMainCommand('iterate', arguments);
+    };
+
+    Gremlin.prototype.next = function() {
+        return this.execMainCommand('next', arguments);
+    };
+
+    Gremlin.prototype.toList = function() {
+        return this.execMainCommand('toList', arguments);
+    };
+
+    Gremlin.prototype.keys = function() {
+        return this.execMainCommand('keys', arguments);
+    };
+
+    Gremlin.prototype.remove = function() {
+        return this.execMainCommand('remove', arguments);
+    };
+
+    Gremlin.prototype.values = function() {
+        return this.execMainCommand('values', arguments);
+    };
+
     Gremlin.prototype.put = CommandBuilder.queryPipes('put');
 
-    Gremlin.prototype.getPropertyKeys = CommandBuilder.queryMain('getPropertyKeys');
-    Gremlin.prototype.setProperty = CommandBuilder.queryMain('setProperty');
-    Gremlin.prototype.getProperty = CommandBuilder.queryMain('getProperty');
+    Gremlin.prototype.getPropertyKeys = function() {
+        return this.execMainCommand('getPropertyKeys', arguments);
+    };
+
+    Gremlin.prototype.setProperty = function() {
+        return this.execMainCommand('setProperty', arguments);
+    };
+
+    Gremlin.prototype.getProperty = function() {
+        return this.execMainCommand('getProperty', arguments);
+    };
 
     // Titan specifics
-    Gremlin.prototype.name = CommandBuilder.queryMain('name');
-    Gremlin.prototype.dataType = CommandBuilder.queryMain('dataType');
-    Gremlin.prototype.indexed = CommandBuilder.queryMain('indexed');
-    Gremlin.prototype.unique = CommandBuilder.queryMain('unique');
-    Gremlin.prototype.makePropertyKey = CommandBuilder.queryMain('makePropertyKey');
-    Gremlin.prototype.group = CommandBuilder.queryMain('group');
-    Gremlin.prototype.makeEdgeLabel = CommandBuilder.queryMain('makeEdgeLabel');
-    Gremlin.prototype.query = CommandBuilder.queryMain('query');
+    Gremlin.prototype.name = function() {
+        return this.execMainCommand('name', arguments);
+    };
+
+    Gremlin.prototype.dataType = function() {
+        return this.execMainCommand('dataType', arguments);
+    };
+
+    Gremlin.prototype.indexed = function() {
+        return this.execMainCommand('indexed', arguments);
+    };
+
+    Gremlin.prototype.unique = function() {
+        return this.execMainCommand('unique', arguments);
+    };
+
+    Gremlin.prototype.makePropertyKey = function() {
+        return this.execMainCommand('makePropertyKey', arguments);
+    };
+
+    Gremlin.prototype.group = function() {
+        return this.execMainCommand('group', arguments);
+    };
+
+    Gremlin.prototype.makeEdgeLabel = function() {
+        return this.execMainCommand('makeEdgeLabel', arguments);
+    };
+
+    Gremlin.prototype.query = function() {
+        return this.execMainCommand('query', arguments);
+    };
 
     // Titan v0.4.0 specifics
-    Gremlin.prototype.single = CommandBuilder.queryMain('single');
-    Gremlin.prototype.list = CommandBuilder.queryMain('list');
+    Gremlin.prototype.single = function() {
+        return this.execMainCommand('single', arguments);
+    };
+
+    Gremlin.prototype.list = function() {
+        return this.execMainCommand('list', arguments);
+    };
 
     // replaces unique(Direction.IN)
-    Gremlin.prototype.oneToMany = CommandBuilder.queryMain('oneToMany');
+    Gremlin.prototype.oneToMany = function() {
+        return this.execMainCommand('oneToMany', arguments);
+    };
+
     // replaces unique(Direction.OUT)
-    Gremlin.prototype.manyToOne = CommandBuilder.queryMain('manyToOne');
+    Gremlin.prototype.manyToOne = function() {
+        return this.execMainCommand('manyToOne', arguments);
+    };
+
     // replaces unique(Direction.IN).unique(Direction.OUT)
-    Gremlin.prototype.oneToOne = CommandBuilder.queryMain('oneToOne');
+    Gremlin.prototype.oneToOne = function() {
+        return this.execMainCommand('oneToOne', arguments);
+    };
 
-    Gremlin.prototype.makeKey = CommandBuilder.queryMain('makeKey');
-    Gremlin.prototype.makeLabel = CommandBuilder.queryMain('makeLabel');
-    Gremlin.prototype.make = CommandBuilder.queryMain('make');
-    Gremlin.prototype.sortKey = CommandBuilder.queryMain('sortKey');
-    Gremlin.prototype.signature = CommandBuilder.queryMain('signature');
-    Gremlin.prototype.unidirected = CommandBuilder.queryMain('unidirected');
+    Gremlin.prototype.makeKey = function() {
+        return this.execMainCommand('makeKey', arguments);
+    };
 
-    Gremlin.prototype.createKeyIndex = CommandBuilder.queryMain('createKeyIndex');
-    Gremlin.prototype.getIndexes = CommandBuilder.queryMain('getIndexes');
-    Gremlin.prototype.hasIndex = CommandBuilder.queryMain('hasIndex');
+    Gremlin.prototype.makeLabel = function() {
+        return this.execMainCommand('makeLabel', arguments);
+    };
+
+    Gremlin.prototype.make = function() {
+        return this.execMainCommand('make', arguments);
+    };
+
+    Gremlin.prototype.sortKey = function() {
+        return this.execMainCommand('sortKey', arguments);
+    };
+
+    Gremlin.prototype.signature = function() {
+        return this.execMainCommand('signature', arguments);
+    };
+
+    Gremlin.prototype.unidirected = function() {
+        return this.execMainCommand('unidirected', arguments);
+    };
+
+    Gremlin.prototype.createKeyIndex = function() {
+        return this.execMainCommand('createKeyIndex', arguments);
+    };
+
+    Gremlin.prototype.getIndexes = function() {
+        return this.execMainCommand('getIndexes', arguments);
+    };
+
+    Gremlin.prototype.hasIndex = function() {
+        return this.execMainCommand('hasIndex', arguments);
+    };
 
     return Gremlin;
+
 })();
