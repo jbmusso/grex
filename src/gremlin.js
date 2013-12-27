@@ -10,15 +10,20 @@ function CommandBuilder() {
 
 CommandBuilder.queryMain = function(methodName, reset) {
     return function() {
-        var gremlin = reset ? new Gremlin(this) : this,
-            args,
-            appendArg = '';
+        var gremlin;
+        var appendArg = '';
+
+        if (reset) {
+            gremlin = new Gremlin(this);
+        } else {
+            gremlin = this;
+        }
 
         //cater for select array parameters
         if(methodName == 'select'){
             gremlin.appendScript('.' + methodName + Argument.build.call(this, arguments, true));
         } else {
-            args = _.isArray(arguments[0]) ? arguments[0] : arguments;
+            var args = _.isArray(arguments[0]) ? arguments[0] : arguments;
 
             //cater for idx param 2
             if (methodName == 'idx' && args.length > 1) {
