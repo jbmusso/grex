@@ -10,14 +10,14 @@ var isRegexId = Utils.isRegexId;
 
 function queryMain (methodName, reset) {
     return function(){
-        var gremlin = reset ? new Gremlin(this) : this._buildGremlin(this.params),
+        var gremlin = reset ? new Gremlin(this) : this._buildGremlin(this.script),
             args = '',
             appendArg = '';
 
         //cater for select array parameters
         if(methodName == 'select'){
             args = arguments;
-            gremlin.params += '.' + methodName + buildArguments.call(this, args, true);
+            gremlin.script += '.' + methodName + buildArguments.call(this, args, true);
         } else {
             args = _.isArray(arguments[0]) ? arguments[0] : arguments;
 
@@ -32,10 +32,10 @@ function queryMain (methodName, reset) {
                 args.length = 1;
             }
 
-            gremlin.params += '.' + methodName + buildArguments.call(this, args);
+            gremlin.script += '.' + methodName + buildArguments.call(this, args);
         }
 
-        gremlin.params += appendArg;
+        gremlin.script += appendArg;
 
         return gremlin;
     };
@@ -48,8 +48,8 @@ module.exports = queryMain;
 //Do not pass in method name, just string arg
 function queryIndex () {
     return function(arg) {
-        var gremlin = this._buildGremlin(this.params);
-        gremlin.params += '['+ arg.toString() + ']';
+        var gremlin = this._buildGremlin(this.script);
+        gremlin.script += '['+ arg.toString() + ']';
 
         return gremlin;
     };
@@ -59,18 +59,18 @@ function queryIndex () {
 // and | or | put  => g.v(1).outE().or(g._().has('id', 'T.eq', 9), g._().has('weight', 'T.lt', '0.6f'))
 function queryPipes (methodName) {
     return function() {
-        var gremlin = this._buildGremlin(this.params);
+        var gremlin = this._buildGremlin(this.script);
         var args = _.isArray(arguments[0]) ? arguments[0] : arguments;
 
-        gremlin.params += "." + methodName + "(";
+        gremlin.script += "." + methodName + "(";
 
         _.each(args, function(arg) {
-            gremlin.params += arg.params || parseArguments.call(this, arg);
-            gremlin.params += ",";
+            gremlin.script += arg.script || parseArguments.call(this, arg);
+            gremlin.script += ",";
         }, this);
 
-        gremlin.params = gremlin.params.slice(0, -1);
-        gremlin.params += ")";
+        gremlin.script = gremlin.script.slice(0, -1);
+        gremlin.script += ")";
 
         return gremlin;
     };
@@ -79,18 +79,18 @@ function queryPipes (methodName) {
 //retain & except => g.V().retain([g.v(1), g.v(2), g.v(3)])
 function queryCollection (methodName) {
     return function() {
-        var gremlin = this._buildGremlin(this.params),
+        var gremlin = this._buildGremlin(this.script),
             param = '';
 
         if(_.isArray(arguments[0])){
             _.each(arguments[0], function(arg) {
-                param += arg.params;
+                param += arg.script;
                 param += ",";
             });
 
-            gremlin.params += "." + methodName + "([" + param + "])";
+            gremlin.script += "." + methodName + "([" + param + "])";
         } else {
-            gremlin.params += "." + methodName + buildArguments.call(this, arguments[0]);
+            gremlin.script += "." + methodName + buildArguments.call(this, arguments[0]);
         }
 
         return gremlin;
@@ -107,7 +107,7 @@ function buildArguments (array, retainArray) {
             append += v;
         } else if (_.isObject(v) && v.hasOwnProperty('verbatim')) {
             argList += v.verbatim + ",";
-        } else if (_.isObject(v) && !(v.hasOwnProperty('params') && isGraphReference(v.params))) {
+        } else if (_.isObject(v) && !(v.hasOwnProperty('params') && isGraphReference(v.script))) {
             jsonString = JSON.stringify(v);
             jsonString = jsonString.replace('{', '[');
             argList += jsonString.replace('}', ']') + ",";
@@ -129,8 +129,8 @@ function parseArguments(val) {
     }
 
     //check to see if the arg is referencing the graph ie. g.v(1)
-    if(_.isObject(val) && val.hasOwnProperty('params') && isGraphReference(val.params)){
-        return val.params.toString();
+    if(_.isObject(val) && val.hasOwnProperty('params') && isGraphReference(val.script)){
+        return val.script.toString();
     }
 
     if(isGraphReference(val)) {
@@ -155,7 +155,7 @@ var Gremlin = (function () {
     function Gremlin(gRex) {
         this.gRex = gRex;
         this.options = gRex.options;
-        this.params = 'g';
+        this.script = 'g';
         this.resultFormatter = gRex.resultFormatter;
     }
 
@@ -166,7 +166,7 @@ var Gremlin = (function () {
     Gremlin.prototype.getData = function() {
         var deferred = q.defer();
 
-        var uri = '/graphs/' + this.options.graph + '/tp/gremlin?script=' + encodeURIComponent(this.params) + '&rexster.showTypes=true';
+        var uri = '/graphs/' + this.options.graph + '/tp/gremlin?script=' + encodeURIComponent(this.script) + '&rexster.showTypes=true';
         var url = 'http://' + this.options.host + ':' + this.options.port + uri;
 
         var options = {
@@ -195,7 +195,7 @@ var Gremlin = (function () {
     };
 
     Gremlin.prototype._buildGremlin = function (queryString) {
-        this.params = queryString;
+        this.script = queryString;
         return this;
     };
 
