@@ -1,52 +1,57 @@
-var Element = require("../element"),
-    ActionHandler = require("./actionhandler"),
-    TransactionCommitter = require("./transactioncommitter"),
-    addTypes = require("../addtypes");
+var ElementFactory = require("../elementfactory"),
+    ActionHandlerFactory = require("./actionhandlers/actionhandlerfactory"),
+    TransactionCommitter = require("./transactioncommitter");
 
 
 module.exports = (function () {
     function Transaction(options, typeMap) {
         this.committer = new TransactionCommitter(this);
-        this.OPTS = options;
+        this.options = options;
         this.typeMap = typeMap;
-        this.pendingElements = [];
+        this.txArray = [];
         this.pendingVertices = [];
-    }
-
-
-    function cud(action, type) {
-        return function() {
-            var element = Element.build(type),
-                // Instantiate an actionhandler everytime cud() is called.
-                // TODO: improve this, and pass element to prepareElementFor() instead. Will avoid instantiating a ActionHandler every time.
-                actionhandler = ActionHandler.build(element, this, arguments);
-
-            actionhandler.handleAction(action);
-
-            if (actionhandler.addToTransaction) {
-                element._action = action;
-                this.pendingElements.push(addTypes(element, this.typeMap));
-            }
-
-            return element;
-        };
     }
 
     Transaction.prototype.commit = function() {
         return this.committer.doCommit();
     };
 
-    Transaction.prototype.addVertex = cud('create', 'vertex');
+    /**
+     * Handle an action for an element of given type.
+     *
+     * @param {String} action
+     * @param {String} type
+     * @param {Array} args
+     */
+    Transaction.prototype.handleAction = function(action, type, args) {
+        var element = ElementFactory.build(type);
+        var actionhandler = ActionHandlerFactory.build(element, this, args);
+        return actionhandler.handleAction(action);
+    };
 
-    Transaction.prototype.addEdge = cud('create', 'edge');
+    Transaction.prototype.addVertex = function() {
+        return this.handleAction('create', 'vertex', arguments);
+    };
 
-    Transaction.prototype.removeVertex = cud('delete', 'vertex');
+    Transaction.prototype.addEdge = function() {
+        return this.handleAction('create', 'edge', arguments);
+    };
 
-    Transaction.prototype.removeEdge = cud('delete', 'edge');
+    Transaction.prototype.removeVertex = function() {
+        return this.handleAction('delete', 'vertex', arguments);
+    };
 
-    Transaction.prototype.updateVertex = cud('update', 'vertex');
+    Transaction.prototype.removeEdge = function() {
+        return this.handleAction('delete', 'edge', arguments);
+    };
 
-    Transaction.prototype.updateEdge = cud('update', 'edge');
+    Transaction.prototype.updateVertex = function() {
+        return this.handleAction('update', 'vertex', arguments);
+    };
+
+    Transaction.prototype.updateEdge = function() {
+        return this.handleAction('update', 'edge', arguments);
+    };
 
     return Transaction;
 })();
