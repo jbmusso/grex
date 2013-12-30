@@ -9,7 +9,6 @@ module.exports = (function() {
 
   ResultFormatter.prototype.formatResults = function(results) {
     var formattedResult = {
-      success: true,
       results: [],
       typeMap: {}
     };

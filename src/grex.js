@@ -65,10 +65,11 @@ module.exports = (function(){
         return deferred.reject(err);
       }
 
-      var results = body.results;
-      var transformedResults = this.transformResults(results);
+      var transformedResults = this.transformResults(body.results);
+      body.results = transformedResults.results;
+      body.typeMap = transformedResults.typeMap;
 
-      return deferred.resolve(transformedResults);
+      return deferred.resolve(body);
     }.bind(this));
 
     return deferred.promise;
