@@ -8,10 +8,11 @@ module.exports = (function() {
     this.gRex = gRex;
     this.typeMap = {};
     this.name = gRex.options.graph;
+    this.commandBuilder = new CommandBuilder(this);
   }
 
   Graph.prototype.exec = function(methodName, args) {
-    var command = CommandBuilder.queryMain(methodName, true).apply(this, args);
+    var command = this.commandBuilder.queryMain(methodName, true).apply(this, args);
     return command;
   };
 
