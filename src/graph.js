@@ -11,6 +11,14 @@ module.exports = (function() {
     this.name = gRex.options.graph;
   }
 
+  /**
+   * Add a command to execute against the Graph and return a new Pipeline.
+   *
+   * @private
+   * @param {String} methodName
+   * @param {Array} args
+   * @return {Pipeline}
+   */
   Graph.prototype.add = function(methodName, args) {
     var pipeline = new Pipeline(this.gRex);
     pipeline.gremlin.queryMain(methodName, pipeline).apply(this, args);
@@ -94,6 +102,13 @@ module.exports = (function() {
     return this.add('getTypes', arguments);
   };
 
+  /**
+   * Begin a new Transaction, passing any types eventually defined before.
+   *
+   * @public
+   * @param {Object} typeMap A map of types
+   * @return {Transaction}
+   */
   Graph.prototype.begin = function (typeMap) {
       typeMap = typeMap ? _.extend(typeMap, this.typeMap) : this.typeMap;
 

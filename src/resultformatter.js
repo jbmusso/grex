@@ -49,8 +49,8 @@ module.exports = (function() {
    *   age: 29
    * }
    *
-   * @param {Object} graphElement - a raw graph element as returned by Rexster
-   * @param {Object} formattedResult - gRex result object to populate
+   * @param {Object} graphElement A raw graph element as returned by Rexster
+   * @param {Object} formattedResult gRex result object to populate
    */
   ResultFormatter.prototype.formatGraphElement = function(graphElement, formattedResult) {
     var returnObject = {};

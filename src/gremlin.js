@@ -9,10 +9,22 @@ module.exports = (function() {
     this.script = 'g';
   }
 
+  /**
+   * @private
+   * @param {String} script
+   */
   Gremlin.prototype.appendScript = function(script) {
     this.script += script;
   };
 
+  /**
+   * Populate a Gremlin script string with default behavior. Used for most
+   * commands.
+   * This method optionally takes a new Pipeline object as second parameter.
+   *
+   * @param {String} methodName
+   * @param {Pipeline} pipeline Optional pipeline
+   */
   Gremlin.prototype.queryMain = function(methodName, pipeline) {
     return function() {
       var appendArg = '';
@@ -50,8 +62,13 @@ module.exports = (function() {
     }.bind(this);
   };
 
-  // [i] => index & [1..2] => range
-  // Do not pass in method name, just string range
+  /**
+   * Alternative 'index' and 'range' commands, ie:
+   *   index() => [i]
+   *   range() => [1..2]
+   *
+   * Do not pass in method name, just string range.
+   */
   Gremlin.prototype.queryIndex = function() {
     return function(range) {
       this.gremlin.appendScript('['+ range.toString() + ']');
@@ -60,7 +77,12 @@ module.exports = (function() {
     };
   }.bind(this);
 
-  // and | or | put  => g.v(1).outE().or(g._().has('id', 'T.eq', 9), g._().has('weight', 'T.lt', '0.6f'))
+  /**
+   * Used for 'and', 'or' & 'put commands, ie:
+   *   g.v(1).outE().or(g._().has('id', 'T.eq', 9), g._().has('weight', 'T.lt', '0.6f'))
+   *
+   * @param {String} methodName
+   */
   Gremlin.prototype.queryPipes = function(methodName) {
     return function() {
       var args = _.isArray(arguments[0]) ? arguments[0] : arguments;
@@ -79,7 +101,12 @@ module.exports = (function() {
     };
   }.bind(this);
 
-  //retain & except => g.V().retain([g.v(1), g.v(2), g.v(3)])
+  /**
+   * Used for retain & except commands, ie:
+   *   g.V().retain([g.v(1), g.v(2), g.v(3)])
+   *
+   * @param {String} methodName
+   */
   Gremlin.prototype.queryCollection = function(methodName) {
     return function() {
       var param = '';

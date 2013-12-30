@@ -3,7 +3,7 @@ var _ = require("lodash");
 
 var ActionHandler = require("./actionhandler");
 
-/*
+/**
  * Prepares a Vertex for a transaction
  */
 module.exports = (function() {

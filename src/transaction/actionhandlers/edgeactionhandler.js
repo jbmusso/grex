@@ -2,7 +2,7 @@ var inherits = require("inherits");
 
 var ActionHandler = require("./actionhandler");
 
-/*
+/**
  * Prepares an Edge for a transaction
  */
 module.exports = (function() {
@@ -28,7 +28,7 @@ module.exports = (function() {
     this.edge.setProperties(this.actionArgs[3 + argOffset]);
   };
 
-  /*
+  /**
    * Note that it is not possible to update an edge _inV, _outV and _label
    * properties.
    */

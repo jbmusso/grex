@@ -1,6 +1,6 @@
 var addTypes = require("../../addtypes");
 var _ = require("lodash");
-/*
+/**
  * Handle create/update/delete actions for Graph elements (vertices or edges)
  * within a transaction, setting their properties accordingly.
  *
@@ -16,7 +16,7 @@ module.exports = (function() {
     this.addToTransaction = true;
   }
 
-  /*
+  /**
    * @return {Element}
    */
   ActionHandler.prototype.handleAction = function(action) {

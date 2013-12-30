@@ -6,6 +6,14 @@ module.exports = (function () {
     this.gremlin = new Gremlin(this);
   }
 
+  /**
+   * Execute a query against the server.
+   * Support the dual callback/promise API.
+   *
+   * WARNING: this method will likely be deprecated in the future.
+   *
+   * @param {Function} callback
+   */
   Pipeline.prototype.get = function(callback) {
     return this.gRex.exec(this.gremlin.script).nodeify(callback);
   };
@@ -113,7 +121,6 @@ module.exports = (function () {
   Pipeline.prototype.range = function() {
     return this.gremlin.queryIndex().apply(this, arguments);
   };
-
 
   Pipeline.prototype.and = function() {
     return this.gremlin.queryPipes('and').apply(this, arguments);
@@ -225,7 +232,7 @@ module.exports = (function () {
     return this.gremlin.queryMain('fairMerge').apply(this, arguments);
   };
 
-  //g.v(1).out()ifThenElse('{it.name=='josh'}','{it.age}','{it.name}')
+  // g.v(1).out().ifThenElse('{it.name=='josh'}','{it.age}','{it.name}')
   Pipeline.prototype.ifThenElse = function() {
     return this.gremlin.queryMain('ifThenElse').apply(this, arguments);
   };
@@ -316,34 +323,37 @@ module.exports = (function () {
     return this.gremlin.queryMain('query').apply(this, arguments);
   };
 
-  // Titan v0.4.0 specifics
+  // Titan v0.4.0+
   Pipeline.prototype.single = function() {
     return this.gremlin.queryMain('single').apply(this, arguments);
   };
 
+  // Titan v0.4.0+
   Pipeline.prototype.list = function() {
     return this.gremlin.queryMain('list').apply(this, arguments);
   };
 
-  // replaces unique(Direction.IN)
+  // Titan v0.4.0+: replaces unique(Direction.IN)
   Pipeline.prototype.oneToMany = function() {
     return this.gremlin.queryMain('oneToMany').apply(this, arguments);
   };
 
-  // replaces unique(Direction.OUT)
+  // Titan v0.4.0+: replaces unique(Direction.OUT)
   Pipeline.prototype.manyToOne = function() {
     return this.gremlin.queryMain('manyToOne').apply(this, arguments);
   };
 
-  // replaces unique(Direction.IN).unique(Direction.OUT)
+  // Titan v0.4.0+: replaces unique(Direction.IN) and unique(Direction.OUT)
   Pipeline.prototype.oneToOne = function() {
     return this.gremlin.queryMain('oneToOne').apply(this, arguments);
   };
 
+  // Titan v0.4.0+
   Pipeline.prototype.makeKey = function() {
     return this.gremlin.queryMain('makeKey').apply(this, arguments);
   };
 
+  // Titan v0.4.0+
   Pipeline.prototype.makeLabel = function() {
     return this.gremlin.queryMain('makeLabel').apply(this, arguments);
   };
