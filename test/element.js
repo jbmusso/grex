@@ -7,29 +7,22 @@ var edge, vertex;
 
 describe('Elements', function() {
   describe('Factory', function() {
-    it('should build an Element of Vertex class', function() {
+    it('should build a Vertex graph element', function() {
       vertex = ElementFactory.build("vertex");
       vertex.should.be.instanceof(Vertex);
+      vertex.should.have.property('_type', 'vertex');
+      vertex.should.have.property('_id', null);
     });
 
-    it('should build an Element of Edge class', function() {
+    it('should build an Edge graph element', function() {
       edge = ElementFactory.build("edge");
       edge.should.be.instanceof(Edge);
       edge.should.have.property('_type', 'edge');
+      edge.should.have.property('_id', null);
     });
   });
 
   describe('Vertex element', function() {
-    describe('Instantiation', function() {
-      it('should have a _type property set to "vertex"', function() {
-          vertex.should.have.property('_type', 'vertex');
-      });
-
-      it('should have an _id property set to "null"', function() {
-          vertex.should.have.property('_id', null);
-      });
-    });
-
     describe('setProperty', function() {
       before(function() {
         vertex.setProperty('name', 'bob');
@@ -55,26 +48,12 @@ describe('Elements', function() {
     });
 
     describe('getProperties', function() {
-      var vertexProperties;
-      before(function() {
-        vertexProperties = vertex.getProperties();
-      });
-
       it('should return properties', function() {
+        var vertexProperties = vertex.getProperties();
         vertexProperties.should.have.property('_type', 'vertex');
         vertexProperties.should.have.property('_id', null);
         vertexProperties.should.have.property('name', 'bob');
       });
-    });
-  });
-
-  describe('Edge element', function() {
-    it('should have a _type property set to "vertex"', function() {
-        edge.should.have.property('_type', 'edge');
-    });
-
-    it('should have an _id property set to "null"', function() {
-        edge.should.have.property('_id', null);
     });
   });
 });

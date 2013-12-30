@@ -10,39 +10,31 @@ var ElementFactory = require("../../src/elementfactory");
 var vertexHandler, edgeHandler;
 var edge, vertex, transaction;
 
-describe('Element ActionHandlers', function() {
-    before(function(done){
-        gRex.connect()
-            .then(function(result) {
-                g = result;
-                done();
-            })
-            .fail(function(error) {
-                console.error(error);
-            });
+describe('Element ActionHandlers Factory', function() {
+  before(function(done){
+    gRex.connect()
+    .then(function(result) {
+      g = result;
+      done();
+    })
+    .fail(function(error) {
+      console.error(error);
     });
+  });
 
-    before(function() {
-        edge = ElementFactory.build("edge");
-        vertex = ElementFactory.build("vertex");
-        transaction = g.begin();
-    });
+  before(function() {
+    edge = ElementFactory.build("edge");
+    vertex = ElementFactory.build("vertex");
+    transaction = g.begin();
+  });
 
-    describe('Vertex ActionHandler class', function() {
-        describe('when building a vertex action handler', function() {
-            it('should return a vertex ActionHandler', function() {
-                vertexHandler = ActionHandlerFactory.build(vertex, transaction, []);
-                vertexHandler.should.be.instanceof(VertexActionHandler);
-            });
-        });
-    });
+  it('should build a vertex ActionHandler', function() {
+    vertexHandler = ActionHandlerFactory.build(vertex, transaction, []);
+    vertexHandler.should.be.instanceof(VertexActionHandler);
+  });
 
-    describe('Edge ActionHandler class', function() {
-        describe('when building a vertex action handler', function() {
-            it('should return an edge ActionHandler', function() {
-                edgeHandler = ActionHandlerFactory.build(edge, transaction, []);
-                edgeHandler.should.be.instanceof(EdgeActionHandler);
-            });
-        });
-    });
+  it('should build an edge ActionHandler', function() {
+    edgeHandler = ActionHandlerFactory.build(edge, transaction, []);
+    edgeHandler.should.be.instanceof(EdgeActionHandler);
+  });
 });
