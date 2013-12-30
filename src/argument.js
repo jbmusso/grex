@@ -57,7 +57,9 @@ module.exports = (function () {
   };
 
   Argument.isRegexId = function(id) {
-    return !!this.options.idRegex && _.isString(id) && this.options.idRegex.test(id);
+    var options = this.gRex.options;
+
+    return !!options.idRegex && _.isString(id) && options.idRegex.test(id);
   };
 
   Argument.isGraphReference = function(val) {

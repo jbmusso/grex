@@ -100,11 +100,10 @@ CommandBuilder.queryCollection = function(methodName) {
 
 
 var Gremlin = (function () {
-    function Gremlin(gRex) {
-        this.gRex = gRex;
-        this.options = gRex.options;
+    function Gremlin(graph) {
+        this.graph = graph;
+        this.gRex = graph.gRex;
         this.script = 'g';
-        this.resultFormatter = gRex.resultFormatter;
     }
 
     Gremlin.prototype.get = function(callback) {
@@ -114,8 +113,8 @@ var Gremlin = (function () {
     Gremlin.prototype.getData = function() {
         var deferred = q.defer();
 
-        var uri = '/graphs/' + this.options.graph + '/tp/gremlin?script=' + encodeURIComponent(this.script) + '&rexster.showTypes=true';
-        var url = 'http://' + this.options.host + ':' + this.options.port + uri;
+        var uri = '/graphs/' + this.graph.name + '/tp/gremlin?script=' + encodeURIComponent(this.script) + '&rexster.showTypes=true';
+        var url = 'http://' + this.graph.gRex.options.host + ':' + this.graph.gRex.options.port + uri;
 
         var options = {
             url: url,
@@ -139,7 +138,7 @@ var Gremlin = (function () {
 
 
     Gremlin.prototype.transformResults = function(results) {
-        return this.resultFormatter.formatResults(results);
+        return this.graph.gRex.resultFormatter.formatResults(results);
     };
 
     Gremlin.prototype.appendScript = function(script) {

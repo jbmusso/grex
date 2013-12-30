@@ -1,14 +1,13 @@
 var CommandBuilder = require("./gremlin");
 var Transaction = require("./transaction/transaction");
-var ResultFormatter = require("./resultformatter");
 
 
 module.exports = (function() {
 
-  function Graph(options) {
-    this.options = options;
+  function Graph(gRex) {
+    this.gRex = gRex;
     this.typeMap = {};
-    this.resultFormatter = new ResultFormatter();
+    this.name = gRex.options.graph;
   }
 
   Graph.prototype.exec = function(methodName, args) {
@@ -95,7 +94,7 @@ module.exports = (function() {
   Graph.prototype.begin = function (typeMap) {
       typeMap = typeMap ? _.extend(typeMap, this.typeMap) : this.typeMap;
 
-      return new Transaction(this.options, typeMap);
+      return new Transaction(this.gRex.options, typeMap);
   };
 
   return Graph;

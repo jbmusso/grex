@@ -3,6 +3,7 @@ var Q = require("q"),
 
 var Graph = require("./graph");
 var classes = require("./classes");
+var ResultFormatter = require("./resultformatter");
 
 
 module.exports = (function(){
@@ -14,6 +15,8 @@ module.exports = (function(){
       'idRegex': false // OrientDB id regex -> /^[0-9]+:[0-9]+$/
     });
 
+    this.resultFormatter = new ResultFormatter();
+
     _.extend(this, classes);
     this.ClassTypes = classes;
   }
@@ -24,7 +27,7 @@ module.exports = (function(){
       options = undefined;
     }
 
-    var graph = new Graph(this.options);
+    var graph = new Graph(this);
 
     return Q.fcall(function() {
       return graph;
