@@ -1,19 +1,13 @@
 var Gremlin = require('./gremlin');
 
 module.exports = (function () {
-  function Pipeline(graph) {
-    this.graph = graph;
-    this.gRex = graph.gRex;
-    this.script = 'g';
+  function Pipeline(gRex) {
+    this.gRex = gRex;
     this.gremlin = new Gremlin(this);
   }
 
   Pipeline.prototype.get = function(callback) {
-    return this.graph.gRex.exec(this.script).then().nodeify(callback);
-  };
-
-  Pipeline.prototype.appendScript = function(script) {
-      this.script += script;
+    return this.gRex.exec(this.gremlin.script).then().nodeify(callback);
   };
 
   /*** Transform ***/

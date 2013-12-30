@@ -12,7 +12,7 @@ module.exports = (function() {
   }
 
   Graph.prototype.exec = function(methodName, args) {
-    var pipeline = new Pipeline(this);
+    var pipeline = new Pipeline(this.gRex);
     var command = pipeline.gremlin.queryMain(methodName, pipeline).apply(this, args);
     return command;
   };

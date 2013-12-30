@@ -4,18 +4,29 @@ var Argument = require("./argument");
 
 
 module.exports = (function() {
-  function Gremlin(context) {
-    this.context = context; // Either an instance of Graph or Pipeline
+  function Gremlin(pipeline) {
+    this.pipeline = pipeline; // Either an instance of Graph or Pipeline
+    this.script = 'g';
   }
+
+  Gremlin.prototype.appendScript = function(script) {
+    this.script += script;
+  };
 
   Gremlin.prototype.queryMain = function(methodName, pipeline) {
     return function() {
       var appendArg = '';
-      pipeline = pipeline || this.context;
+
+      if (pipeline) {
+        // Set a new Pipeline instance, if supplied
+        this.pipeline = pipeline;
+      }
+
+      var gremlin = this.pipeline.gremlin;
 
       //cater for select array parameters
       if(methodName == 'select'){
-        pipeline.appendScript('.' + methodName + Argument.build.call(this.context, arguments, true));
+        gremlin.appendScript('.' + methodName + Argument.build.call(this.pipeline, arguments, true));
       } else {
         var args = _.isArray(arguments[0]) ? arguments[0] : arguments;
 
@@ -23,19 +34,19 @@ module.exports = (function() {
         if (methodName == 'idx' && args.length > 1) {
           _.each(args[1], function(v, k) {
             appendArg = k + ":";
-            appendArg += Argument.parse.call(this.context, args[1][k]);
+            appendArg += Argument.parse.call(this.pipeline, args[1][k]);
           }, this);
 
           appendArg = "[["+ appendArg + "]]";
           args.length = 1;
         }
 
-        pipeline.appendScript('.' + methodName + Argument.build.call(this.context, args));
+        gremlin.appendScript('.' + methodName + Argument.build.call(this.pipeline, args));
       }
 
-      pipeline.appendScript(appendArg);
+      gremlin.appendScript(appendArg);
 
-      return pipeline;
+      return this.pipeline;
     }.bind(this);
   };
 
@@ -43,30 +54,30 @@ module.exports = (function() {
   // Do not pass in method name, just string range
   Gremlin.prototype.queryIndex = function() {
     return function(range) {
-      this.appendScript('['+ range.toString() + ']');
+      this.gremlin.appendScript('['+ range.toString() + ']');
 
       return this;
     };
-  };
+  }.bind(this);
 
   // and | or | put  => g.v(1).outE().or(g._().has('id', 'T.eq', 9), g._().has('weight', 'T.lt', '0.6f'))
   Gremlin.prototype.queryPipes = function(methodName) {
     return function() {
       var args = _.isArray(arguments[0]) ? arguments[0] : arguments;
 
-      this.appendScript("." + methodName + "(");
+      this.gremlin.appendScript("." + methodName + "(");
 
       _.each(args, function(arg) {
-        this.appendScript(arg.script || Argument.parse.call(this, arg));
-        this.appendScript(",");
+        this.gremlin.appendScript((arg.gremlin && arg.gremlin.script) || Argument.parse.call(this, arg));
+        this.gremlin.appendScript(",");
       }, this);
 
-      this.script = this.script.slice(0, -1); // Remove trailing comma
-      this.appendScript(")");
+      this.gremlin.script = this.gremlin.script.slice(0, -1); // Remove trailing comma
+      this.gremlin.appendScript(")");
 
       return this;
     };
-  };
+  }.bind(this);
 
   //retain & except => g.V().retain([g.v(1), g.v(2), g.v(3)])
   Gremlin.prototype.queryCollection = function(methodName) {
@@ -75,18 +86,18 @@ module.exports = (function() {
 
       if(_.isArray(arguments[0])){
         _.each(arguments[0], function(arg) {
-          param += arg.script;
+          param += arg.gremlin.script;
           param += ",";
         });
 
-        this.appendScript("." + methodName + "([" + param + "])");
+        this.gremlin.appendScript("." + methodName + "([" + param + "])");
       } else {
-        this.appendScript("." + methodName + Argument.build.call(this, arguments[0]));
+        this.gremlin.appendScript("." + methodName + Argument.build.call(this, arguments[0]));
       }
 
       return this;
     };
-  };
+  }.bind(this);
 
   return Gremlin;
 
