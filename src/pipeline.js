@@ -7,7 +7,7 @@ module.exports = (function () {
   }
 
   Pipeline.prototype.get = function(callback) {
-    return this.gRex.exec(this.gremlin.script).then().nodeify(callback);
+    return this.gRex.exec(this.gremlin.script).nodeify(callback);
   };
 
   /*** Transform ***/
