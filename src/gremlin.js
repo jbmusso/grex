@@ -68,8 +68,8 @@ module.exports = (function() {
       this.gremlin.appendScript("." + methodName + "(");
 
       _.each(args, function(arg) {
-        this.gremlin.appendScript((arg.gremlin && arg.gremlin.script) || Argument.parse.call(this, arg));
-        this.gremlin.appendScript(",");
+        var partialScript = (arg.gremlin && arg.gremlin.script) || Argument.parse.call(this, arg);
+        this.gremlin.appendScript(partialScript + ",");
       }, this);
 
       this.gremlin.script = this.gremlin.script.slice(0, -1); // Remove trailing comma
