@@ -1,5 +1,7 @@
-var CommandBuilder = require("./gremlin");
+var Gremlin = require("./gremlin");
 var Transaction = require("./transaction/transaction");
+
+var Pipeline = require('./pipeline');
 
 
 module.exports = (function() {
@@ -8,11 +10,12 @@ module.exports = (function() {
     this.gRex = gRex;
     this.typeMap = {};
     this.name = gRex.options.graph;
-    this.commandBuilder = new CommandBuilder(this);
+    this.gremlin = new Gremlin(this);
   }
 
   Graph.prototype.exec = function(methodName, args) {
-    var command = this.commandBuilder.queryMain(methodName, true).apply(this, args);
+    var pipeline = new Pipeline(this);
+    var command = this.gremlin.queryMain(methodName, pipeline).apply(this, args);
     return command;
   };
 
