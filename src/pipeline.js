@@ -164,7 +164,10 @@ module.exports = (function () {
   };
 
   /*** Side Effect ***/
-  // Pipeline.prototype.aggregate // Not implemented
+  Pipeline.prototype.aggregate = function() {
+    throw new Error('Not implemented.');
+  };
+
   Pipeline.prototype.as = function() {
     return this.gremlin.queryMain('as').apply(this, arguments);
   };
@@ -198,9 +201,17 @@ module.exports = (function () {
     return this.gremlin.queryMain('linkOut').apply(this, arguments);
   };
 
-  // Pipeline.prototype.store // Not implemented
-  // Pipeline.prototype.table // Not implemented
-  // Pipeline.prototype.tree // Not implemented
+  Pipeline.prototype.store = function() {
+    throw new Error('Not implemented');
+  };
+
+  Pipeline.prototype.table = function() {
+    throw new Error('Not implemented');
+  };
+
+  Pipeline.prototype.tree = function() {
+    throw new Error('Not implemented');
+  };
 
   /*** Branch ***/
   Pipeline.prototype.copySplit = function() {
@@ -224,7 +235,10 @@ module.exports = (function () {
   };
 
   /*** Methods ***/
-  // Pipeline.prototype.fill // Not implemented
+  Pipeline.prototype.fill = function() {
+    throw new Error('Not implemented');
+  };
+
   Pipeline.prototype.count = function() {
     return this.gremlin.queryMain('count').apply(this, arguments);
   };
