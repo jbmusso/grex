@@ -1,4 +1,3 @@
-var request = require("request");
 var q = require("q");
 var _ = require("lodash");
 
@@ -107,38 +106,7 @@ var Gremlin = (function () {
     }
 
     Gremlin.prototype.get = function(callback) {
-        return this.getData().then().nodeify(callback);
-    };
-
-    Gremlin.prototype.getData = function() {
-        var deferred = q.defer();
-
-        var uri = '/graphs/' + this.graph.name + '/tp/gremlin?script=' + encodeURIComponent(this.script) + '&rexster.showTypes=true';
-        var url = 'http://' + this.graph.gRex.options.host + ':' + this.graph.gRex.options.port + uri;
-
-        var options = {
-            url: url,
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-            }
-        };
-
-        request.get(options, function(err, res, body) {
-            if (err) {
-                return deferred.reject(err);
-            }
-
-            var results = this.transformResults(JSON.parse(body).results);
-
-            return deferred.resolve(results);
-        }.bind(this));
-
-        return deferred.promise;
-    };
-
-
-    Gremlin.prototype.transformResults = function(results) {
-        return this.graph.gRex.resultFormatter.formatResults(results);
+        return this.graph.gRex.exec(this.script).then().nodeify(callback);
     };
 
     Gremlin.prototype.appendScript = function(script) {
