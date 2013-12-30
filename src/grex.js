@@ -45,14 +45,19 @@ module.exports = (function(){
   Grex.prototype.exec = function(script) {
     var deferred = Q.defer();
 
-    var uri = '/graphs/' + this.options.graph + '/tp/gremlin?script=' + encodeURIComponent(script) + '&rexster.showTypes=true';
+    var uri = '/graphs/' + this.options.graph + '/tp/gremlin';
     var url = 'http://' + this.options.host + ':' + this.options.port + uri;
 
     var options = {
       url: url,
+      qs: {
+        script: script,
+        'rexster.showTypes': true
+      },
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
-      }
+      },
+      json: true
     };
 
     request.get(options, function(err, res, body) {
@@ -60,9 +65,10 @@ module.exports = (function(){
         return deferred.reject(err);
       }
 
-      var results = this.transformResults(JSON.parse(body).results);
+      var results = body.results;
+      var transformedResults = this.transformResults(results);
 
-      return deferred.resolve(results);
+      return deferred.resolve(transformedResults);
     }.bind(this));
 
     return deferred.promise;
