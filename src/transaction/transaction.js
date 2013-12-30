@@ -12,35 +12,46 @@ module.exports = (function () {
         this.pendingVertices = [];
     }
 
-
-    function cud(action, type) {
-        return function() {
-            var element = ElementFactory.build(type),
-                // Instantiate an actionhandler everytime cud() is called.
-                // TODO: improve this, and pass element to prepareElementFor() instead. Will avoid instantiating a ActionHandler every time.
-                actionhandler = ActionHandlerFactory.build(element, this, arguments);
-
-            element = actionhandler.handleAction(action); //returns "element"
-
-            return element;
-        };
-    }
-
     Transaction.prototype.commit = function() {
         return this.committer.doCommit();
     };
 
-    Transaction.prototype.addVertex = cud('create', 'vertex');
+    /**
+     * Handle an action for an element of given type.
+     *
+     * @param {String} action
+     * @param {String} type
+     * @param {Array} args
+     */
+    Transaction.prototype.handleAction = function(action, type, args) {
+        var element = ElementFactory.build(type);
+        var actionhandler = ActionHandlerFactory.build(element, this, args);
+        return actionhandler.handleAction(action);
+    };
 
-    Transaction.prototype.addEdge = cud('create', 'edge');
+    Transaction.prototype.addVertex = function() {
+        return this.handleAction('create', 'vertex', arguments);
+    };
 
-    Transaction.prototype.removeVertex = cud('delete', 'vertex');
+    Transaction.prototype.addEdge = function() {
+        return this.handleAction('create', 'edge', arguments);
+    };
 
-    Transaction.prototype.removeEdge = cud('delete', 'edge');
+    Transaction.prototype.removeVertex = function() {
+        return this.handleAction('delete', 'vertex', arguments);
+    };
 
-    Transaction.prototype.updateVertex = cud('update', 'vertex');
+    Transaction.prototype.removeEdge = function() {
+        return this.handleAction('delete', 'edge', arguments);
+    };
 
-    Transaction.prototype.updateEdge = cud('update', 'edge');
+    Transaction.prototype.updateVertex = function() {
+        return this.handleAction('update', 'vertex', arguments);
+    };
+
+    Transaction.prototype.updateEdge = function() {
+        return this.handleAction('update', 'edge', arguments);
+    };
 
     return Transaction;
 })();
