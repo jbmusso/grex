@@ -11,7 +11,7 @@ module.exports = (function() {
     this.name = gRex.options.graph;
   }
 
-  Graph.prototype.exec = function(methodName, args) {
+  Graph.prototype.add = function(methodName, args) {
     var pipeline = new Pipeline(this.gRex);
     pipeline.gremlin.queryMain(methodName, pipeline).apply(this, args);
 
@@ -19,79 +19,79 @@ module.exports = (function() {
   };
 
   Graph.prototype._ = function() {
-    return this.exec('_', arguments);
+    return this.add('_', arguments);
   };
 
   Graph.prototype.E = function() {
-    return this.exec('E', arguments);
+    return this.add('E', arguments);
   };
 
   Graph.prototype.V = function() {
-    return this.exec('V', arguments);
+    return this.add('V', arguments);
   };
 
   // Methods
   Graph.prototype.e = function() {
-    return this.exec('e', arguments);
+    return this.add('e', arguments);
   };
 
   Graph.prototype.idx = function() {
-    return this.exec('idx', arguments);
+    return this.add('idx', arguments);
   };
 
   Graph.prototype.v = function() {
-    return this.exec('v', arguments);
+    return this.add('v', arguments);
   };
 
   // Indexing
   Graph.prototype.createIndex = function() {
-    return this.exec('createIndex', arguments);
+    return this.add('createIndex', arguments);
   };
 
   Graph.prototype.createKeyIndex = function() {
-    return this.exec('createKeyIndex', arguments);
+    return this.add('createKeyIndex', arguments);
   };
 
   Graph.prototype.getIndices = function() {
-    return this.exec('getIndices', arguments);
+    return this.add('getIndices', arguments);
   };
 
   Graph.prototype.getIndexedKeys = function() {
-    return this.exec('getIndexedKeys', arguments);
+    return this.add('getIndexedKeys', arguments);
   };
 
   Graph.prototype.getIndex = function() {
-    return this.exec('getIndex', arguments);
+    return this.add('getIndex', arguments);
   };
 
   Graph.prototype.dropIndex = function() {
-    return this.exec('dropIndex', arguments);
+    return this.add('dropIndex', arguments);
   };
 
   Graph.prototype.dropKeyIndex = function() {
-    return this.exec('dropKeyIndex', arguments);
+    return this.add('dropKeyIndex', arguments);
   };
 
   // Types
   Graph.prototype.makeKey = function() {
-    return this.exec('makeKey', arguments);
+    return this.add('makeKey', arguments);
   };
 
   Graph.prototype.clear = function() {
-    return this.exec('clear', arguments);
+    return this.add('clear', arguments);
   };
 
   Graph.prototype.shutdown = function() {
-    return this.exec('shutdown', arguments);
+    return this.add('shutdown', arguments);
   };
 
   Graph.prototype.getFeatures = function() {
-    return this.exec('getFeatures', arguments);
+    return this.add('getFeatures', arguments);
   };
 
   // Titan specifics
   Graph.prototype.getTypes = function() {
-    return this.exec('getTypes', arguments);
+    return this.add('getTypes', arguments);
   };
 
   Graph.prototype.begin = function (typeMap) {
