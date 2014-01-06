@@ -19,7 +19,7 @@ module.exports = (function () {
   };
 
   Pipeline.prototype.add = function(methodName, type, args) {
-    this.gremlin['query' + type](methodName).apply(this, args);
+    this.gremlin['query' + type](methodName, args);
 
     return this;
   };
@@ -120,22 +120,16 @@ module.exports = (function () {
   /*** Filter ***/
   // index(i)
   Pipeline.prototype.index = function() {
-    this.gremlin.queryIndex.apply(this.gremlin, arguments);
-
-    return this;
+    return this.add('', 'Index', arguments);
   };
 
   // range('[i..j]')
   Pipeline.prototype.range = function() {
-    this.gremlin.queryIndex.apply(this.gremlin, arguments);
-
-    return this;
+    return this.add('', 'Index', arguments);
   };
 
   Pipeline.prototype.and = function() {
-    this.gremlin.queryPipes('and').apply(this, arguments);
-
-    return this;
+    return this.add('and', 'Pipes', arguments);
   };
 
   Pipeline.prototype.back = function() {
@@ -147,9 +141,7 @@ module.exports = (function () {
   };
 
   Pipeline.prototype.except = function() {
-    this.gremlin.queryCollection('except').apply(this, arguments);
-
-    return this;
+    return this.add('except', 'Collection', arguments);
   };
 
   Pipeline.prototype.filter = function() {
@@ -169,9 +161,7 @@ module.exports = (function () {
   };
 
   Pipeline.prototype.or = function() {
-    this.gremlin.queryPipes('or').apply(this, arguments);
-
-    return this;
+    return this.add('or', 'Pipes', arguments);
   };
 
   Pipeline.prototype.random = function() {
@@ -179,9 +169,7 @@ module.exports = (function () {
   };
 
   Pipeline.prototype.retain = function() {
-    this.gremlin.queryCollection('retain').apply(this, arguments);
-
-    return this;
+    return this.add('retain', 'Collection', arguments);
   };
 
   Pipeline.prototype.simplePath = function() {
@@ -240,9 +228,7 @@ module.exports = (function () {
 
   /*** Branch ***/
   Pipeline.prototype.copySplit = function() {
-    this.gremlin.queryPipes('copySplit').apply(this, arguments);
-
-    return this;
+    return this.add('copySplit', 'Pipes', arguments);
   };
   Pipeline.prototype.exhaustMerge = function() {
     return this.add('exhaustMerge', 'Main', arguments);
@@ -295,9 +281,7 @@ module.exports = (function () {
   };
 
   Pipeline.prototype.put = function() {
-    this.gremlin.queryPipes('put').apply(this, arguments);
-
-    return this;
+    return this.add('put', 'Pipes', arguments);
   };
 
   Pipeline.prototype.getPropertyKeys = function() {

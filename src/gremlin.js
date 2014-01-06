@@ -25,39 +25,30 @@ module.exports = (function() {
    * @param {String} methodName
    * @param {Pipeline} pipeline Optional pipeline
    */
-  Gremlin.prototype.queryMain = function(methodName, pipeline) {
-    return function() {
-      var appendArg = '';
+  Gremlin.prototype.queryMain = function(methodName, args) {
+    var appendArg = '';
 
-      if (pipeline) {
-        // Set a new Pipeline instance, if supplied
-        this.pipeline = pipeline;
+    //cater for select array parameters
+    if (methodName == 'select') {
+      this.appendScript('.' + methodName + Argument.build.call(this.pipeline, args, true));
+    } else {
+      args = _.isArray(args[0]) ? args[0] : args;
+
+      //cater for idx param 2
+      if (methodName == 'idx' && args.length > 1) {
+        _.each(args[1], function(v, k) {
+          appendArg = k + ":";
+          appendArg += Argument.parse.call(this.pipeline, args[1][k]);
+        }, this);
+
+        appendArg = "[["+ appendArg + "]]";
+        args.length = 1;
       }
 
-      var gremlin = this.pipeline.gremlin;
+      this.appendScript('.' + methodName + Argument.build.call(this.pipeline, args));
+    }
 
-      //cater for select array parameters
-      if(methodName == 'select'){
-        gremlin.appendScript('.' + methodName + Argument.build.call(this.pipeline, arguments, true));
-      } else {
-        var args = _.isArray(arguments[0]) ? arguments[0] : arguments;
-
-        //cater for idx param 2
-        if (methodName == 'idx' && args.length > 1) {
-          _.each(args[1], function(v, k) {
-            appendArg = k + ":";
-            appendArg += Argument.parse.call(this.pipeline, args[1][k]);
-          }, this);
-
-          appendArg = "[["+ appendArg + "]]";
-          args.length = 1;
-        }
-
-        gremlin.appendScript('.' + methodName + Argument.build.call(this.pipeline, args));
-      }
-
-      gremlin.appendScript(appendArg);
-    }.bind(this);
+    this.appendScript(appendArg);
   };
 
   /**
@@ -67,8 +58,8 @@ module.exports = (function() {
    *
    * Do not pass in method name, just string range.
    */
-  Gremlin.prototype.queryIndex = function(range) {
-    this.appendScript('['+ range.toString() + ']');
+  Gremlin.prototype.queryIndex = function(methodName, arg) {
+    this.appendScript('['+ arg[0].toString() + ']');
   };
 
   /**
@@ -77,21 +68,19 @@ module.exports = (function() {
    *
    * @param {String} methodName
    */
-  Gremlin.prototype.queryPipes = function(methodName) {
-    return function() {
-      var args = _.isArray(arguments[0]) ? arguments[0] : arguments;
+  Gremlin.prototype.queryPipes = function(methodName, args) {
+    args = _.isArray(args[0]) ? args[0] : args;
 
-      this.gremlin.appendScript("." + methodName + "(");
+    this.appendScript("." + methodName + "(");
 
-      _.each(args, function(arg) {
-        var partialScript = (arg.gremlin && arg.gremlin.script) || Argument.parse.call(this, arg);
-        this.gremlin.appendScript(partialScript + ",");
-      }, this);
+    _.each(args, function(arg) {
+      var partialScript = (arg.gremlin && arg.gremlin.script) || Argument.parse.call(this.pipeline, arg);
+      this.appendScript(partialScript + ",");
+    }, this);
 
-      this.gremlin.script = this.gremlin.script.slice(0, -1); // Remove trailing comma
-      this.gremlin.appendScript(")");
-    };
-  }.bind(this);
+    this.script = this.script.slice(0, -1); // Remove trailing comma
+    this.appendScript(")");
+  };
 
   /**
    * Used for retain & except commands, ie:
@@ -99,22 +88,21 @@ module.exports = (function() {
    *
    * @param {String} methodName
    */
-  Gremlin.prototype.queryCollection = function(methodName) {
-    return function() {
-      var param = '';
+  Gremlin.prototype.queryCollection = function(methodName, args) {
+    var param = '';
 
-      if(_.isArray(arguments[0])){
-        _.each(arguments[0], function(arg) {
-          param += arg.gremlin.script;
-          param += ",";
-        });
+    if (_.isArray(args[0])) {
+      // Passing in an array of Pipeline with Gremlin script as arguments
+      _.each(args[0], function(pipeline) {
+        param += pipeline.gremlin.script;
+        param += ",";
+      });
 
-        this.gremlin.appendScript("." + methodName + "([" + param + "])");
-      } else {
-        this.gremlin.appendScript("." + methodName + Argument.build.call(this, arguments[0]));
-      }
-    };
-  }.bind(this);
+      this.appendScript("." + methodName + "([" + param + "])");
+    } else {
+      this.appendScript("." + methodName + Argument.build.call(this.pipeline, args[0]));
+    }
+  };
 
   return Gremlin;
 

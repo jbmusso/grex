@@ -21,7 +21,7 @@ module.exports = (function() {
    */
   Graph.prototype.add = function(methodName, args) {
     var pipeline = new Pipeline(this.gRex);
-    pipeline.gremlin.queryMain(methodName, pipeline).apply(this, args);
+    pipeline.gremlin.queryMain(methodName, args);
 
     return pipeline;
   };
