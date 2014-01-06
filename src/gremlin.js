@@ -57,8 +57,6 @@ module.exports = (function() {
       }
 
       gremlin.appendScript(appendArg);
-
-      return this.pipeline;
     }.bind(this);
   };
 
@@ -69,13 +67,9 @@ module.exports = (function() {
    *
    * Do not pass in method name, just string range.
    */
-  Gremlin.prototype.queryIndex = function() {
-    return function(range) {
-      this.gremlin.appendScript('['+ range.toString() + ']');
-
-      return this;
-    };
-  }.bind(this);
+  Gremlin.prototype.queryIndex = function(range) {
+    this.appendScript('['+ range.toString() + ']');
+  };
 
   /**
    * Used for 'and', 'or' & 'put commands, ie:
@@ -96,8 +90,6 @@ module.exports = (function() {
 
       this.gremlin.script = this.gremlin.script.slice(0, -1); // Remove trailing comma
       this.gremlin.appendScript(")");
-
-      return this;
     };
   }.bind(this);
 
@@ -121,8 +113,6 @@ module.exports = (function() {
       } else {
         this.gremlin.appendScript("." + methodName + Argument.build.call(this, arguments[0]));
       }
-
-      return this;
     };
   }.bind(this);
 
