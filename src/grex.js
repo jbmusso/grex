@@ -4,7 +4,9 @@ var request = require("request");
 
 var Graph = require("./graph");
 var classes = require("./classes");
+
 var ResultFormatter = require("./resultformatter");
+var ArgumentHandler = require("./argumenthandler");
 
 
 module.exports = (function(){
@@ -17,6 +19,7 @@ module.exports = (function(){
     });
 
     this.resultFormatter = new ResultFormatter();
+    this.argumentHandler = new ArgumentHandler(this.options);
 
     _.extend(this, classes);
     this.ClassTypes = classes;

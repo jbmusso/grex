@@ -1,27 +1,28 @@
 var _ = require("lodash");
 
 module.exports = (function () {
-  function Argument() {
+  function ArgumentHandler(options) {
+    this.options = options;
   }
 
-  Argument.build = function(array, retainArray) {
+  ArgumentHandler.prototype.build = function(array, retainArray) {
     var argList = '',
         append = '',
         jsonString = '';
 
     _.each(array, function(v) {
-      if(Argument.isClosure(v)){
+      if (this.isClosure(v)){
         append += v;
       } else if (_.isObject(v) && v.hasOwnProperty('verbatim')) {
         argList += v.verbatim + ",";
-      } else if (_.isObject(v) && !(v.hasOwnProperty('params') && Argument.isGraphReference(v.script))) {
+      } else if (_.isObject(v) && !(v.hasOwnProperty('params') && this.isGraphReference(v.script))) {
         jsonString = JSON.stringify(v);
         jsonString = jsonString.replace('{', '[');
         argList += jsonString.replace('}', ']') + ",";
       } else if(retainArray && _.isArray(v)) {
-        argList += "[" + Argument.parse.call(this, v) + "],";
+        argList += "[" + this.parse(v) + "],";
       } else {
-        argList += Argument.parse.call(this, v) + ",";
+        argList += this.parse(v) + ",";
       }
     }, this);
 
@@ -30,22 +31,22 @@ module.exports = (function () {
     return '(' + argList + ')' + append;
   };
 
-  Argument.parse = function(val) {
+  ArgumentHandler.prototype.parse = function(val) {
     if(val === null) {
       return 'null';
     }
 
     //check to see if the arg is referencing the graph ie. g.v(1)
-    if(_.isObject(val) && val.hasOwnProperty('params') && Argument.isGraphReference(val.script)){
+    if(_.isObject(val) && val.hasOwnProperty('params') && this.isGraphReference(val.script)){
       return val.script.toString();
     }
 
-    if(Argument.isGraphReference(val)) {
+    if(this.isGraphReference(val)) {
       return val.toString();
     }
 
     //Cater for ids that are not numbers but pass parseFloat test
-    if(Argument.isRegexId.call(this, val) || _.isNaN(parseFloat(val))) {
+    if(this.isRegexId.call(this, val) || _.isNaN(parseFloat(val))) {
       return "'" + val + "'";
     }
 
@@ -56,24 +57,22 @@ module.exports = (function () {
     return val;
   };
 
-  Argument.isRegexId = function(id) {
-    var options = this.gRex.options;
-
-    return !!options.idRegex && _.isString(id) && options.idRegex.test(id);
+  ArgumentHandler.prototype.isRegexId = function(id) {
+    return !!this.options.idRegex && _.isString(id) && this.options.idRegex.test(id);
   };
 
-  Argument.isGraphReference = function(val) {
+  ArgumentHandler.prototype.isGraphReference = function(val) {
     var graphRegex = /^T\.(gt|gte|eq|neq|lte|lt|decr|incr|notin|in)$|^Contains\.(IN|NOT_IN)$|^g\.|^Vertex(\.class)$|^Edge(\.class)$|^String(\.class)$|^Integer(\.class)$|^Geoshape(\.class)$|^Direction\.(OUT|IN|BOTH)$|^TitanKey(\.class)$|^TitanLabel(\.class)$/;
 
     return _.isString(val) && graphRegex.test(val);
   };
 
-  Argument.isClosure = function(val) {
+  ArgumentHandler.prototype.isClosure = function(val) {
     var closureRegex = /^\{.*\}$/;
 
     return _.isString(val) && closureRegex.test(val);
   };
 
-  return Argument;
+  return ArgumentHandler;
 
 })();

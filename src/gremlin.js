@@ -1,12 +1,9 @@
 var _ = require("lodash");
 
-var Argument = require("./argument");
-
-
 module.exports = (function() {
-  function Gremlin(pipeline) {
-    this.pipeline = pipeline; // Either an instance of Graph or Pipeline
+  function Gremlin(argumentHandler) {
     this.script = 'g';
+    this.argumentHandler = argumentHandler;
   }
 
   /**
@@ -23,14 +20,14 @@ module.exports = (function() {
    * This method optionally takes a new Pipeline object as second parameter.
    *
    * @param {String} methodName
-   * @param {Pipeline} pipeline Optional pipeline
+   * @param {Array} args Method's arguments
    */
   Gremlin.prototype.queryMain = function(methodName, args) {
     var appendArg = '';
 
     //cater for select array parameters
     if (methodName == 'select') {
-      this.appendScript('.' + methodName + Argument.build.call(this.pipeline, args, true));
+      this.appendScript('.' + methodName + this.argumentHandler.build(args, true));
     } else {
       args = _.isArray(args[0]) ? args[0] : args;
 
@@ -38,14 +35,14 @@ module.exports = (function() {
       if (methodName == 'idx' && args.length > 1) {
         _.each(args[1], function(v, k) {
           appendArg = k + ":";
-          appendArg += Argument.parse.call(this.pipeline, args[1][k]);
+          appendArg += this.argumentHandler.parse(args[1][k]);
         }, this);
 
         appendArg = "[["+ appendArg + "]]";
         args.length = 1;
       }
 
-      this.appendScript('.' + methodName + Argument.build.call(this.pipeline, args));
+      this.appendScript('.' + methodName + this.argumentHandler.build(args));
     }
 
     this.appendScript(appendArg);
@@ -74,7 +71,7 @@ module.exports = (function() {
     this.appendScript("." + methodName + "(");
 
     _.each(args, function(arg) {
-      var partialScript = (arg.gremlin && arg.gremlin.script) || Argument.parse.call(this.pipeline, arg);
+      var partialScript = (arg.gremlin && arg.gremlin.script) || this.argumentHandler.parse(arg);
       this.appendScript(partialScript + ",");
     }, this);
 
@@ -100,7 +97,7 @@ module.exports = (function() {
 
       this.appendScript("." + methodName + "([" + param + "])");
     } else {
-      this.appendScript("." + methodName + Argument.build.call(this.pipeline, args[0]));
+      this.appendScript("." + methodName + this.argumentHandler.build(args[0]));
     }
   };
 
