@@ -1,7 +1,7 @@
 {
   "name": "grex",
   "description": "Client for Rexster Graph Server",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "keywords": [
     "database",
     "graph",
@@ -27,7 +27,9 @@
   },
   "dependencies": {
     "q": "0.9.x",
-    "request": "~2.27.0"
+    "request": "~2.27.0",
+    "inherits": "~2.0.1",
+    "lodash": "~2.4.1"
   },
   "license": "MIT",
   "engines": {
@@ -38,10 +40,10 @@
     "grunt": "~0.4.1",
     "grunt-contrib-uglify": "~0.2.2",
     "grunt-contrib-jshint": "~0.6.0",
-    "grunt-browserify": "~1.2.1",
     "grunt-mocha": "~0.4.0",
-    "grunt-mocha-test": "~0.7.0",
-    "grunt-browserify2": "~0.1.8",
-    "should": "~1.3.0"
+    "grunt-mocha-test": "~0.6.2",
+    "browserify": "~2.35.4",
+    "grunt-browserify": "~1.3.0",
+    "should": "~2.1.1"
   }
 }

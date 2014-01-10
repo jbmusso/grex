@@ -1,74 +1,86 @@
-var q = require("q"),
-    merge = require("./utils").merge,
-    Transaction = require("./transaction/transaction"),
-    qryMain = require("./gremlin");
+var Q = require("q"),
+    _ = require("lodash");
+var request = require("request");
+
+var Graph = require("./graph");
+var classes = require("./classes");
+
+var ResultFormatter = require("./resultformatter");
+var ArgumentHandler = require("./argumenthandler");
 
 
 module.exports = (function(){
-    function gRex(options){
-        var self = this;
-        //default options
-        this.OPTS = {
-            'host': 'localhost',
-            'port': 8182,
-            'graph': 'tinkergraph',
-            'idRegex': false // OrientDB id regex -> /^[0-9]+:[0-9]+$/
-        };
+  function Grex(options) {
+    this.options = _.defaults(options || {
+      'host': 'localhost',
+      'port': 8182,
+      'graph': 'tinkergraph',
+      'idRegex': false // OrientDB id regex -> /^[0-9]+:[0-9]+$/
+    });
 
-        this.typeMap = {};
+    this.resultFormatter = new ResultFormatter();
+    this.argumentHandler = new ArgumentHandler(this.options);
 
-        if(options){
-            this.setOptions(options);
-        }
+    _.extend(this, classes);
+    this.ClassTypes = classes;
+  }
 
-        this.V = qryMain('V', true);
-        this._ = qryMain('_', true);
-        this.E = qryMain('E', true);
-        this.V =  qryMain('V', true);
-
-        //Methods
-        this.e = qryMain('e', true);
-        this.idx = qryMain('idx', true);
-        this.v = qryMain('v', true);
-
-        //Indexing
-        this.createIndex = qryMain('createIndex', true);
-        this.createKeyIndex = qryMain('createKeyIndex', true);
-        this.getIndices =  qryMain('getIndices', true);
-        this.getIndexedKeys =  qryMain('getIndexedKeys', true);
-        this.getIndex =  qryMain('getIndex', true);
-        this.dropIndex = qryMain('dropIndex', true);
-        this.dropKeyIndex = qryMain('dropKeyIndex', true);
-
-        //Types
-        this.makeType = qryMain('makeType', true);
-
-        this.clear =  qryMain('clear', true);
-        this.shutdown = qryMain('shutdown', true);
-        this.getFeatures = qryMain('getFeatures', true);
-
-        this.connect = function(){
-            return q.fcall(function() {
-                return self;
-            });
-        };
+  Grex.prototype.connect = function(options, callback) {
+    if(typeof options === 'function'){
+      callback = options;
+      options = undefined;
     }
 
-    gRex.prototype.setOptions = function (options){
-        if(!!options){
-            for (var k in options){
-                if(options.hasOwnProperty(k)){
-                    this.OPTS[k] = options[k];
-                }
-            }
-        }
+    var graph = new Graph(this);
+
+    return Q.fcall(function() {
+      return graph;
+    })
+    .nodeify(callback);
+  };
+
+  /**
+   * Send a Gremlin script for execution on the server, fetch and format
+   * results.
+   *
+   * @param {String} script A raw Gremlin (Groovy) script to execute
+   */
+  Grex.prototype.exec = function(script) {
+    var deferred = Q.defer();
+
+    var uri = '/graphs/' + this.options.graph + '/tp/gremlin';
+    var url = 'http://' + this.options.host + ':' + this.options.port + uri;
+
+    var options = {
+      url: url,
+      qs: {
+        script: script,
+        'rexster.showTypes': true
+      },
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      json: true
     };
 
-    gRex.prototype.begin = function (typeMap){
-        typeMap = typeMap ? merge(typeMap, this.typeMap) : this.typeMap;
+    request.get(options, function(err, res, body) {
+      if (err) {
+        return deferred.reject(err);
+      }
 
-        return new Transaction(this.OPTS, typeMap);
-    };
+      var transformedResults = this.transformResults(body.results);
+      body.results = transformedResults.results;
+      body.typeMap = transformedResults.typeMap;
 
-    return gRex;
+      return deferred.resolve(body);
+    }.bind(this));
+
+    return deferred.promise;
+  };
+
+  Grex.prototype.transformResults = function(results) {
+    return this.resultFormatter.formatResults(results);
+  };
+
+  return Grex;
 })();

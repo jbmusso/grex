@@ -1,3 +1,3 @@
-var grex = require('./src/main.js');
+var Grex = require('./src/grex.js');
 
-module.exports = grex;
+module.exports = new Grex();
