@@ -1,8 +1,8 @@
 var _ = require("lodash");
 
 module.exports = (function() {
-  function Gremlin(argumentHandler) {
-    this.script = 'g';
+  function Gremlin(argumentHandler, script) {
+    this.script = script || '';
     this.argumentHandler = argumentHandler;
   }
 

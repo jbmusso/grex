@@ -3,7 +3,7 @@ var Gremlin = require('./gremlin');
 module.exports = (function () {
   function Pipeline(gRex) {
     this.gRex = gRex;
-    this.gremlin = new Gremlin(gRex.argumentHandler);
+    this.gremlin = new Gremlin(gRex.argumentHandler, 'g');
   }
 
   /**

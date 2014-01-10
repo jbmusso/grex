@@ -112,7 +112,7 @@ module.exports = (function() {
   Graph.prototype.begin = function (typeMap) {
       typeMap = typeMap ? _.extend(typeMap, this.typeMap) : this.typeMap;
 
-      return new Transaction(this.gRex.options, typeMap);
+      return new Transaction(this.gRex, typeMap);
   };
 
   return Graph;
