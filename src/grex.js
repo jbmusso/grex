@@ -4,7 +4,9 @@ var request = require("request");
 
 var Graph = require("./graph");
 var classes = require("./classes");
+
 var ResultFormatter = require("./resultformatter");
+var ArgumentHandler = require("./argumenthandler");
 
 
 module.exports = (function(){
@@ -17,6 +19,7 @@ module.exports = (function(){
     });
 
     this.resultFormatter = new ResultFormatter();
+    this.argumentHandler = new ArgumentHandler(this.options);
 
     _.extend(this, classes);
     this.ClassTypes = classes;
@@ -45,14 +48,19 @@ module.exports = (function(){
   Grex.prototype.exec = function(script) {
     var deferred = Q.defer();
 
-    var uri = '/graphs/' + this.options.graph + '/tp/gremlin?script=' + encodeURIComponent(script) + '&rexster.showTypes=true';
+    var uri = '/graphs/' + this.options.graph + '/tp/gremlin';
     var url = 'http://' + this.options.host + ':' + this.options.port + uri;
 
     var options = {
       url: url,
+      qs: {
+        script: script,
+        'rexster.showTypes': true
+      },
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
-      }
+      },
+      json: true
     };
 
     request.get(options, function(err, res, body) {
@@ -60,9 +68,11 @@ module.exports = (function(){
         return deferred.reject(err);
       }
 
-      var results = this.transformResults(JSON.parse(body).results);
+      var transformedResults = this.transformResults(body.results);
+      body.results = transformedResults.results;
+      body.typeMap = transformedResults.typeMap;
 
-      return deferred.resolve(results);
+      return deferred.resolve(body);
     }.bind(this));
 
     return deferred.promise;

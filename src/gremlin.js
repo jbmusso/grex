@@ -1,12 +1,9 @@
 var _ = require("lodash");
 
-var Argument = require("./argument");
-
-
 module.exports = (function() {
-  function Gremlin(pipeline) {
-    this.pipeline = pipeline; // Either an instance of Graph or Pipeline
-    this.script = 'g';
+  function Gremlin(argumentHandler, script) {
+    this.script = script || '';
+    this.argumentHandler = argumentHandler;
   }
 
   /**
@@ -23,43 +20,32 @@ module.exports = (function() {
    * This method optionally takes a new Pipeline object as second parameter.
    *
    * @param {String} methodName
-   * @param {Pipeline} pipeline Optional pipeline
+   * @param {Array} args Method's arguments
    */
-  Gremlin.prototype.queryMain = function(methodName, pipeline) {
-    return function() {
-      var appendArg = '';
+  Gremlin.prototype.queryMain = function(methodName, args) {
+    var appendArg = '';
 
-      if (pipeline) {
-        // Set a new Pipeline instance, if supplied
-        this.pipeline = pipeline;
+    //cater for select array parameters
+    if (methodName == 'select') {
+      this.appendScript('.' + methodName + this.argumentHandler.build(args, true));
+    } else {
+      args = _.isArray(args[0]) ? args[0] : args;
+
+      //cater for idx param 2
+      if (methodName == 'idx' && args.length > 1) {
+        _.each(args[1], function(v, k) {
+          appendArg = k + ":";
+          appendArg += this.argumentHandler.parse(args[1][k]);
+        }, this);
+
+        appendArg = "[["+ appendArg + "]]";
+        args.length = 1;
       }
 
-      var gremlin = this.pipeline.gremlin;
+      this.appendScript('.' + methodName + this.argumentHandler.build(args));
+    }
 
-      //cater for select array parameters
-      if(methodName == 'select'){
-        gremlin.appendScript('.' + methodName + Argument.build.call(this.pipeline, arguments, true));
-      } else {
-        var args = _.isArray(arguments[0]) ? arguments[0] : arguments;
-
-        //cater for idx param 2
-        if (methodName == 'idx' && args.length > 1) {
-          _.each(args[1], function(v, k) {
-            appendArg = k + ":";
-            appendArg += Argument.parse.call(this.pipeline, args[1][k]);
-          }, this);
-
-          appendArg = "[["+ appendArg + "]]";
-          args.length = 1;
-        }
-
-        gremlin.appendScript('.' + methodName + Argument.build.call(this.pipeline, args));
-      }
-
-      gremlin.appendScript(appendArg);
-
-      return this.pipeline;
-    }.bind(this);
+    this.appendScript(appendArg);
   };
 
   /**
@@ -68,63 +54,57 @@ module.exports = (function() {
    *   range() => [1..2]
    *
    * Do not pass in method name, just string range.
+   *
+   * @param {String} methodName
+   * @param {Array} args Method's arguments
    */
-  Gremlin.prototype.queryIndex = function() {
-    return function(range) {
-      this.gremlin.appendScript('['+ range.toString() + ']');
-
-      return this;
-    };
-  }.bind(this);
+  Gremlin.prototype.queryIndex = function(methodName, arg) {
+    this.appendScript('['+ arg[0].toString() + ']');
+  };
 
   /**
    * Used for 'and', 'or' & 'put commands, ie:
    *   g.v(1).outE().or(g._().has('id', 'T.eq', 9), g._().has('weight', 'T.lt', '0.6f'))
    *
    * @param {String} methodName
+   * @param {Array} args Method's arguments
    */
-  Gremlin.prototype.queryPipes = function(methodName) {
-    return function() {
-      var args = _.isArray(arguments[0]) ? arguments[0] : arguments;
+  Gremlin.prototype.queryPipes = function(methodName, args) {
+    args = _.isArray(args[0]) ? args[0] : args;
 
-      this.gremlin.appendScript("." + methodName + "(");
+    this.appendScript("." + methodName + "(");
 
-      _.each(args, function(arg) {
-        var partialScript = (arg.gremlin && arg.gremlin.script) || Argument.parse.call(this, arg);
-        this.gremlin.appendScript(partialScript + ",");
-      }, this);
+    _.each(args, function(arg) {
+      var partialScript = (arg.gremlin && arg.gremlin.script) || this.argumentHandler.parse(arg);
+      this.appendScript(partialScript + ",");
+    }, this);
 
-      this.gremlin.script = this.gremlin.script.slice(0, -1); // Remove trailing comma
-      this.gremlin.appendScript(")");
-
-      return this;
-    };
-  }.bind(this);
+    this.script = this.script.slice(0, -1); // Remove trailing comma
+    this.appendScript(")");
+  };
 
   /**
    * Used for retain & except commands, ie:
    *   g.V().retain([g.v(1), g.v(2), g.v(3)])
    *
    * @param {String} methodName
+   * @param {Array} args Method's arguments
    */
-  Gremlin.prototype.queryCollection = function(methodName) {
-    return function() {
-      var param = '';
+  Gremlin.prototype.queryCollection = function(methodName, args) {
+    var param = '';
 
-      if(_.isArray(arguments[0])){
-        _.each(arguments[0], function(arg) {
-          param += arg.gremlin.script;
-          param += ",";
-        });
+    if (_.isArray(args[0])) {
+      // Passing in an array of Pipeline with Gremlin script as arguments
+      _.each(args[0], function(pipeline) {
+        param += pipeline.gremlin.script;
+        param += ",";
+      });
 
-        this.gremlin.appendScript("." + methodName + "([" + param + "])");
-      } else {
-        this.gremlin.appendScript("." + methodName + Argument.build.call(this, arguments[0]));
-      }
-
-      return this;
-    };
-  }.bind(this);
+      this.appendScript("." + methodName + "([" + param + "])");
+    } else {
+      this.appendScript("." + methodName + this.argumentHandler.build(args[0]));
+    }
+  };
 
   return Gremlin;
 

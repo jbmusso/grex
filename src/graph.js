@@ -21,7 +21,7 @@ module.exports = (function() {
    */
   Graph.prototype.add = function(methodName, args) {
     var pipeline = new Pipeline(this.gRex);
-    pipeline.gremlin.queryMain(methodName, pipeline).apply(this, args);
+    pipeline.gremlin.queryMain(methodName, args);
 
     return pipeline;
   };
@@ -112,7 +112,7 @@ module.exports = (function() {
   Graph.prototype.begin = function (typeMap) {
       typeMap = typeMap ? _.extend(typeMap, this.typeMap) : this.typeMap;
 
-      return new Transaction(this.gRex.options, typeMap);
+      return new Transaction(this.gRex, typeMap);
   };
 
   return Graph;
