@@ -1,3 +1,5 @@
+var request = require('request');
+
 var ElementFactory = require("../elementfactory"),
     ActionHandlerFactory = require("./actionhandlers/actionhandlerfactory"),
     TransactionCommitter = require("./transactioncommitter");
@@ -6,18 +8,15 @@ var Gremlin = require("../gremlin");
 
 module.exports = (function () {
   function Transaction(gRex, typeMap) {
-    this.committer = new TransactionCommitter(this);
     this.options = gRex.options;
     this.typeMap = typeMap;
-    this.txArray = [];
-    this.pendingVertices = [];
 
     this.gRex = gRex;
     this.gremlin = new Gremlin(gRex.argumentHandler);
   }
 
-  Transaction.prototype.commit = function() {
-    return this.committer.doCommit();
+  Transaction.prototype.commit = function(callback) {
+    return this.gRex.exec(this.gremlin.script).nodeify(callback);
   };
 
   /**

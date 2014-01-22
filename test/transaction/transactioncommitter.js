@@ -40,7 +40,6 @@ describe('Transaction Committer', function() {
 
       tx.commit()
       .done(function(result) {
-        result.should.have.property('txProcessed', 1);
         result.should.have.property('success', true);
         done();
       });

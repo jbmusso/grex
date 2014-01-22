@@ -57,9 +57,6 @@ module.exports = (function(){
         script: script,
         'rexster.showTypes': true
       },
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
       json: true
     };
 

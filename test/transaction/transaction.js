@@ -41,10 +41,6 @@ describe('Transaction', function() {
           vertex.should.be.an.instanceof(Vertex);
         });
 
-        it('should not be added to the transaction', function() {
-          vertex.should.not.have.property('_action');
-        });
-
         it('should have a null _id', function() {
           vertex.should.have.property('_id', null);
         });
@@ -65,10 +61,6 @@ describe('Transaction', function() {
 
         it('should return a vertex', function() {
           vertex.should.be.an.instanceof(Vertex);
-        });
-
-        it('should be added to the transaction', function() {
-          vertex.should.have.property('_action', 'create');
         });
 
         it('should have a numerical _id', function() {
@@ -96,10 +88,6 @@ describe('Transaction', function() {
           vertex.should.be.an.instanceof(Vertex);
         });
 
-        it('should not be added to the transaction', function() {
-          vertex.should.not.have.property('_action');
-        });
-
         it('should have a null _id', function() {
           vertex.should.have.property('_id', null);
         });
@@ -122,10 +110,6 @@ describe('Transaction', function() {
           vertex.should.be.an.instanceof(Vertex);
         });
 
-        it('should be added to the transaction', function() {
-          vertex.should.have.property('_action', 'update');
-        });
-
         it('should have a numerical _id', function() {
           vertex.should.have.property('_id');
           vertex._id.should.be.a.Number;
@@ -145,10 +129,6 @@ describe('Transaction', function() {
 
         it('should return an edge', function() {
           edge.should.be.an.instanceof(Edge);
-        });
-
-        it('should be added to the transaction', function() {
-          edge.should.have.property('_action', 'create');
         });
 
         it('should have a null _id', function() {
@@ -179,10 +159,6 @@ describe('Transaction', function() {
           edge.should.be.an.instanceof(Edge);
         });
 
-        it('should be added to the transaction', function() {
-          edge.should.have.property('_action', 'create');
-        });
-
         it('should have a numerical _id', function() {
           edge.should.have.property('_id');
           edge._id.should.be.a.Number;
@@ -209,10 +185,6 @@ describe('Transaction', function() {
       describe('when called with "id, {..}" arguments signature', function() {
         before(function() {
           edge = transaction.updateEdge(20, { since: 'after' });
-        });
-
-        it('should be added to the transaction', function() {
-          edge.should.have.property('_action', 'update');
         });
 
         it('should return an edge', function() {
@@ -250,10 +222,6 @@ describe('Transaction', function() {
           vertex.should.be.an.instanceof(Vertex);
         });
 
-        it('should be added to the transaction', function() {
-          vertex.should.have.property('_action', 'delete');
-        });
-
         it('should not have a _keys property', function() {
           vertex.should.not.have.property('_keys');
         });
@@ -278,10 +246,6 @@ describe('Transaction', function() {
           vertex.should.be.an.instanceof(Vertex);
         });
 
-        it('should be added to the transaction', function() {
-          vertex.should.have.property('_action', 'delete');
-        });
-
         it('should have a _keys property', function() {
           vertex.should.have.property('_keys');
           vertex._keys.should.be.an.Array;
@@ -302,10 +266,6 @@ describe('Transaction', function() {
 
         it('should return an edge', function() {
           edge.should.be.an.instanceof(Edge);
-        });
-
-        it('should be added to the transaction', function() {
-          edge.should.have.property('_action', 'delete');
         });
 
         it('should not have a _keys property', function() {
@@ -330,10 +290,6 @@ describe('Transaction', function() {
 
         it('should return an edge', function() {
           edge.should.be.an.instanceof(Edge);
-        });
-
-        it('should be added to the transaction', function() {
-          edge.should.have.property('_action', 'delete');
         });
 
         it('should have a _keys property', function() {

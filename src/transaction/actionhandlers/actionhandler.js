@@ -13,7 +13,6 @@ module.exports = (function() {
     this.transaction = transaction;
     // array of arguments passed to the cud() action
     this.actionArgs = actionArgs;
-    this.addToTransaction = true;
   }
 
   /**
@@ -24,10 +23,7 @@ module.exports = (function() {
     this[action]();
 
     if (this.addToTransaction) {
-      this.element._action = action;
       typedElement = addTypes(this.element, this.transaction.typeMap);
-
-      this.transaction.txArray.push(typedElement);
     }
 
     return this.element;
