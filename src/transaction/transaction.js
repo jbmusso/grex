@@ -13,8 +13,8 @@ module.exports = (function () {
 
     this.gRex = gRex;
     this.gremlin = new Gremlin(gRex.argumentHandler);
-    this.vertex = 1;
-    this.edge = 1;
+    this.vertex = 0;
+    this.edge = 0;
   }
 
   Transaction.prototype.commit = function(callback) {
@@ -31,6 +31,8 @@ module.exports = (function () {
    */
   Transaction.prototype.handleAction = function(actionName, type, args) {
     var element = ElementFactory.build(type);
+    // Set and increment element's transaction id
+    element.txid = ++this[type];
     var actionhandler = ActionHandlerFactory.build(element, this);
 
     // Call given action for element of given type, with given arguments

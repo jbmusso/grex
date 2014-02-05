@@ -9,6 +9,13 @@ module.exports = (function() {
     this._id = null;
   }
 
+  // Keep track of a temporary transaction id for each element
+  Object.defineProperty(Element.prototype, "txid", {
+    value: 0,
+    enumerable: false,
+    writable: true
+  });
+
   Element.prototype.getProperties = function() {
     var o = {};
 
