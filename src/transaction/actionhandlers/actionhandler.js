@@ -13,18 +13,6 @@ module.exports = (function() {
     this.transaction = transaction;
   }
 
-  /**
-   * @return {Element}
-   */
-  ActionHandler.prototype.handleAction = function(action) {
-    var typedElement;
-    this[action]();
-
-    if (this.addToTransaction) {
-      typedElement = addTypes(this.element, this.transaction.typeMap);
-    }
-
-    return this.element;
   };
 
   // This method is common to Vertex and Edge.
@@ -44,7 +32,6 @@ module.exports = (function() {
       this.element._keys = args[1];
     }
   };
-
 
   return ActionHandler;
 
