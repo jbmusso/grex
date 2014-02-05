@@ -9,7 +9,7 @@ var gRex = require('../../index.js'),
 
 var transaction;
 
-before(function(done){
+before(function(done) {
   gRex.connect()
   .then(function(result) {
     g = result;
@@ -222,10 +222,6 @@ describe('Transaction', function() {
           vertex.should.be.an.instanceof(Vertex);
         });
 
-        it('should not have a _keys property', function() {
-          vertex.should.not.have.property('_keys');
-        });
-
         it('should have a numerical _id', function() {
           vertex.should.have.property('_id');
           vertex._id.should.be.a.Number;
@@ -246,12 +242,6 @@ describe('Transaction', function() {
           vertex.should.be.an.instanceof(Vertex);
         });
 
-        it('should have a _keys property', function() {
-          vertex.should.have.property('_keys');
-          vertex._keys.should.be.an.Array;
-          vertex._keys.should.eql(keys);
-        });
-
         after(function() {
           vertex = null;
         });
@@ -266,10 +256,6 @@ describe('Transaction', function() {
 
         it('should return an edge', function() {
           edge.should.be.an.instanceof(Edge);
-        });
-
-        it('should not have a _keys property', function() {
-          edge.should.not.have.property('_keys');
         });
 
         it('should have a numerical _id', function() {
@@ -290,12 +276,6 @@ describe('Transaction', function() {
 
         it('should return an edge', function() {
           edge.should.be.an.instanceof(Edge);
-        });
-
-        it('should have a _keys property', function() {
-          edge.should.have.property('_keys');
-          edge._keys.should.be.an.Array;
-          edge._keys.should.eql(keys);
         });
 
         after(function() {
