@@ -4,6 +4,7 @@ module.exports = (function() {
   function Gremlin(argumentHandler, script) {
     this.script = script || '';
     this.argumentHandler = argumentHandler;
+    this.lines = [];
   }
 
   /**
@@ -14,6 +15,9 @@ module.exports = (function() {
     this.script += script;
   };
 
+  Gremlin.prototype.addLine = function(line) {
+    this.lines.push(line);
+  };
   /**
    * Populate a Gremlin script string with default behavior. Used for most
    * commands.
