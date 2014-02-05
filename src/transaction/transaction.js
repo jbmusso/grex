@@ -26,18 +26,22 @@ module.exports = (function () {
    * @param {String} type
    * @param {Array} args
    */
-  Transaction.prototype.handleAction = function(action, type, args) {
+  Transaction.prototype.handleAction = function(actionName, type, args) {
     var element = ElementFactory.build(type);
-    var actionhandler = ActionHandlerFactory.build(element, this, args);
-    return actionhandler.handleAction(action);
+    var actionhandler = ActionHandlerFactory.build(element, this);
+
+    // Call given action for element of given type, with given arguments
+    actionhandler[actionName](actionName, args);
+
+    return element;
   };
 
   Transaction.prototype.addVertex = function() {
-    return this.handleAction('create', 'vertex', arguments);
+    return this.handleAction('add', 'vertex', arguments);
   };
 
   Transaction.prototype.addEdge = function() {
-    return this.handleAction('create', 'edge', arguments);
+    return this.handleAction('add', 'edge', arguments);
   };
 
   Transaction.prototype.removeVertex = function() {

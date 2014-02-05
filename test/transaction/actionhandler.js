@@ -29,12 +29,12 @@ describe('Element ActionHandlers Factory', function() {
   });
 
   it('should build a vertex ActionHandler', function() {
-    vertexHandler = ActionHandlerFactory.build(vertex, transaction, []);
+    vertexHandler = ActionHandlerFactory.build(vertex, transaction);
     vertexHandler.should.be.instanceof(VertexActionHandler);
   });
 
   it('should build an edge ActionHandler', function() {
-    edgeHandler = ActionHandlerFactory.build(edge, transaction, []);
+    edgeHandler = ActionHandlerFactory.build(edge, transaction);
     edgeHandler.should.be.instanceof(EdgeActionHandler);
   });
 });

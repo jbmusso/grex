@@ -6,14 +6,15 @@ module.exports = (function() {
   function ActionHandlerFactory() {
   }
 
-  ActionHandlerFactory.build = function(element, transaction, actionArgs) {
+  ActionHandlerFactory.build = function(element, transaction) {
     var handlers = {
       vertex: VertexActionHandler,
       edge: EdgeActionHandler
     };
 
-    var type = element._type;
-    var handler = new handlers[type](element, transaction, actionArgs);
+
+    var actionHandlerClass = handlers[element._type];
+    var handler = new actionHandlerClass(element, transaction);
 
     return handler;
   };

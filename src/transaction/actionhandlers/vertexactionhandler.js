@@ -14,22 +14,32 @@ module.exports = (function() {
 
   inherits(VertexActionHandler, ActionHandler);
 
-  function createUpdateVertex() {
-    if (_.isObject(this.actionArgs[0])) {
-      // Called cud({..}), ie. user is expecting the graph database to autogenerate _id
-      this.vertex.setProperties(this.actionArgs[0]);
+  function addUpdateVertex(actionName, args) {
+    var properties,
+        id,
+        gremlinLine;
+
+    if (_.isObject(args[0])) {
+      // Called addVertex({..}) or updateVertex({..}), ie. user is expecting the graph database to autogenerate _id
+      properties = args[0];
+      this.vertex.setProperties(properties);
     } else {
-      // Called cud(id, {..})
-      if(this.actionArgs.length === 2){ // called cud(id, {..})
-          this.vertex.setProperties(this.actionArgs[1]);
-      }
+      // Called addVertex(id) or updateVertex(id) with no arguments
+      this.vertex._id = args[0];
+
+      // Called addVertex(id, {..}) or updateVertex(id, {..})
+      if (args.length === 2) {
+        id = args[0];
+        properties = args[1];
+        this.vertex.setProperties(properties);
 
       this.vertex._id = this.actionArgs[0];
     }
   }
 
-  VertexActionHandler.prototype.create = createUpdateVertex;
-  VertexActionHandler.prototype.update = createUpdateVertex;
+  VertexActionHandler.prototype.add = addUpdateVertex;
+
+  VertexActionHandler.prototype.update = addUpdateVertex;
 
   return VertexActionHandler;
 

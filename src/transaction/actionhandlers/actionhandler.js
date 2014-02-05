@@ -8,11 +8,9 @@ var _ = require("lodash");
  * each element in the transaction.
  */
 module.exports = (function() {
-  function ActionHandler(element, transaction, actionArgs) {
+  function ActionHandler(element, transaction) {
     this.element = element;
     this.transaction = transaction;
-    // array of arguments passed to the cud() action
-    this.actionArgs = actionArgs;
   }
 
   /**
@@ -30,20 +28,20 @@ module.exports = (function() {
   };
 
   // This method is common to Vertex and Edge.
-  ActionHandler.prototype.delete = function() {
+  ActionHandler.prototype.delete = function(actionName, args) {
     var _id;
 
-    if (_.isObject(this.actionArgs[0])) {
-      _id = this.actionArgs[0]._id;
+    if (_.isObject(args[0])) {
+      _id = args[0]._id;
     } else {
       // arg is a Number
-      _id = this.actionArgs[0];
+      _id = args[0];
     }
     this.element._id = _id;
 
     // Indicates that an array of property keys was passed: this will not remove the element but only remove these keys.
-    if (this.actionArgs.length > 1) {
-      this.element._keys = this.actionArgs[1];
+    if (args.length > 1) {
+      this.element._keys = args[1];
     }
   };
 
