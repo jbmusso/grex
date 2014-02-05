@@ -18,6 +18,11 @@ module.exports = (function() {
   Gremlin.prototype.addLine = function(line) {
     this.lines.push(line);
   };
+
+  Gremlin.prototype.computeTransactionScript = function() {
+    this.script = this.lines.join('\n');
+  };
+
   /**
    * Populate a Gremlin script string with default behavior. Used for most
    * commands.

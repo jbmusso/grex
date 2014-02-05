@@ -13,6 +13,8 @@ module.exports = (function() {
     this.transaction = transaction;
   }
 
+  ActionHandler.prototype.stringifyArgument = function(argument) {
+    return JSON.stringify(argument).replace('{', '[').replace('}', ']');
   };
 
   // This method is common to Vertex and Edge.

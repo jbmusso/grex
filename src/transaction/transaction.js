@@ -13,9 +13,12 @@ module.exports = (function () {
 
     this.gRex = gRex;
     this.gremlin = new Gremlin(gRex.argumentHandler);
+    this.vertex = 1;
+    this.edge = 1;
   }
 
   Transaction.prototype.commit = function(callback) {
+    this.gremlin.computeTransactionScript();
     return this.gRex.exec(this.gremlin.script).nodeify(callback);
   };
 

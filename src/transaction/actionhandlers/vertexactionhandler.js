@@ -23,6 +23,9 @@ module.exports = (function() {
       // Called addVertex({..}) or updateVertex({..}), ie. user is expecting the graph database to autogenerate _id
       properties = args[0];
       this.vertex.setProperties(properties);
+
+      gremlinLine = 'v'+ this.element.txid +' = g.'+ actionName +'Vertex('+ this.stringifyArgument(properties) +')';
+      this.transaction.gremlin.addLine(gremlinLine);
     } else {
       // Called addVertex(id) or updateVertex(id) with no arguments
       this.vertex._id = args[0];
@@ -33,7 +36,9 @@ module.exports = (function() {
         properties = args[1];
         this.vertex.setProperties(properties);
 
-      this.vertex._id = this.actionArgs[0];
+        gremlinLine = 'v'+ this.element.txid +' = g.'+ actionName +'Vertex('+ id +','+ this.stringifyArgument(properties) +')';
+        this.transaction.gremlin.addLine(gremlinLine);
+      }
     }
   }
 
