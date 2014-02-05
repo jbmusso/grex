@@ -1,7 +1,7 @@
 var addTypes = require("../../addtypes");
 var _ = require("lodash");
 /**
- * Handle create/update/delete actions for Graph elements (vertices or edges)
+ * Handle create/update/remove actions for Graph elements (vertices or edges)
  * within a transaction, setting their properties accordingly.
  *
  * ActionHandlers are bound to a transaction. One handler is instantiated for
@@ -18,7 +18,7 @@ module.exports = (function() {
   };
 
   // This method is common to Vertex and Edge.
-  ActionHandler.prototype.delete = function(actionName, args) {
+  ActionHandler.prototype.remove = function(actionName, args) {
     var _id;
 
     if (_.isObject(args[0])) {

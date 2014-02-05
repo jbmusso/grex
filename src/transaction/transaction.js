@@ -50,11 +50,11 @@ module.exports = (function () {
   };
 
   Transaction.prototype.removeVertex = function() {
-    return this.handleAction('delete', 'vertex', arguments);
+    return this.handleAction('remove', 'vertex', arguments);
   };
 
   Transaction.prototype.removeEdge = function() {
-    return this.handleAction('delete', 'edge', arguments);
+    return this.handleAction('remove', 'edge', arguments);
   };
 
   Transaction.prototype.updateVertex = function() {

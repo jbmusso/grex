@@ -137,7 +137,7 @@ describe('Transaction Committer', function() {
       });
     });
 
-    it('should delete vertices in a transaction', function(done) {
+    it('should remove vertices in a transaction', function(done) {
       var tx = g.begin();
 
       tx.removeVertex(alice);
