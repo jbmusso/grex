@@ -14,7 +14,7 @@ module.exports = (function() {
 
   inherits(VertexActionHandler, ActionHandler);
 
-  function addUpdateVertex(actionName, args) {
+  VertexActionHandler.prototype.add = function(actionName, args) {
     var properties,
         id,
         gremlinLine;
@@ -40,11 +40,7 @@ module.exports = (function() {
         this.transaction.gremlin.addLine(gremlinLine);
       }
     }
-  }
-
-  VertexActionHandler.prototype.add = addUpdateVertex;
-
-  VertexActionHandler.prototype.update = addUpdateVertex;
+  };
 
   return VertexActionHandler;
 

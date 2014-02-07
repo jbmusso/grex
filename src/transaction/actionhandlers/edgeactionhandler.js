@@ -33,18 +33,6 @@ module.exports = (function() {
 
     gremlinLine = 'g.addEdge('+ this.edge._outV._id +','+this.edge._inV._id+',"'+ this.edge._label +'",'+ this.stringifyArgument(properties) +')';
     this.transaction.gremlin.addLine(gremlinLine);
-
-
-  };
-
-  /**
-   * Note that it is not possible to update an edge _inV, _outV and _label
-   * properties.
-   */
-  EdgeActionHandler.prototype.update = function(actionName, args) {
-    // g.updateEdge(id, properties) was called
-    this.edge._id = args[0];
-    this.edge.setProperties(args[1]);
   };
 
   return EdgeActionHandler;
