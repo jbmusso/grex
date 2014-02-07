@@ -64,13 +64,13 @@ module.exports = (function () {
     return vertex;
   };
 
-  Transaction.prototype.addEdge = function(txid) {
+  Transaction.prototype.addEdge = function() {
     var edge = new Edge(this.gremlin);
 
     var argOffset = 0,
         properties;
 
-    edge.txid = txid;
+    // edge.txid = txid;
 
     if (arguments.length === 5) {
       // Called g.addEdge(id, _outV, _inV, label, properties)
@@ -85,7 +85,7 @@ module.exports = (function () {
     edge._label = arguments[2 + argOffset];
     edge.setProperties(properties);
 
-    gremlinLine = 'g.addEdge('+ edge._outV._id +','+edge._inV._id+',"'+ edge._label +'",'+ this.stringifyArgument(properties) +')';
+    gremlinLine = 'g.addEdge('+ edge._outV.txid +','+edge._inV.txid+',"'+ edge._label +'",'+ this.stringifyArgument(properties) +')';
     this.gremlin.addLine(gremlinLine);
 
 

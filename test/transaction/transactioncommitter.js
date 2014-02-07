@@ -23,7 +23,7 @@ describe('Transaction Committer', function() {
     it('should add a vertex in a transaction', function(done) {
       var tx = g.begin();
 
-      var alice = tx.addVertex('alice', { name: "Alice" });
+      alice = tx.addVertex('alice', { name: "Alice" });
 
       tx.commit()
       .then(function(result) {
@@ -32,11 +32,11 @@ describe('Transaction Committer', function() {
       });
     });
 
-    it('should add a vertex and an edge in a transaction', function(done) {
+    it('should add two vertices and an edge in a transaction', function(done) {
       var tx = g.begin();
-
       bob = tx.addVertex('bob', { name: 'Bob' });
-      tx.addEdge(20, alice, bob, 'likes', { since: 'now' });
+      waldo = tx.addVertex('waldo', { name: 'Ryan'});
+      tx.addEdge(20, bob, waldo, 'likes', { since: 'now' });
 
       tx.commit()
       .done(function(result) {
@@ -45,32 +45,17 @@ describe('Transaction Committer', function() {
       });
     });
 
-    it('should add 2 vertices in a transaction', function(done) {
-      var tx = g.begin();
-
-      james = tx.addVertex('james', { name: 'James' });
-      waldo = tx.addVertex('waldo', { name: 'Waldo' });
-
-      tx.commit()
-      .then(function(result) {
-        result.should.have.property('success', true);
-        done();
-      });
-    });
-
     // Clean up: remove james and waldo from the database
-    after(function(done) {
-      var tx = g.begin();
-      james.remove();
-      waldo.remove();
+    // after(function(done) {
+    //   var tx = g.begin();
+    //   james.remove();
+    //   waldo.remove();
 
-      tx.commit()
-      .then(function(){
-        done();
-      });
-    });
-  });
-
+    //   tx.commit()
+    //   .then(function(){
+    //     done();
+    //   });
+    // });
   });
 
   describe('when deleting two vertices', function() {
@@ -88,16 +73,16 @@ describe('Transaction Committer', function() {
       });
     });
 
-    it('should remove vertices in a transaction', function(done) {
-      var tx = g.begin();
+    // it('should remove vertices in a transaction', function(done) {
+    //   var tx = g.begin();
 
-      alice.remove();
-      bob.remove();
+    //   alice.remove();
+    //   bob.remove();
 
-      tx.commit()
-      .then(function(result) {
-        done();
-      });
-    });
+    //   tx.commit()
+    //   .then(function(result) {
+    //     done();
+    //   });
+    // });
   });
 });
