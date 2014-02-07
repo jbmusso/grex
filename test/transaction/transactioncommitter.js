@@ -23,7 +23,7 @@ describe('Transaction Committer', function() {
     it('should add a vertex in a transaction', function(done) {
       var tx = g.begin();
 
-      alice = tx.addVertex({ name: "Alice" });
+      var alice = tx.addVertex('alice', { name: "Alice" });
 
       tx.commit()
       .then(function(result) {
@@ -35,7 +35,7 @@ describe('Transaction Committer', function() {
     it('should add a vertex and an edge in a transaction', function(done) {
       var tx = g.begin();
 
-      bob = tx.addVertex({ name: 'Bob' });
+      bob = tx.addVertex('bob', { name: 'Bob' });
       tx.addEdge(20, alice, bob, 'likes', { since: 'now' });
 
       tx.commit()
@@ -48,8 +48,8 @@ describe('Transaction Committer', function() {
     it('should add 2 vertices in a transaction', function(done) {
       var tx = g.begin();
 
-      james = tx.addVertex({ name: 'James' });
-      waldo = tx.addVertex({ name: 'Waldo' });
+      james = tx.addVertex('james', { name: 'James' });
+      waldo = tx.addVertex('waldo', { name: 'Waldo' });
 
       tx.commit()
       .then(function(result) {
@@ -61,8 +61,8 @@ describe('Transaction Committer', function() {
     // Clean up: remove james and waldo from the database
     after(function(done) {
       var tx = g.begin();
-      // tx.removeVertex(james._id);
-      // tx.removeVertex(waldo._id);
+      james.remove();
+      waldo.remove();
 
       tx.commit()
       .then(function(){
@@ -140,8 +140,8 @@ describe('Transaction Committer', function() {
     it('should remove vertices in a transaction', function(done) {
       var tx = g.begin();
 
-      // tx.removeVertex(alice);
-      // tx.removeVertex(bob);
+      alice.remove();
+      bob.remove();
 
       tx.commit()
       .then(function(result) {

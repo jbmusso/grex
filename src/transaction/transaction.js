@@ -30,11 +30,14 @@ module.exports = (function () {
   };
 
   Transaction.prototype.addVertex = function(txid) {
-    var vertex = new Vertex();
+    var vertex = new Vertex(this.gremlin);
 
     var properties,
         id,
         gremlinLine;
+
+
+    vertex.txid = txid;
 
     if (_.isObject(arguments[1])) {
       // Called addVertex(txid, {..}) or updateVertex(txid, {..}), ie. user is expecting the graph database to autogenerate _id
@@ -61,11 +64,13 @@ module.exports = (function () {
     return vertex;
   };
 
-  Transaction.prototype.addEdge = function() {
-    var edge = new Edge();
+  Transaction.prototype.addEdge = function(txid) {
+    var edge = new Edge(this.gremlin);
 
     var argOffset = 0,
         properties;
+
+    edge.txid = txid;
 
     if (arguments.length === 5) {
       // Called g.addEdge(id, _outV, _inV, label, properties)
