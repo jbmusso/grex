@@ -1,8 +1,6 @@
 var request = require('request');
 var _ = require('lodash');
 
-var TransactionCommitter = require("./transactioncommitter");
-
 var Vertex = require('../elements/vertex');
 var Edge = require('../elements/edge');
 

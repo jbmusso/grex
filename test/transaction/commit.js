@@ -18,8 +18,8 @@ before(function(done){
 var alice, bob;
 var james, waldo;
 
-describe('Transaction Committer', function() {
-  describe('when adding elements to the graph', function() {
+describe('Transaction commit', function() {
+  describe('when adding elements to the graph in a transaction', function() {
     it('should add a vertex in a transaction', function(done) {
       var tx = g.begin();
 
