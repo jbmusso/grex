@@ -51,7 +51,7 @@ module.exports = (function () {
       vertex._id = arguments[1];
 
       // Called addVertex(txid, id, {..}) or updateVertex(txid, id, {..})
-      if (arguments.length === 2) {
+      if (arguments.length === 3) {
         id = arguments[1];
         properties = arguments[2];
         vertex.setProperties(properties);
