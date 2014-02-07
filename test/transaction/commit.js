@@ -25,8 +25,7 @@ describe('Transaction commit', function() {
 
       alice = tx.addVertex('alice', { name: "Alice" });
 
-      tx.commit()
-      .then(function(result) {
+      tx.commit(function(err, result) {
         result.should.have.property('success', true);
         done();
       });
@@ -38,8 +37,7 @@ describe('Transaction commit', function() {
       waldo = tx.addVertex('waldo', { name: 'Ryan'});
       tx.addEdge(20, bob, waldo, 'likes', { since: 'now' });
 
-      tx.commit()
-      .done(function(result) {
+      tx.commit(function(err, result) {
         result.should.have.property('success', true);
         done();
       });
