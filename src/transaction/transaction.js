@@ -27,37 +27,27 @@ module.exports = (function () {
     return JSON.stringify(argument).replace('{', '[').replace('}', ']');
   };
 
-  Transaction.prototype.addVertex = function(txid) {
-    var vertex = new Vertex(this.gremlin);
-
-    var properties,
-        id,
+  /**
+   * Build a Gremlin line used for adding a Vertex in the graph.
+   * Note: for databases which accept custom _id properties (ie. non generated)
+   * the user must pass a valid _id value in the properties map.
+   * This slight change to the API of addVertex makes it easier to use
+   * in a JavaScript environment.
+   *
+   * @param {Object} properties
+   * @param {String} identifier Optional variable name used within the script context
+   */
+  Transaction.prototype.addVertex = function(properties, identifier) {
+    var vertex = new Vertex(this.gremlin),
+        id = properties._id ? properties._id +',' : '',
+        identifierPrefix = identifier ? identifier + ' = ' : '',
         gremlinLine;
 
+    vertex.identifier = identifier; // Non-enumerable property
+    vertex.setProperties(properties);
 
-    vertex.txid = txid;
-
-    if (_.isObject(arguments[1])) {
-      // Called addVertex(txid, {..}) or updateVertex(txid, {..}), ie. user is expecting the graph database to autogenerate _id
-      properties = arguments[1];
-      vertex.setProperties(properties);
-
-      gremlinLine = vertex.txid +' = g.addVertex('+ this.stringifyArgument(properties) +')';
-      this.gremlin.addLine(gremlinLine);
-    } else {
-      // Called addVertex(txid, id) or updateVertex(txid, id) with no arguments
-      vertex._id = arguments[1];
-
-      // Called addVertex(txid, id, {..}) or updateVertex(txid, id, {..})
-      if (arguments.length === 3) {
-        id = arguments[1];
-        properties = arguments[2];
-        vertex.setProperties(properties);
-
-        gremlinLine = vertex.txid +' = g.addVertex('+ id +','+ this.stringifyArgument(properties) +')';
-        this.gremlin.addLine(gremlinLine);
-      }
-    }
+    gremlinLine = identifierPrefix +'g.addVertex('+ id + this.stringifyArgument(properties) +')';
+    this.gremlin.addLine(gremlinLine);
 
     return vertex;
   };
@@ -68,7 +58,7 @@ module.exports = (function () {
     var argOffset = 0,
         properties;
 
-    // edge.txid = txid;
+    // edge.identifier = identifier;
 
     if (arguments.length === 5) {
       // Called g.addEdge(id, _outV, _inV, label, properties)
@@ -83,7 +73,7 @@ module.exports = (function () {
     edge._label = arguments[2 + argOffset];
     edge.setProperties(properties);
 
-    gremlinLine = 'g.addEdge('+ edge._outV.txid +','+edge._inV.txid+',"'+ edge._label +'",'+ this.stringifyArgument(properties) +')';
+    gremlinLine = 'g.addEdge('+ edge._outV.identifier +','+edge._inV.identifier+',"'+ edge._label +'",'+ this.stringifyArgument(properties) +')';
     this.gremlin.addLine(gremlinLine);
 
 

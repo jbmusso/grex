@@ -23,7 +23,7 @@ describe('Transaction commit', function() {
     it('should add a vertex in a transaction', function(done) {
       var tx = g.begin();
 
-      alice = tx.addVertex('alice', { name: "Alice" });
+      alice = tx.addVertex({ name: "Alice" });
 
       tx.commit(function(err, result) {
         result.should.have.property('success', true);
@@ -33,8 +33,8 @@ describe('Transaction commit', function() {
 
     it('should add two vertices and an edge in a transaction', function(done) {
       var tx = g.begin();
-      bob = tx.addVertex('bob', { name: 'Bob' });
-      waldo = tx.addVertex('waldo', { name: 'Ryan'});
+      bob = tx.addVertex({ name: 'Bob' }, 'bob');
+      waldo = tx.addVertex({ name: 'Ryan' }, 'waldo');
       tx.addEdge(20, bob, waldo, 'likes', { since: 'now' });
 
       tx.commit(function(err, result) {

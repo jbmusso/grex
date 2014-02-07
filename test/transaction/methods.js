@@ -34,7 +34,7 @@ describe('Transaction', function() {
     describe('#addVertex()', function() {
       describe('when called with "{..}" arguments signature', function() {
         before(function() {
-          vertex = transaction.addVertex('vertex', { foo: "bar" });
+          vertex = transaction.addVertex({ foo: "bar" });
         });
 
         it('should return a vertex pending for addition', function() {
@@ -56,7 +56,7 @@ describe('Transaction', function() {
 
       describe('when called with "id, {..}" arguments signature', function() {
         before(function() {
-          vertex = transaction.addVertex('vertex', 1, { foo: 'bar' });
+          vertex = transaction.addVertex({ foo: 'bar', _id: 1 });
         });
 
         it('should return a vertex', function() {

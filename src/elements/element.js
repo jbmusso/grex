@@ -16,7 +16,7 @@ module.exports = (function() {
   }
 
   // Keep track of a temporary transaction id for each element
-  Object.defineProperty(Element.prototype, "txid", {
+  Object.defineProperty(Element.prototype, "identifier", {
     value: null,
     enumerable: false,
     writable: true
@@ -69,7 +69,7 @@ module.exports = (function() {
   };
 
   Element.prototype.remove = function() {
-    var line = this.txid +'.remove()';
+    var line = this.identifier +'.remove()';
     this.gremlin.addLine(line);
   };
 
