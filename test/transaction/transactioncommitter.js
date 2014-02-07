@@ -61,8 +61,8 @@ describe('Transaction Committer', function() {
     // Clean up: remove james and waldo from the database
     after(function(done) {
       var tx = g.begin();
-      tx.removeVertex(james._id);
-      tx.removeVertex(waldo._id);
+      // tx.removeVertex(james._id);
+      // tx.removeVertex(waldo._id);
 
       tx.commit()
       .then(function(){
@@ -140,8 +140,8 @@ describe('Transaction Committer', function() {
     it('should remove vertices in a transaction', function(done) {
       var tx = g.begin();
 
-      tx.removeVertex(alice);
-      tx.removeVertex(bob);
+      // tx.removeVertex(alice);
+      // tx.removeVertex(bob);
 
       tx.commit()
       .then(function(result) {

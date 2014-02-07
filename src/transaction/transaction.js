@@ -1,8 +1,10 @@
 var request = require('request');
+var _ = require('lodash');
 
-var ElementFactory = require("../elementfactory"),
-    ActionHandlerFactory = require("./actionhandlers/actionhandlerfactory"),
-    TransactionCommitter = require("./transactioncommitter");
+var TransactionCommitter = require("./transactioncommitter");
+
+var Vertex = require('../elements/vertex');
+var Edge = require('../elements/edge');
 
 var Gremlin = require("../gremlin");
 
@@ -19,50 +21,70 @@ module.exports = (function () {
 
   Transaction.prototype.commit = function(callback) {
     this.gremlin.computeTransactionScript();
+    console.log(this.gremlin.script);
     return this.gRex.exec(this.gremlin.script).nodeify(callback);
   };
 
-  /**
-   * Handle an action for an element of given type.
-   *
-   * @param {String} action
-   * @param {String} type
-   * @param {Array} args
-   */
-  Transaction.prototype.handleAction = function(actionName, type, args) {
-    var element = ElementFactory.build(type);
-    // Set and increment element's transaction id
-    element.txid = ++this[type];
-    var actionhandler = ActionHandlerFactory.build(element, this);
-
-    // Call given action for element of given type, with given arguments
-    actionhandler[actionName](actionName, args);
-
-    return element;
+  Transaction.prototype.stringifyArgument = function(argument) {
+    return JSON.stringify(argument).replace('{', '[').replace('}', ']');
   };
 
-  Transaction.prototype.addVertex = function() {
-    return this.handleAction('add', 'vertex', arguments);
+  Transaction.prototype.addVertex = function(txid) {
+    var vertex = new Vertex();
+
+    var properties,
+        id,
+        gremlinLine;
+
+    if (_.isObject(arguments[1])) {
+      // Called addVertex(txid, {..}) or updateVertex(txid, {..}), ie. user is expecting the graph database to autogenerate _id
+      properties = arguments[1];
+      vertex.setProperties(properties);
+
+      gremlinLine = vertex.txid +' = g.addVertex('+ this.stringifyArgument(properties) +')';
+      this.gremlin.addLine(gremlinLine);
+    } else {
+      // Called addVertex(txid, id) or updateVertex(txid, id) with no arguments
+      vertex._id = arguments[1];
+
+      // Called addVertex(txid, id, {..}) or updateVertex(txid, id, {..})
+      if (arguments.length === 2) {
+        id = arguments[1];
+        properties = arguments[2];
+        vertex.setProperties(properties);
+
+        gremlinLine = vertex.txid +' = g.addVertex('+ id +','+ this.stringifyArgument(properties) +')';
+        this.gremlin.addLine(gremlinLine);
+      }
+    }
+
+    return vertex;
   };
 
   Transaction.prototype.addEdge = function() {
-    return this.handleAction('add', 'edge', arguments);
-  };
+    var edge = new Edge();
 
-  Transaction.prototype.removeVertex = function() {
-    return this.handleAction('remove', 'vertex', arguments);
-  };
+    var argOffset = 0,
+        properties;
 
-  Transaction.prototype.removeEdge = function() {
-    return this.handleAction('remove', 'edge', arguments);
-  };
+    if (arguments.length === 5) {
+      // Called g.addEdge(id, _outV, _inV, label, properties)
+      argOffset = 1;
+      edge._id = arguments[0];
+    } // else g.addEdge(_outV, _inV, label, properties) was called, leave _id to null (default factory value).
 
-  Transaction.prototype.updateVertex = function() {
-    return this.handleAction('update', 'vertex', arguments);
-  };
+    properties = arguments[3 + argOffset];
 
-  Transaction.prototype.updateEdge = function() {
-    return this.handleAction('update', 'edge', arguments);
+    edge._outV = arguments[0 + argOffset];
+    edge._inV = arguments[1 + argOffset];
+    edge._label = arguments[2 + argOffset];
+    edge.setProperties(properties);
+
+    gremlinLine = 'g.addEdge('+ edge._outV._id +','+edge._inV._id+',"'+ edge._label +'",'+ this.stringifyArgument(properties) +')';
+    this.gremlin.addLine(gremlinLine);
+
+
+    return edge;
   };
 
   return Transaction;
