@@ -71,55 +71,6 @@ describe('Transaction Committer', function() {
     });
   });
 
-  describe('when updating a vertex', function() {
-    before(function(done) {
-      g.V('name', 'Alice').get(function(err, result) {
-        alice = result.results[0];
-        done();
-      });
-    });
-
-    it('should update a property', function(done) {
-      var tx = g.begin();
-
-      tx.updateVertex(alice._id, { name: 'Jess' });
-
-      tx.commit()
-      .then(function(result) {
-        result.should.have.property('txProcessed', 1);
-        result.should.have.property('success', true);
-        done();
-      })
-      .fail(function(error) {
-        console.error(error);
-        done();
-      });
-    });
-  });
-
-  // Currently bugged?
-  // @see https://groups.google.com/forum/#!topic/gremlin-users/i0Uci2yZoaQ
-  describe('when updating an edge', function() {
-    before(function(done) {
-      g.V('name', 'Jess').outE('likes').get(function(err, result) {
-        updatedEdge = result.results[0];
-        done();
-      });
-    });
-
-    it('should update a property', function(done) {
-      tx = g.begin();
-      tx.updateEdge(updatedEdge._id, { since: 'forever', foo: 'bar' });
-
-      tx.commit()
-      .then(function(result) {
-        done();
-      })
-      .fail(function(error) {
-        console.error(error);
-        done();
-      });
-    });
   });
 
   describe('when deleting two vertices', function() {
