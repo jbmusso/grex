@@ -11,7 +11,7 @@ module.exports = (function() {
     Object.defineProperty(this, "gremlin", {
       value: gremlin,
       enumerable: false,
-      writable: true
+      writable: false
     });
   }
 
