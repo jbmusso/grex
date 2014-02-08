@@ -2,6 +2,7 @@ var Q = require("q"),
     _ = require("lodash");
 var request = require("request");
 
+var Gremlin = require('./gremlin');
 var Graph = require("./graph");
 var classes = require("./classes");
 
@@ -73,6 +74,12 @@ module.exports = (function(){
     }.bind(this));
 
     return deferred.promise;
+  };
+
+  Grex.prototype.gremlin = function() {
+    var gremlin = new Gremlin(this);
+
+    return gremlin;
   };
 
   Grex.prototype.transformResults = function(results) {
