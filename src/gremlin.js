@@ -44,6 +44,8 @@ module.exports = (function() {
     //cater for select array parameters
     if (methodName == 'select') {
       this.appendScript('.' + methodName + this.argumentHandler.build(args, true));
+    } else if (methodName == '_') {
+      this.appendScript(methodName + this.argumentHandler.build(args, true));
     } else {
       args = _.isArray(args[0]) ? args[0] : args;
 
