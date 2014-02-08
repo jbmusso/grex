@@ -1,14 +1,10 @@
 var Pipeline = require('./pipeline');
-
 var Vertex = require('./elements/vertex');
 var Edge = require('./elements/edge');
 
 module.exports = (function() {
-
-  function Graph(gRex) {
-    this.gRex = gRex;
-    this.typeMap = {};
-    this.name = gRex.options.graph;
+  function Graph(gremlin) {
+    this.gremlin = gremlin;
   }
 
   /**
@@ -20,7 +16,7 @@ module.exports = (function() {
    * @return {Pipeline}
    */
   Graph.prototype.add = function(methodName, args) {
-    var pipeline = new Pipeline(this.gRex);
+    var pipeline = new Pipeline(this.gremlin);
     pipeline.gremlin.queryMain(methodName, args);
 
     return pipeline;

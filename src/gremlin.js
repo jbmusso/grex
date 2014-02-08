@@ -1,11 +1,28 @@
 var _ = require("lodash");
 
+var Graph = require('./graph');
+var Pipeline = require('./pipeline');
+
 module.exports = (function() {
-  function Gremlin(argumentHandler, script) {
-    this.script = script || '';
-    this.argumentHandler = argumentHandler;
+  function Gremlin(gRex) {
+    this.script = '';
+    this.gRex = gRex;
+    this.argumentHandler = gRex.argumentHandler;
     this.lines = [];
   }
+
+  Object.defineProperty(Gremlin.prototype, "g", {
+    get: function() {
+      var graph = new Graph(this);
+      graph.gremlin.script += 'g';
+      return graph;
+    }
+  });
+
+  Gremlin.prototype.exec = function(callback) {
+    this.computeTransactionScript();
+    return this.gRex.exec(this.script).nodeify(callback);
+  };
 
   Gremlin.prototype._ = function() {
     var pipeline = new Pipeline(new Gremlin(this.gRex));
