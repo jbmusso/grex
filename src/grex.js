@@ -32,11 +32,9 @@ module.exports = (function(){
       options = undefined;
     }
 
-    var graph = new Graph(this);
-
     return Q.fcall(function() {
-      return graph;
-    })
+      return this;
+    }.bind(this))
     .nodeify(callback);
   };
 
