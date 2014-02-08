@@ -7,6 +7,13 @@ module.exports = (function() {
     this.lines = [];
   }
 
+  Gremlin.prototype._ = function() {
+    var pipeline = new Pipeline(new Gremlin(this.gRex));
+    pipeline.gremlin.queryMain('_', arguments);
+
+    return pipeline;
+  };
+
   /**
    * @private
    * @param {String} script

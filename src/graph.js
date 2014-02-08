@@ -26,10 +26,6 @@ module.exports = (function() {
     return pipeline;
   };
 
-  Graph.prototype._ = function() {
-    return this.add('_', arguments);
-  };
-
   Graph.prototype.E = function() {
     return this.add('E', arguments);
   };

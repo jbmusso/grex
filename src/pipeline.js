@@ -24,11 +24,6 @@ module.exports = (function () {
     return this;
   };
 
-  /*** Transform ***/
-  Pipeline.prototype._ = function() {
-    return this.add('_', 'Main', arguments);
-  };
-
   Pipeline.prototype.both = function() {
     return this.add('both', 'Main', arguments);
   };
