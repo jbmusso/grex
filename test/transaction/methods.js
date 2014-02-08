@@ -1,7 +1,6 @@
 /*jshint expr: true*/ // won't complain for (1).should.be.an.Number;
 
 var gRex = require('../../index.js'),
-  Transaction = require("../../src/transaction/transaction"),
   Vertex = require("../../src/elements/vertex"),
   Edge = require("../../src/elements/edge"),
   T = gRex.T,
@@ -12,7 +11,6 @@ var transaction;
 before(function(done) {
   gRex.connect()
   .then(function(result) {
-    g = result;
     done();
   })
   .fail(function(error) {
@@ -21,13 +19,6 @@ before(function(done) {
 });
 
 describe('Transaction', function() {
-  describe('begin()', function() {
-    it('should start a transaction', function() {
-      transaction = g.begin();
-      transaction.should.be.an.instanceof(Transaction);
-    });
-  });
-
   describe('Transaction methods', function() {
     var vertex, edge;
 

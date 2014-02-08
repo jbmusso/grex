@@ -1,12 +1,11 @@
-var gRex = require('../../index.js'),
-  Transaction = require("../../src/transaction/transaction");
+var gRex = require('../../index.js');
 
 var g, updatedEdge;
 
 before(function(done){
   gRex.connect()
   .then(function(result) {
-    g = result;
+    gRex = result;
     done();
   })
   .fail(function(error) {
@@ -21,23 +20,25 @@ var james, waldo;
 describe('Transaction commit', function() {
   describe('when adding elements to the graph in a transaction', function() {
     it('should add a vertex in a transaction', function(done) {
-      var tx = g.begin();
+      var gremlin = gRex.gremlin();
 
-      alice = tx.addVertex({ name: "Alice" });
+      gremlin.g.addVertex({ name: "Alice" });
 
-      tx.commit(function(err, result) {
+      console.log(gremlin.lines);
+      gremlin.exec(function(err, result) {
         result.should.have.property('success', true);
         done();
       });
     });
 
     it('should add two vertices and an edge in a transaction', function(done) {
-      var tx = g.begin();
-      bob = tx.addVertex({ name: 'Bob' }, 'bob');
-      waldo = tx.addVertex({ name: 'Ryan' }, 'waldo');
-      tx.addEdge(20, bob, waldo, 'likes', { since: 'now' });
+      var gremlin = gRex.gremlin();
+      bob = gremlin.g.addVertex({ name: 'Bob' }, 'bob');
+      waldo = gremlin.g.addVertex({ name: 'Ryan' }, 'waldo');
+      gremlin.g.addEdge(20, bob, waldo, 'likes', { since: 'now' });
 
-      tx.commit(function(err, result) {
+      console.log(gremlin.lines);
+      gremlin.exec(function(err, result) {
         result.should.have.property('success', true);
         done();
       });
@@ -45,11 +46,11 @@ describe('Transaction commit', function() {
 
     // Clean up: remove james and waldo from the database
     // after(function(done) {
-    //   var tx = g.begin();
+    //   var gremlin = gRex.gremlin;
     //   james.remove();
     //   waldo.remove();
 
-    //   tx.commit()
+    //   gremlin.exec()
     //   .then(function(){
     //     done();
     //   });
@@ -72,12 +73,12 @@ describe('Transaction commit', function() {
     });
 
     // it('should remove vertices in a transaction', function(done) {
-    //   var tx = g.begin();
+    //   var gremlin = gRex.gremlin;
 
     //   alice.remove();
     //   bob.remove();
 
-    //   tx.commit()
+    //   gremlin.exec()
     //   .then(function(result) {
     //     done();
     //   });
