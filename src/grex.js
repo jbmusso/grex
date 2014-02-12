@@ -82,12 +82,7 @@ module.exports = (function(){
 
   Object.defineProperty(Grex.prototype, "g", {
     get: function() {
-      var gremlin = new Gremlin(this);
-      gremlin.script += 'g';
-
-      var graph = new Graph(gremlin);
-
-      return graph;
+      return this.gremlin().g;
     }
   });
 
