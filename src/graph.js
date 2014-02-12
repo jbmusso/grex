@@ -134,7 +134,7 @@ module.exports = (function() {
     vertex.setProperties(properties);
 
     gremlinLine = identifierPrefix +'g.addVertex('+ id + this.stringifyArgument(properties) +')';
-    this.gremlin.addLine(gremlinLine);
+    this.gremlin.line(gremlinLine);
 
     return vertex;
   };
@@ -155,11 +155,11 @@ module.exports = (function() {
     edge._inV = arguments[1];
     edge._label = arguments[2];
     edge.setProperties(properties);
-    delete properties._id
+    delete properties._id;
 
     gremlinLine = 'g.addEdge('+ optionalId + edge._outV.identifier +','+ edge._inV.identifier +',"'+ edge._label +'",'+ this.stringifyArgument(properties) +')';
     // console.log(gremlinLine);
-    this.gremlin.addLine(gremlinLine);
+    this.gremlin.line(gremlinLine);
 
 
     return edge;

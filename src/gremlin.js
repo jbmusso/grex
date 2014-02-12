@@ -8,7 +8,7 @@ module.exports = (function() {
     this.script = '';
     this.gRex = gRex;
     this.argumentHandler = gRex.argumentHandler;
-    this.lines = [];
+    // this.lines = [];
   }
 
   Object.defineProperty(Gremlin.prototype, "g", {
@@ -20,7 +20,6 @@ module.exports = (function() {
   });
 
   Gremlin.prototype.exec = function(callback) {
-    this.computeTransactionScript();
     return this.gRex.exec(this.script).nodeify(callback);
   };
 
@@ -39,17 +38,17 @@ module.exports = (function() {
    * @private
    * @param {String} script
    */
-  Gremlin.prototype.appendScript = function(script) {
+  Gremlin.prototype.append = function(script) {
     this.script += script;
   };
 
-  Gremlin.prototype.addLine = function(line) {
-    this.lines.push(line);
+  Gremlin.prototype.line = function(line) {
+    this.script += '\n'+ line;
   };
 
-  Gremlin.prototype.computeTransactionScript = function() {
-    this.script = this.lines.join('\n');
-  };
+  // Gremlin.prototype.computeTransactionScript = function() {
+  //   this.script = this.lines.join('\n');
+  // };
 
   /**
    * Populate a Gremlin script string with default behavior. Used for most
@@ -64,9 +63,9 @@ module.exports = (function() {
 
     //cater for select array parameters
     if (methodName == 'select') {
-      this.appendScript('.' + methodName + this.argumentHandler.build(args, true));
+      this.append('.' + methodName + this.argumentHandler.build(args, true));
     } else if (methodName == '_') {
-      this.appendScript(methodName + this.argumentHandler.build(args, true));
+      this.append(methodName + this.argumentHandler.build(args, true));
     } else {
       args = _.isArray(args[0]) ? args[0] : args;
 
@@ -81,10 +80,10 @@ module.exports = (function() {
         args.length = 1;
       }
 
-      this.appendScript('.' + methodName + this.argumentHandler.build(args));
+      this.append('.' + methodName + this.argumentHandler.build(args));
     }
 
-    this.appendScript(appendArg);
+    this.append(appendArg);
   };
 
   /**
@@ -98,7 +97,7 @@ module.exports = (function() {
    * @param {Array} args Method's arguments
    */
   Gremlin.prototype.queryIndex = function(methodName, arg) {
-    this.appendScript('['+ arg[0].toString() + ']');
+    this.append('['+ arg[0].toString() + ']');
   };
 
   /**
@@ -111,15 +110,15 @@ module.exports = (function() {
   Gremlin.prototype.queryPipes = function(methodName, args) {
     args = _.isArray(args[0]) ? args[0] : args;
 
-    this.appendScript("." + methodName + "(");
+    this.append("." + methodName + "(");
 
     _.each(args, function(arg) {
       var partialScript = (arg.gremlin && arg.gremlin.script) || this.argumentHandler.parse(arg);
-      this.appendScript(partialScript + ",");
+      this.append(partialScript + ",");
     }, this);
 
     this.script = this.script.slice(0, -1); // Remove trailing comma
-    this.appendScript(")");
+    this.append(")");
   };
 
   /**
@@ -139,9 +138,9 @@ module.exports = (function() {
         param += ",";
       });
 
-      this.appendScript("." + methodName + "([" + param + "])");
+      this.append("." + methodName + "([" + param + "])");
     } else {
-      this.appendScript("." + methodName + this.argumentHandler.build(args[0]));
+      this.append("." + methodName + this.argumentHandler.build(args[0]));
     }
   };
 

@@ -70,7 +70,7 @@ module.exports = (function() {
 
   Element.prototype.remove = function() {
     var line = this.identifier +'.remove()';
-    this.gremlin.addLine(line);
+    this.gremlin.line(line);
   };
 
   return Element;
