@@ -6,8 +6,6 @@ var gRex = require('../../index.js'),
   T = gRex.T,
   Contains = gRex.Contains;
 
-var transaction;
-
 before(function(done) {
   gRex.connect()
   .then(function(result) {
@@ -18,14 +16,15 @@ before(function(done) {
   });
 });
 
-describe('Transaction', function() {
+describe.only('Transaction', function() {
   describe('Transaction methods', function() {
     var vertex, edge;
 
     describe('#addVertex()', function() {
-      describe('when called with "{..}" arguments signature', function() {
+      describe('when called with "{..}" arguments signature and no _id property', function() {
         before(function() {
-          vertex = transaction.addVertex({ foo: "bar" });
+          var g = gRex.gremlin().g;
+          vertex = g.addVertex({ foo: "bar" });
         });
 
         it('should return a vertex pending for addition', function() {
@@ -45,9 +44,10 @@ describe('Transaction', function() {
         });
       });
 
-      describe('when called with "id, {..}" arguments signature', function() {
+      describe('when called with "{..}" arguments signature and an _id property', function() {
         before(function() {
-          vertex = transaction.addVertex({ foo: 'bar', _id: 1 });
+          var g = gRex.gremlin().g;
+          vertex = g.addVertex({ foo: 'bar', _id: 1 });
         });
 
         it('should return a vertex', function() {
@@ -72,7 +72,8 @@ describe('Transaction', function() {
     describe('#addEdge()', function() {
       describe('when called with "_outV, _inV, label, {..}" arguments signature', function() {
         before(function() {
-          edge = transaction.addEdge(20, 30, "knows", { since: 'now' });
+          var g = gRex.gremlin().g;
+          edge = g.addEdge(20, 30, "knows", { since: 'now' });
         });
 
         it('should return an edge', function() {
@@ -100,7 +101,8 @@ describe('Transaction', function() {
 
       describe('when called with "id, _outV, _inV, label, {..}" arguments signature', function() {
         before(function() {
-          edge = transaction.addEdge(1, 20, 30, "knows", { since: 'now' });
+          var g = gRex.gremlin().g;
+          edge = g.addEdge(1, 20, 30, "knows", { since: 'now' });
         });
 
         it('should return an edge', function() {
