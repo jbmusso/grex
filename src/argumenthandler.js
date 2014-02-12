@@ -5,12 +5,12 @@ module.exports = (function () {
     this.options = options;
   }
 
-  ArgumentHandler.prototype.build = function(array, retainArray) {
+  ArgumentHandler.prototype.build = function(args, retainArray) {
     var argList = '',
         append = '',
         jsonString = '';
 
-    _.each(array, function(v) {
+    _.each(args, function(v) {
       if (this.isClosure(v)){
         append += v;
       } else if (_.isObject(v) && v.hasOwnProperty('verbatim')) {
@@ -46,7 +46,7 @@ module.exports = (function () {
     }
 
     //Cater for ids that are not numbers but pass parseFloat test
-    if(this.isRegexId.call(this, val) || _.isNaN(parseFloat(val))) {
+    if(this.isRegexId(val) || _.isNaN(parseFloat(val))) {
       return "'" + val + "'";
     }
 
