@@ -80,6 +80,17 @@ module.exports = (function(){
     return gremlin;
   };
 
+  Object.defineProperty(Grex.prototype, "g", {
+    get: function() {
+      var gremlin = new Gremlin(this);
+      gremlin.script += 'g';
+
+      var graph = new Graph(gremlin);
+
+      return graph;
+    }
+  });
+
   Grex.prototype.transformResults = function(results) {
     return this.resultFormatter.formatResults(results);
   };

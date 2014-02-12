@@ -107,9 +107,8 @@ describe('Gremlin steps', function() {
 
     it('should chain .retain([])', function() {
       var gremlin = gRex.gremlin();
-      var g = gremlin.g;
-      console.log(gremlin.script);
-      var query = gremlin.g.V().retain([g.v(1), g.v(2), g.v(3)]);
+      var query = gremlin.g.V().retain([gRex.g.v(1), gRex.g.v(2), gRex.g.v(3)]);
+
       query.gremlin.script.should.equal("g.V().retain([g.v(1),g.v(2),g.v(3),])");
     });
 
