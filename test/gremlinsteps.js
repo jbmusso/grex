@@ -148,6 +148,7 @@ describe('Graph methods', function() {
     });
 
     it("should support g.idx().put()", function() {
+      var g = gRex.g;
       var query = gRex.gremlin().g.idx("my-index").put("name", "marko", g.v(1));
       query.gremlin.script.should.equal("g.idx('my-index').put('name','marko',g.v(1))");
     });
