@@ -139,28 +139,26 @@ module.exports = (function() {
     return vertex;
   };
 
-  Graph.prototype.addEdge = function() {
-    var edge = new Edge(this.gremlin);
+  Graph.prototype.addEdge = function(v1, v2, label, properties, identifier) {
+    var edge = new Edge(this.gremlin),
+        optionalId = '';
 
-    var argOffset = 0,
-        properties;
+    edge.identifier = identifier; // Non-enumerable property
 
-    // edge.identifier = identifier;
+    // edge._id = properties._id ? properties._id : null;
+    if (properties._id) {
+      edge._id = properties._id;
+      optionalId = edge._id + ',';
+    }
 
-    if (arguments.length === 5) {
-      // Called g.addEdge(id, _outV, _inV, label, properties)
-      argOffset = 1;
-      edge._id = arguments[0];
-    } // else g.addEdge(_outV, _inV, label, properties) was called, leave _id to null (default factory value).
-
-    properties = arguments[3 + argOffset];
-
-    edge._outV = arguments[0 + argOffset];
-    edge._inV = arguments[1 + argOffset];
-    edge._label = arguments[2 + argOffset];
+    edge._outV = arguments[0];
+    edge._inV = arguments[1];
+    edge._label = arguments[2];
     edge.setProperties(properties);
+    delete properties._id
 
-    gremlinLine = 'g.addEdge('+ edge._outV.identifier +','+edge._inV.identifier+',"'+ edge._label +'",'+ this.stringifyArgument(properties) +')';
+    gremlinLine = 'g.addEdge('+ optionalId + edge._outV.identifier +','+ edge._inV.identifier +',"'+ edge._label +'",'+ this.stringifyArgument(properties) +')';
+    // console.log(gremlinLine);
     this.gremlin.addLine(gremlinLine);
 
 

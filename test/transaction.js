@@ -35,7 +35,7 @@ describe('Transaction commit', function() {
 
       bob = g.addVertex({ name: 'Bob' }, 'bob');
       waldo = g.addVertex({ name: 'Ryan' }, 'waldo');
-      g.addEdge(20, bob, waldo, 'likes', { since: 'now' });
+      g.addEdge(bob, waldo, 'likes', { since: 'now' });
 
       gremlin.exec(function(err, result) {
         result.should.have.property('success', true);

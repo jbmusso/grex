@@ -97,35 +97,5 @@ describe('Graph', function() {
         edge = null;
       });
     });
-
-    describe('when called with "id, _outV, _inV, label, {..}" arguments signature', function() {
-      before(function() {
-        var g = gRex.gremlin().g;
-        edge = g.addEdge(1, 20, 30, "knows", { since: 'now' });
-      });
-
-      it('should return an edge', function() {
-        edge.should.be.an.instanceof(Edge);
-      });
-
-      it('should have a numerical _id', function() {
-        edge.should.have.property('_id');
-        edge._id.should.be.a.Number;
-      });
-
-      it('should have set _outV, _inV and _label properties', function() {
-        edge.should.have.property('_outV', 20);
-        edge.should.have.property('_inV', 30);
-        edge.should.have.property('_label', 'knows');
-      });
-
-      it('should have own specified properties', function() {
-        edge.should.have.property('since', 'now');
-      });
-
-      after(function() {
-        edge = null;
-      });
-    });
   });
 });
