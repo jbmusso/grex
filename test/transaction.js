@@ -1,4 +1,4 @@
-var gRex = require('../../index.js');
+var gRex = require('../index.js');
 
 var g, updatedEdge;
 
@@ -24,7 +24,6 @@ describe('Transaction commit', function() {
 
       gremlin.g.addVertex({ name: "Alice" });
 
-      console.log(gremlin.lines);
       gremlin.exec(function(err, result) {
         result.should.have.property('success', true);
         done();
@@ -37,7 +36,6 @@ describe('Transaction commit', function() {
       waldo = gremlin.g.addVertex({ name: 'Ryan' }, 'waldo');
       gremlin.g.addEdge(20, bob, waldo, 'likes', { since: 'now' });
 
-      console.log(gremlin.lines);
       gremlin.exec(function(err, result) {
         result.should.have.property('success', true);
         done();
