@@ -5,9 +5,22 @@ var _ = require('lodash');
 */
 module.exports = (function() {
   // Graph Elements are currently Vertex or Edge
-  function Element() {
+  function Element(gremlin) {
     this._id = null;
+
+    Object.defineProperty(this, "gremlin", {
+      value: gremlin,
+      enumerable: false,
+      writable: false
+    });
   }
+
+  // Keep track of a temporary transaction id for each element
+  Object.defineProperty(Element.prototype, "identifier", {
+    value: null,
+    enumerable: false,
+    writable: true
+  });
 
   Element.prototype.getProperties = function() {
     var o = {};
@@ -53,6 +66,11 @@ module.exports = (function() {
       this.addProperty(key, properties[key]);
     }
     return this;
+  };
+
+  Element.prototype.remove = function() {
+    var line = this.identifier +'.remove()';
+    this.gremlin.addLine(line);
   };
 
   return Element;

@@ -1,10 +1,35 @@
 var _ = require("lodash");
 
+var Graph = require('./graph');
+var Pipeline = require('./pipeline');
+
 module.exports = (function() {
-  function Gremlin(argumentHandler) {
-    this.script = 'g';
-    this.argumentHandler = argumentHandler;
+  function Gremlin(gRex) {
+    this.script = '';
+    this.gRex = gRex;
+    this.argumentHandler = gRex.argumentHandler;
+    this.lines = [];
   }
+
+  Object.defineProperty(Gremlin.prototype, "g", {
+    get: function() {
+      var graph = new Graph(this);
+      graph.gremlin.script += 'g';
+      return graph;
+    }
+  });
+
+  Gremlin.prototype.exec = function(callback) {
+    this.computeTransactionScript();
+    return this.gRex.exec(this.script).nodeify(callback);
+  };
+
+  Gremlin.prototype._ = function() {
+    var pipeline = new Pipeline(new Gremlin(this.gRex));
+    pipeline.gremlin.queryMain('_', arguments);
+
+    return pipeline;
+  };
 
   /**
    * @private
@@ -12,6 +37,14 @@ module.exports = (function() {
    */
   Gremlin.prototype.appendScript = function(script) {
     this.script += script;
+  };
+
+  Gremlin.prototype.addLine = function(line) {
+    this.lines.push(line);
+  };
+
+  Gremlin.prototype.computeTransactionScript = function() {
+    this.script = this.lines.join('\n');
   };
 
   /**
@@ -28,6 +61,8 @@ module.exports = (function() {
     //cater for select array parameters
     if (methodName == 'select') {
       this.appendScript('.' + methodName + this.argumentHandler.build(args, true));
+    } else if (methodName == '_') {
+      this.appendScript(methodName + this.argumentHandler.build(args, true));
     } else {
       args = _.isArray(args[0]) ? args[0] : args;
 

@@ -2,6 +2,7 @@ var Q = require("q"),
     _ = require("lodash");
 var request = require("request");
 
+var Gremlin = require('./gremlin');
 var Graph = require("./graph");
 var classes = require("./classes");
 
@@ -31,11 +32,9 @@ module.exports = (function(){
       options = undefined;
     }
 
-    var graph = new Graph(this);
-
     return Q.fcall(function() {
-      return graph;
-    })
+      return this;
+    }.bind(this))
     .nodeify(callback);
   };
 
@@ -57,9 +56,6 @@ module.exports = (function(){
         script: script,
         'rexster.showTypes': true
       },
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
       json: true
     };
 
@@ -77,6 +73,23 @@ module.exports = (function(){
 
     return deferred.promise;
   };
+
+  Grex.prototype.gremlin = function() {
+    var gremlin = new Gremlin(this);
+
+    return gremlin;
+  };
+
+  Object.defineProperty(Grex.prototype, "g", {
+    get: function() {
+      var gremlin = new Gremlin(this);
+      gremlin.script += 'g';
+
+      var graph = new Graph(gremlin);
+
+      return graph;
+    }
+  });
 
   Grex.prototype.transformResults = function(results) {
     return this.resultFormatter.formatResults(results);

@@ -1,27 +1,10 @@
-var ElementFactory = require("../src/elementfactory");
-
 var Vertex = require("../src/elements/vertex");
 var Edge = require("../src/elements/edge");
 
-var edge, vertex;
+var edge = new Edge(),
+    vertex = new Vertex();
 
 describe('Elements', function() {
-  describe('Factory', function() {
-    it('should build a Vertex graph element', function() {
-      vertex = ElementFactory.build("vertex");
-      vertex.should.be.instanceof(Vertex);
-      vertex.should.have.property('_type', 'vertex');
-      vertex.should.have.property('_id', null);
-    });
-
-    it('should build an Edge graph element', function() {
-      edge = ElementFactory.build("edge");
-      edge.should.be.instanceof(Edge);
-      edge.should.have.property('_type', 'edge');
-      edge.should.have.property('_id', null);
-    });
-  });
-
   describe('Vertex element', function() {
     describe('setProperty', function() {
       before(function() {

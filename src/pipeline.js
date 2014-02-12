@@ -1,9 +1,8 @@
 var Gremlin = require('./gremlin');
 
 module.exports = (function () {
-  function Pipeline(gRex) {
-    this.gRex = gRex;
-    this.gremlin = new Gremlin(gRex.argumentHandler);
+  function Pipeline(gremlin) {
+    this.gremlin = gremlin;
   }
 
   /**
@@ -15,18 +14,13 @@ module.exports = (function () {
    * @param {Function} callback
    */
   Pipeline.prototype.get = function(callback) {
-    return this.gRex.exec(this.gremlin.script).nodeify(callback);
+    return this.gremlin.exec(callback);
   };
 
   Pipeline.prototype.add = function(methodName, type, args) {
     this.gremlin['query' + type](methodName, args);
 
     return this;
-  };
-
-  /*** Transform ***/
-  Pipeline.prototype._ = function() {
-    return this.add('_', 'Main', arguments);
   };
 
   Pipeline.prototype.both = function() {
