@@ -24,11 +24,15 @@ module.exports = (function() {
     return this.gRex.exec(this.script).nodeify(callback);
   };
 
+  /**
+   * Transforms an arbitrary object into a Pipeline
+   * @return {Pipeline}
+   */
   Gremlin.prototype._ = function() {
-    var pipeline = new Pipeline(new Gremlin(this.gRex));
-    pipeline.gremlin.queryMain('_', arguments);
+    var gremlin = new Gremlin(this.gRex);
+    gremlin.queryMain('_', arguments);
 
-    return pipeline;
+    return new Pipeline(gremlin);
   };
 
   /**
