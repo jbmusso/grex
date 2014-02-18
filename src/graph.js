@@ -127,13 +127,12 @@ module.exports = (function() {
   Graph.prototype.addVertex = function(properties, identifier) {
     var vertex = new Vertex(this.gremlin),
         id = properties._id ? properties._id +',' : '',
-        identifierPrefix = identifier ? identifier + ' = ' : '',
-        gremlinLine;
+        identifierPrefix = identifier ? identifier + ' = ' : '';
 
     vertex.identifier = identifier; // Non-enumerable property
     vertex.setProperties(properties);
 
-    gremlinLine = identifierPrefix +'g.addVertex('+ id + this.stringifyArgument(properties) +')';
+    var gremlinLine = identifierPrefix +'g.addVertex('+ id + this.stringifyArgument(properties) +')';
     this.gremlin.line(gremlinLine);
 
     return vertex;
@@ -157,7 +156,7 @@ module.exports = (function() {
     edge.setProperties(properties);
     delete properties._id;
 
-    gremlinLine = 'g.addEdge('+ optionalId + edge._outV.identifier +','+ edge._inV.identifier +',"'+ edge._label +'",'+ this.stringifyArgument(properties) +')';
+    var gremlinLine = 'g.addEdge('+ optionalId + edge._outV.identifier +','+ edge._inV.identifier +',"'+ edge._label +'",'+ this.stringifyArgument(properties) +')';
     // console.log(gremlinLine);
     this.gremlin.line(gremlinLine);
 
