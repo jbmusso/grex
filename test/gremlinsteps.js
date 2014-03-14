@@ -95,7 +95,6 @@ describe('Gremlin steps', function() {
     it('should chain .and() with 2 conditions', function() {
       var gremlin = gRex.gremlin();
       var query = gremlin.g.V().and(gremlin._().both("knows"), gremlin._().both("created"));
-      console.log(query.gremlin.script);
       query.gremlin.script.should.equal("g.V().and(_().both('knows'),_().both('created'))");
     });
 
