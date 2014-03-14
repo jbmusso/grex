@@ -6,9 +6,9 @@ module.exports = (function () {
   }
 
   ArgumentHandler.prototype.build = function(args, retainArray) {
-    var argList = '',
-        append = '',
-        jsonString = '';
+    var argList = '';
+    var append = '';
+    var jsonString = '';
 
     _.each(args, function(v) {
       if (this.isClosure(v)){

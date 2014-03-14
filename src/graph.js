@@ -140,9 +140,9 @@ module.exports = (function() {
    * @param {String} identifier Optional variable name used within the script context
    */
   Graph.prototype.addVertex = function(properties, identifier) {
-    var vertex = new Vertex(this.gremlin),
-        id = properties._id ? properties._id +',' : '',
-        identifierPrefix = identifier ? identifier + ' = ' : '';
+    var vertex = new Vertex(this.gremlin);
+    var id = properties._id ? properties._id +',' : '';
+    var identifierPrefix = identifier ? identifier + ' = ' : '';
 
     vertex.identifier = identifier; // Non-enumerable property
     vertex.setProperties(properties);
@@ -154,8 +154,8 @@ module.exports = (function() {
   };
 
   Graph.prototype.addEdge = function(v1, v2, label, properties, identifier) {
-    var edge = new Edge(this.gremlin),
-        optionalId = '';
+    var edge = new Edge(this.gremlin);
+    var optionalId = '';
 
     edge.identifier = identifier; // Non-enumerable property
 
