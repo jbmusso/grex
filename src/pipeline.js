@@ -100,7 +100,9 @@ module.exports = (function () {
   };
 
   Pipeline.prototype.select = function() {
-    return this.add('select', 'Main', arguments);
+    this.gremlin.append('.select' + this.gremlin.argumentHandler.build(arguments, true));
+
+    return this;
   };
 
   Pipeline.prototype.transform = function() {
