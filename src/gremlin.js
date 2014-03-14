@@ -59,24 +59,9 @@ module.exports = (function() {
    * @param {Array} args Method's arguments
    */
   Gremlin.prototype.queryMain = function(methodName, args) {
-    var appendArg = '';
-
     args = _.isArray(args[0]) ? args[0] : args;
 
-    //cater for idx param 2
-    if (methodName == 'idx' && args.length > 1) {
-      _.each(args[1], function(v, k) {
-        appendArg = k + ":";
-        appendArg += this.argumentHandler.parse(args[1][k]);
-      }, this);
-
-      appendArg = "[["+ appendArg + "]]";
-      args.length = 1;
-    }
-
     this.append('.' + methodName + this.argumentHandler.build(args));
-
-    this.append(appendArg);
   };
 
   /**

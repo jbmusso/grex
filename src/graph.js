@@ -1,3 +1,5 @@
+var _ = require("lodash");
+
 var Pipeline = require('./pipeline');
 var Vertex = require('./elements/vertex');
 var Edge = require('./elements/edge');
@@ -27,7 +29,21 @@ module.exports = (function() {
   };
 
   Graph.prototype.idx = function() {
-    this.gremlin.queryMain('idx', arguments);
+    var appendArg = '';
+    var args = _.isArray(arguments[0]) ? arguments[0] : arguments;
+
+    if (args.length > 1) {
+      _.each(args[1], function(value, key) {
+        appendArg = key + ":";
+        appendArg += this.gremlin.argumentHandler.parse(args[1][key]);
+      }, this);
+
+      appendArg = "[["+ appendArg + "]]";
+      args.length = 1; // ???
+    }
+
+    this.gremlin.append('.idx' + this.gremlin.argumentHandler.build(args));
+    this.gremlin.append(appendArg);
 
     return new Pipeline(this.gremlin);
   };
