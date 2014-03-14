@@ -8,7 +8,6 @@ module.exports = (function() {
     this.script = '';
     this.gRex = gRex;
     this.argumentHandler = gRex.argumentHandler;
-    // this.lines = [];
   }
 
   Object.defineProperty(Gremlin.prototype, "g", {
@@ -35,6 +34,8 @@ module.exports = (function() {
   };
 
   /**
+   * Append an arbitrary Gremlin string to current script.
+   *
    * @private
    * @param {String} script
    */
@@ -42,13 +43,15 @@ module.exports = (function() {
     this.script += script;
   };
 
+  /**
+   * Append an arbitrary Gremlin string to current script as a new line.
+   *
+   * @public
+   * @param {String} line
+   */
   Gremlin.prototype.line = function(line) {
     this.script += '\n'+ line;
   };
-
-  // Gremlin.prototype.computeTransactionScript = function() {
-  //   this.script = this.lines.join('\n');
-  // };
 
   /**
    * Populate a Gremlin script string with default behavior. Used for most
