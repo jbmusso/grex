@@ -4,19 +4,23 @@ var Graph = require('./graph');
 var Pipeline = require('./pipeline');
 
 module.exports = (function() {
-  function Gremlin(gRex) {
+  function Gremlin(gRex, options) {
     this.script = '';
     this.gRex = gRex;
     this.argumentHandler = gRex.argumentHandler;
+
+    var settings = _.defaults(options || {
+      graph: 'g'
+    });
+
+    Object.defineProperty(this, settings.graph, {
+      get: function() {
+        var graph = new Graph(this);
+
+        return graph;
+      }
+    });
   }
-
-  Object.defineProperty(Gremlin.prototype, "g", {
-    get: function() {
-      var graph = new Graph(this);
-
-      return graph;
-    }
-  });
 
   Gremlin.prototype.subScript = function() {
     return new Gremlin(this.gRex);

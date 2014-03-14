@@ -74,8 +74,8 @@ module.exports = (function(){
     return deferred.promise;
   };
 
-  Grex.prototype.gremlin = function() {
-    var gremlin = new Gremlin(this);
+  Grex.prototype.gremlin = function(options) {
+    var gremlin = new Gremlin(this, options);
 
     return gremlin;
   };
