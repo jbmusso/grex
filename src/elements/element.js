@@ -5,8 +5,9 @@ var _ = require('lodash');
 */
 module.exports = (function() {
   // Graph Elements are currently Vertex or Edge
-  function Element(gremlin) {
+  function Element(gremlin, identifier) {
     this._id = null;
+    this.identifier = identifier;
 
     Object.defineProperty(this, "gremlin", {
       value: gremlin,
@@ -29,18 +30,28 @@ module.exports = (function() {
       o[propertyName] = this[propertyName];
     }, this);
 
+    this.gremlin.line(this.identifier + '.getProperties()');
+
     return o;
   };
 
-  Element.prototype.setProperty = function (k, v) {
-    this[k] = v;
+  Element.prototype.setProperty = function(key, value) {
+    this[key] = value;
+
+    this.gremlin.line(this.identifier + ".setProperty('"+key+"','"+value+"')");
+
     return this;
   };
 
-  Element.prototype.setProperties = function (properties) {
-    for (var key in properties) {
-      this.setProperty(key, properties[key]);
-    }
+  Element.prototype.setProperties = function(properties) {
+    _.each(properties, function(value, key) {
+      this[key] = value;
+    }, this);
+
+    var line = this.identifier +'.setProperties('+ this.gremlin.stringifyArgument(properties) +')';
+
+    this.gremlin.line(line);
+
     return this;
   };
 
@@ -49,9 +60,14 @@ module.exports = (function() {
    *
    * Use this instead of setProperty() when setting the value of an indexed
    * property.
+   *
+   * @param {String} key
+   * @param {Object} value
    */
-  Element.prototype.addProperty = function(k, v) {
-    this[k] = v;
+  Element.prototype.addProperty = function(key, value) {
+    this[key] = value;
+    this.gremlin.line(this.identifier + ".addProperty('"+key+"','"+value+"')");
+
     return this;
   };
 
@@ -60,11 +76,19 @@ module.exports = (function() {
    *
    * Use this instead of setProperties() when setting the values of indexed
    * properties.
+   *
+   * @param {Object} properties
    */
-  Element.prototype.addProperties = function (properties) {
-    for (var key in properties) {
-      this.addProperty(key, properties[key]);
-    }
+  Element.prototype.addProperties = function(properties) {
+    _.each(properties, function(value, key) {
+      this[key] = value;
+    }, this);
+
+    var line = this.identifier +'.addProperties('+ this.gremlin.stringifyArgument(properties) +')';
+
+    this.gremlin.line(line);
+
+
     return this;
   };
 

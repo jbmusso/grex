@@ -145,9 +145,12 @@ module.exports = (function() {
     var identifierPrefix = identifier ? identifier + ' = ' : '';
 
     vertex.identifier = identifier; // Non-enumerable property
-    vertex.setProperties(properties);
 
-    var gremlinLine = identifierPrefix +'g.addVertex('+ id + this.stringifyArgument(properties) +')';
+    _.each(properties, function(value, key) {
+      vertex[key] = value;
+    });
+
+    var gremlinLine = identifierPrefix +'g.addVertex('+ id + this.gremlin.stringifyArgument(properties) +')';
     this.gremlin.line(gremlinLine);
 
     return vertex;
@@ -159,7 +162,6 @@ module.exports = (function() {
 
     edge.identifier = identifier; // Non-enumerable property
 
-    // edge._id = properties._id ? properties._id : null;
     if (properties._id) {
       edge._id = properties._id;
       optionalId = edge._id + ',';
@@ -168,19 +170,18 @@ module.exports = (function() {
     edge._outV = arguments[0];
     edge._inV = arguments[1];
     edge._label = arguments[2];
-    edge.setProperties(properties);
+
+    _.each(properties, function(value, key) {
+      edge[key] = value;
+    });
+
     delete properties._id;
 
-    var gremlinLine = 'g.addEdge('+ optionalId + edge._outV.identifier +','+ edge._inV.identifier +',"'+ edge._label +'",'+ this.stringifyArgument(properties) +')';
-    // console.log(gremlinLine);
+    var gremlinLine = 'g.addEdge('+ optionalId + edge._outV.identifier +','+ edge._inV.identifier +',"'+ edge._label +'",'+ this.gremlin.stringifyArgument(properties) +')';
+
     this.gremlin.line(gremlinLine);
 
-
     return edge;
-  };
-
-  Graph.prototype.stringifyArgument = function(argument) {
-    return JSON.stringify(argument).replace('{', '[').replace('}', ']');
   };
 
   return Graph;

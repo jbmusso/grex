@@ -53,6 +53,11 @@ module.exports = (function() {
     this.script += '\n'+ line;
   };
 
+
+  Gremlin.prototype.stringifyArgument = function(argument) {
+    return JSON.stringify(argument).replace('{', '[').replace('}', ']');
+  };
+
   /**
    * Populate a Gremlin script string with default behavior. Used for most
    * commands.
