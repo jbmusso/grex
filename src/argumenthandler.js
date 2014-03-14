@@ -10,25 +10,35 @@ module.exports = (function () {
     var append = '';
     var jsonString = '';
 
-    _.each(args, function(v) {
-      if (this.isClosure(v)){
-        append += v;
-      } else if (_.isObject(v) && v.hasOwnProperty('verbatim')) {
-        argList += v.verbatim + ",";
-      } else if (_.isObject(v) && !(v.hasOwnProperty('params') && this.isGraphReference(v.script))) {
-        jsonString = JSON.stringify(v);
+    _.each(args, function(arg) {
+      if (this.isClosure(arg)) {
+        append += arg;
+      } else if (_.isObject(arg) && !(arg.hasOwnProperty('params'))) {
+        jsonString = JSON.stringify(arg);
         jsonString = jsonString.replace('{', '[');
         argList += jsonString.replace('}', ']') + ",";
-      } else if(retainArray && _.isArray(v)) {
-        argList += "[" + this.parse(v) + "],";
+      } else if(retainArray && _.isArray(arg)) {
+        argList += "[" + this.parse(arg) + "],";
       } else {
-        argList += this.parse(v) + ",";
+        argList += this.parse(arg) + ",";
       }
     }, this);
 
     argList = argList.slice(0, -1);
 
     return '(' + argList + ')' + append;
+  };
+
+  ArgumentHandler.prototype.handleArray = function(args) {
+    var argumentList = '';
+
+    _.each(args, function(arg) {
+      argumentList += "[" + this.parse(arg) + "],";
+    }, this);
+
+    argumentList = argumentList.slice(0, -1);
+
+    return '(' + argumentList + ')';
   };
 
   ArgumentHandler.prototype.parse = function(val) {
