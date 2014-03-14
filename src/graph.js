@@ -10,20 +10,19 @@ module.exports = (function() {
   }
 
   Graph.prototype.E = function() {
-    this.gremlin.append('.E' + this.gremlin.argumentHandler.build(arguments));
+    this.gremlin.appendMain('E', arguments);
 
     return new Pipeline(this.gremlin);
   };
 
   Graph.prototype.V = function() {
-    this.gremlin.append('.V' + this.gremlin.argumentHandler.build(arguments));
+    this.gremlin.appendMain('V', arguments);
 
     return new Pipeline(this.gremlin);
   };
 
-  // Methods
   Graph.prototype.e = function() {
-    this.gremlin.append('.e' + this.gremlin.argumentHandler.build(arguments));
+    this.gremlin.appendMain('e', arguments);
 
     return new Pipeline(this.gremlin);
   };
@@ -49,82 +48,82 @@ module.exports = (function() {
   };
 
   Graph.prototype.v = function() {
-    this.gremlin.append('.v' + this.gremlin.argumentHandler.build(arguments));
+    this.gremlin.appendMain('v', arguments);
 
     return new Pipeline(this.gremlin);
   };
 
   // Indexing
   Graph.prototype.createIndex = function() {
-    this.gremlin.append('.createIndex' + this.gremlin.argumentHandler.build(arguments));
+    this.gremlin.appendMain('createIndex', arguments);
 
     return new Pipeline(this.gremlin);
   };
 
   Graph.prototype.createKeyIndex = function() {
-    this.gremlin.append('.createKeyIndex' + this.gremlin.argumentHandler.build(arguments));
+    this.gremlin.appendMain('createKeyIndex', arguments);
 
     return new Pipeline(this.gremlin);
   };
 
   Graph.prototype.getIndices = function() {
-    this.gremlin.append('.getIndices' + this.gremlin.argumentHandler.build(arguments));
+    this.gremlin.appendMain('getIndices', arguments);
 
     return new Pipeline(this.gremlin);
   };
 
   Graph.prototype.getIndexedKeys = function() {
-    this.gremlin.append('.getIndexedKeys' + this.gremlin.argumentHandler.build(arguments));
+    this.gremlin.appendMain('getIndexedKeys', arguments);
 
     return new Pipeline(this.gremlin);
   };
 
   Graph.prototype.getIndex = function() {
-    this.gremlin.append('.getIndex' + this.gremlin.argumentHandler.build(arguments));
+    this.gremlin.appendMain('getIndex', arguments);
 
     return new Pipeline(this.gremlin);
   };
 
   Graph.prototype.dropIndex = function() {
-    this.gremlin.append('.dropIndex' + this.gremlin.argumentHandler.build(arguments));
+    this.gremlin.appendMain('dropIndex', arguments);
 
     return new Pipeline(this.gremlin);
   };
 
   Graph.prototype.dropKeyIndex = function() {
-    this.gremlin.append('.dropKeyIndex' + this.gremlin.argumentHandler.build(arguments));
+    this.gremlin.appendMain('dropKeyIndex', arguments);
 
     return new Pipeline(this.gremlin);
   };
 
   // Types
   Graph.prototype.makeKey = function() {
-    this.gremlin.append('.makeKey' + this.gremlin.argumentHandler.build(arguments));
+    this.gremlin.appendMain('makeKey', arguments);
 
     return new Pipeline(this.gremlin);
   };
 
   Graph.prototype.clear = function() {
-    this.gremlin.append('.clear' + this.gremlin.argumentHandler.build(arguments));
+    this.gremlin.appendMain('clear', arguments);
 
     return new Pipeline(this.gremlin);
   };
 
   Graph.prototype.shutdown = function() {
-    this.gremlin.append('.shutdown' + this.gremlin.argumentHandler.build(arguments));
+    this.gremlin.appendMain('shutdown', arguments);
 
     return new Pipeline(this.gremlin);
   };
 
   Graph.prototype.getFeatures = function() {
-    this.gremlin.append('.getFeatures' + this.gremlin.argumentHandler.build(arguments));
+    this.gremlin.appendMain('getFeatures', arguments);
 
     return new Pipeline(this.gremlin);
   };
 
   // Titan specifics
   Graph.prototype.getTypes = function() {
-    this.gremlin.append('.getTypes' + this.gremlin.argumentHandler.build(arguments));
+    this.gremlin.appendMain('getTypes', arguments);
 
     return new Pipeline(this.gremlin);
   };
