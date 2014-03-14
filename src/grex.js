@@ -80,12 +80,6 @@ module.exports = (function(){
     return gremlin;
   };
 
-  Object.defineProperty(Grex.prototype, "g", {
-    get: function() {
-      return this.gremlin().g;
-    }
-  });
-
   Grex.prototype.transformResults = function(results) {
     return this.resultFormatter.formatResults(results);
   };

@@ -5,23 +5,27 @@ var Vertex = require('./elements/vertex');
 var Edge = require('./elements/edge');
 
 module.exports = (function() {
-  function Graph(gremlin) {
-    this.gremlin = gremlin;
+  function Graph(parentGremlin) {
+    this.parentGremlin = parentGremlin;
+    this.gremlin = this.parentGremlin.subScript();
   }
 
   Graph.prototype.E = function() {
+    this.gremlin.append('g');
     this.gremlin.appendMain('E', arguments);
 
     return new Pipeline(this.gremlin);
   };
 
   Graph.prototype.V = function() {
+    this.gremlin.append('g');
     this.gremlin.appendMain('V', arguments);
 
     return new Pipeline(this.gremlin);
   };
 
   Graph.prototype.e = function() {
+    this.gremlin.append('g');
     this.gremlin.appendMain('e', arguments);
 
     return new Pipeline(this.gremlin);
@@ -31,6 +35,7 @@ module.exports = (function() {
     var indexName = arguments[0];
     var properties = arguments[1];
 
+    this.gremlin.append('g');
     this.gremlin.append(".idx('" + indexName + "')");
 
     if (properties) {
@@ -48,6 +53,7 @@ module.exports = (function() {
   };
 
   Graph.prototype.v = function() {
+    this.gremlin.append('g');
     this.gremlin.appendMain('v', arguments);
 
     return new Pipeline(this.gremlin);
@@ -55,42 +61,49 @@ module.exports = (function() {
 
   // Indexing
   Graph.prototype.createIndex = function() {
+    this.gremlin.append('g');
     this.gremlin.appendMain('createIndex', arguments);
 
     return new Pipeline(this.gremlin);
   };
 
   Graph.prototype.createKeyIndex = function() {
+    this.gremlin.append('g');
     this.gremlin.appendMain('createKeyIndex', arguments);
 
     return new Pipeline(this.gremlin);
   };
 
   Graph.prototype.getIndices = function() {
+    this.gremlin.append('g');
     this.gremlin.appendMain('getIndices', arguments);
 
     return new Pipeline(this.gremlin);
   };
 
   Graph.prototype.getIndexedKeys = function() {
+    this.gremlin.append('g');
     this.gremlin.appendMain('getIndexedKeys', arguments);
 
     return new Pipeline(this.gremlin);
   };
 
   Graph.prototype.getIndex = function() {
+    this.gremlin.append('g');
     this.gremlin.appendMain('getIndex', arguments);
 
     return new Pipeline(this.gremlin);
   };
 
   Graph.prototype.dropIndex = function() {
+    this.gremlin.append('g');
     this.gremlin.appendMain('dropIndex', arguments);
 
     return new Pipeline(this.gremlin);
   };
 
   Graph.prototype.dropKeyIndex = function() {
+    this.gremlin.append('g');
     this.gremlin.appendMain('dropKeyIndex', arguments);
 
     return new Pipeline(this.gremlin);
@@ -98,24 +111,28 @@ module.exports = (function() {
 
   // Types
   Graph.prototype.makeKey = function() {
+    this.gremlin.append('g');
     this.gremlin.appendMain('makeKey', arguments);
 
     return new Pipeline(this.gremlin);
   };
 
   Graph.prototype.clear = function() {
+    this.gremlin.append('g');
     this.gremlin.appendMain('clear', arguments);
 
     return new Pipeline(this.gremlin);
   };
 
   Graph.prototype.shutdown = function() {
+    this.gremlin.append('g');
     this.gremlin.appendMain('shutdown', arguments);
 
     return new Pipeline(this.gremlin);
   };
 
   Graph.prototype.getFeatures = function() {
+    this.gremlin.append('g');
     this.gremlin.appendMain('getFeatures', arguments);
 
     return new Pipeline(this.gremlin);
@@ -123,6 +140,7 @@ module.exports = (function() {
 
   // Titan specifics
   Graph.prototype.getTypes = function() {
+    this.gremlin.append('g');
     this.gremlin.appendMain('getTypes', arguments);
 
     return new Pipeline(this.gremlin);
@@ -153,6 +171,8 @@ module.exports = (function() {
     var gremlinLine = identifierPrefix +'g.addVertex('+ id + this.gremlin.stringifyArgument(properties) +')';
     this.gremlin.line(gremlinLine);
 
+    this.parentGremlin.append(this.gremlin.script);
+
     return vertex;
   };
 
@@ -180,6 +200,8 @@ module.exports = (function() {
     var gremlinLine = 'g.addEdge('+ optionalId + edge._outV.identifier +','+ edge._inV.identifier +',"'+ edge._label +'",'+ this.gremlin.stringifyArgument(properties) +')';
 
     this.gremlin.line(gremlinLine);
+
+    this.parentGremlin.append(this.gremlin.script);
 
     return edge;
   };

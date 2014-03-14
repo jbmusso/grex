@@ -107,7 +107,8 @@ describe('Gremlin steps', function() {
 
     it('should chain .retain([])', function() {
       var gremlin = gRex.gremlin();
-      var query = gremlin.g.V().retain([gRex.g.v(1), gRex.g.v(2), gRex.g.v(3)]);
+
+      var query = gremlin.g.V().retain([gremlin.g.v(1), gremlin.g.v(2), gremlin.g.v(3)]);
 
       query.gremlin.script.should.equal("g.V().retain([g.v(1),g.v(2),g.v(3),])");
     });
@@ -148,8 +149,8 @@ describe('Graph methods', function() {
     });
 
     it("should support g.idx().put()", function() {
-      var g = gRex.g;
-      var query = gRex.gremlin().g.idx("my-index").put("name", "marko", g.v(1));
+      var gremlin = gRex.gremlin();
+      var query = gRex.gremlin().g.idx("my-index").put("name", "marko", gremlin.g.v(1));
       query.gremlin.script.should.equal("g.idx('my-index').put('name','marko',g.v(1))");
     });
 

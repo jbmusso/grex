@@ -13,10 +13,14 @@ module.exports = (function() {
   Object.defineProperty(Gremlin.prototype, "g", {
     get: function() {
       var graph = new Graph(this);
-      graph.gremlin.script += 'g';
+
       return graph;
     }
   });
+
+  Gremlin.prototype.subScript = function() {
+    return new Gremlin(this.gRex);
+  };
 
   Gremlin.prototype.exec = function(callback) {
     return this.gRex.exec(this.script).nodeify(callback);

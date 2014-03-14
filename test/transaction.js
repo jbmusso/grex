@@ -19,9 +19,7 @@ describe('Transaction commit', function() {
   describe('when adding elements to the graph in a transaction', function() {
     it('should add a vertex in a transaction', function(done) {
       var gremlin = gRex.gremlin();
-      var g = gremlin.g;
-
-      g.addVertex({ name: "Alice" });
+      gremlin.g.addVertex({ name: "Alice" });
 
       gremlin.exec(function(err, result) {
         result.should.have.property('success', true);
@@ -31,11 +29,10 @@ describe('Transaction commit', function() {
 
     it('should add two vertices and an edge in a transaction', function(done) {
       var gremlin = gRex.gremlin();
-      var g = gremlin.g;
 
-      bob = g.addVertex({ name: 'Bob' }, 'bob');
-      waldo = g.addVertex({ name: 'Ryan' }, 'waldo');
-      g.addEdge(bob, waldo, 'likes', { since: 'now' });
+      bob = gremlin.g.addVertex({ name: 'Bob' }, 'bob');
+      waldo = gremlin.g.addVertex({ name: 'Ryan' }, 'waldo');
+      gremlin.g.addEdge(bob, waldo, 'likes', { since: 'now' });
 
       gremlin.exec(function(err, result) {
         result.should.have.property('success', true);
