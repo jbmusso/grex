@@ -17,159 +17,187 @@ module.exports = (function () {
     return this.gremlin.exec(callback);
   };
 
-  Pipeline.prototype.add = function(methodName, type, args) {
-    this.gremlin['query' + type](methodName, args);
-
+  Pipeline.prototype.both = function() {
+    this.gremlin.appendMain('both', arguments);
     return this;
   };
 
-  Pipeline.prototype.both = function() {
-    return this.add('both', 'Main', arguments);
-  };
-
   Pipeline.prototype.bothE = function() {
-    return this.add('bothE', 'Main', arguments);
+    this.gremlin.appendMain('bothE', arguments);
+    return this;
   };
 
   Pipeline.prototype.bothV = function() {
-    return this.add('bothV', 'Main', arguments);
+    this.gremlin.appendMain('bothV', arguments);
+    return this;
   };
 
   Pipeline.prototype.cap = function() {
-    return this.add('cap', 'Main', arguments);
+    this.gremlin.appendMain('cap', arguments);
+    return this;
   };
 
   Pipeline.prototype.gather = function() {
-    return this.add('gather', 'Main', arguments);
+    this.gremlin.appendMain('gather', arguments);
+    return this;
   };
 
   Pipeline.prototype.id = function() {
-    return this.add('id', 'Main', arguments);
+    this.gremlin.appendMain('id', arguments);
+    return this;
   };
 
   Pipeline.prototype.in = function() {
-    return this.add('in', 'Main', arguments);
+    this.gremlin.appendMain('in', arguments);
+    return this;
   };
 
   Pipeline.prototype.inE = function() {
-    return this.add('inE', 'Main', arguments);
+    this.gremlin.appendMain('inE', arguments);
+    return this;
   };
 
   Pipeline.prototype.inV = function() {
-    return this.add('inV', 'Main', arguments);
+    this.gremlin.appendMain('inV', arguments);
+    return this;
   };
 
   Pipeline.prototype.property = function() {
-    return this.add('property', 'Main', arguments);
+    this.gremlin.appendMain('property', arguments);
+    return this;
   };
 
   Pipeline.prototype.label = function() {
-    return this.add('label', 'Main', arguments);
+    this.gremlin.appendMain('label', arguments);
+    return this;
   };
 
   Pipeline.prototype.map = function() {
-    return this.add('map', 'Main', arguments);
+    this.gremlin.appendMain('map', arguments);
+    return this;
   };
 
   Pipeline.prototype.memoize = function() {
-    return this.add('memoize', 'Main', arguments);
+    this.gremlin.appendMain('memoize', arguments);
+    return this;
   };
 
   Pipeline.prototype.order = function() {
-    return this.add('order', 'Main', arguments);
+    this.gremlin.appendMain('order', arguments);
+    return this;
   };
 
   Pipeline.prototype.out = function() {
-    return this.add('out', 'Main', arguments);
+    this.gremlin.appendMain('out', arguments);
+    return this;
   };
 
   Pipeline.prototype.outE = function() {
-    return this.add('outE', 'Main', arguments);
+    this.gremlin.appendMain('outE', arguments);
+    return this;
   };
 
   Pipeline.prototype.outV = function() {
-    return this.add('outV', 'Main', arguments);
+    this.gremlin.appendMain('outV', arguments);
+    return this;
   };
 
   Pipeline.prototype.path = function() {
-    return this.add('path', 'Main', arguments);
+    this.gremlin.appendMain('path', arguments);
+    return this;
   };
 
   Pipeline.prototype.scatter = function() {
-    return this.add('scatter', 'Main', arguments);
+    this.gremlin.appendMain('scatter', arguments);
+    return this;
   };
 
   Pipeline.prototype.select = function() {
     this.gremlin.append('.select' + this.gremlin.argumentHandler.build(arguments, true));
-
     return this;
   };
 
   Pipeline.prototype.transform = function() {
-    return this.add('transform', 'Main', arguments);
+    this.gremlin.appendMain('transform', arguments);
+    return this;
   };
 
   Pipeline.prototype.orderMap = function() {
-    return this.add('orderMap', 'Main', arguments);
+    this.gremlin.appendMain('orderMap', arguments);
+    return this;
   };
 
   /*** Filter ***/
   // index(i)
   Pipeline.prototype.index = function() {
-    return this.add('', 'Index', arguments);
+    this.gremlin.appendIndex(arguments);
+    return this;
   };
 
   // range('[i..j]')
   Pipeline.prototype.range = function() {
-    return this.add('', 'Index', arguments);
+    this.gremlin.appendIndex(arguments);
+    return this;
   };
 
   Pipeline.prototype.and = function() {
-    return this.add('and', 'Pipes', arguments);
+    this.gremlin.appendPipes('and', arguments);
+    return this;
   };
 
   Pipeline.prototype.back = function() {
-    return this.add('back', 'Main', arguments);
+    this.gremlin.appendMain('back', arguments);
+    return this;
   };
 
   Pipeline.prototype.dedup = function() {
-    return this.add('dedup', 'Main', arguments);
+    this.gremlin.appendMain('dedup', arguments);
+    return this;
   };
 
   Pipeline.prototype.except = function() {
-    return this.add('except', 'Collection', arguments);
+    this.gremlin.appendCollection('except', arguments);
+    return this;
   };
 
   Pipeline.prototype.filter = function() {
-    return this.add('filter', 'Main', arguments);
+    this.gremlin.appendMain('filter', arguments);
+    return this;
   };
 
   Pipeline.prototype.has = function() {
-    return this.add('has', 'Main', arguments);
+    this.gremlin.appendMain('has', arguments);
+    return this;
   };
 
   Pipeline.prototype.hasNot = function() {
-    return this.add('hasNot', 'Main', arguments);
+    this.gremlin.appendMain('hasNot', arguments);
+    return this;
   };
 
   Pipeline.prototype.interval = function() {
-    return this.add('interval', 'Main', arguments);
+    this.gremlin.appendMain('interval', arguments);
+    return this;
   };
 
   Pipeline.prototype.or = function() {
-    return this.add('or', 'Pipes', arguments);
+    this.gremlin.appendPipes('or', arguments);
+    return this;
   };
 
   Pipeline.prototype.random = function() {
-    return this.add('random', 'Main', arguments);
+    this.gremlin.appendMain('random', arguments);
+    return this;
   };
 
   Pipeline.prototype.retain = function() {
-    return this.add('retain', 'Collection', arguments);
+    this.gremlin.appendCollection('retain', arguments);
+    return this;
   };
 
   Pipeline.prototype.simplePath = function() {
-    return this.add('simplePath', 'Main', arguments);
+    this.gremlin.appendMain('simplePath', arguments);
+    return this;
   };
 
   /*** Side Effect ***/
@@ -178,36 +206,44 @@ module.exports = (function () {
   };
 
   Pipeline.prototype.as = function() {
-    return this.add('as', 'Main', arguments);
+    this.gremlin.appendMain('as', arguments);
+    return this;
   };
 
   Pipeline.prototype.groupBy = function() {
-    return this.add('groupBy', 'Main', arguments);
+    this.gremlin.appendMain('groupBy', arguments);
+    return this;
   };
 
   // Not FullyImplemented ??
   Pipeline.prototype.groupCount = function() {
-    return this.add('groupCount', 'Main', arguments);
+    this.gremlin.appendMain('groupCount', arguments);
+    return this;
   };
 
   Pipeline.prototype.optional = function() {
-    return this.add('optional', 'Main', arguments);
+    this.gremlin.appendMain('optional', arguments);
+    return this;
   };
 
   Pipeline.prototype.sideEffect = function() {
-    return this.add('sideEffect', 'Main', arguments);
+    this.gremlin.appendMain('sideEffect', arguments);
+    return this;
   };
 
   Pipeline.prototype.linkBoth = function() {
-    return this.add('linkBoth', 'Main', arguments);
+    this.gremlin.appendMain('linkBoth', arguments);
+    return this;
   };
 
   Pipeline.prototype.linkIn = function() {
-    return this.add('linkIn', 'Main', arguments);
+    this.gremlin.appendMain('linkIn', arguments);
+    return this;
   };
 
   Pipeline.prototype.linkOut = function() {
-    return this.add('linkOut', 'Main', arguments);
+    this.gremlin.appendMain('linkOut', arguments);
+    return this;
   };
 
   Pipeline.prototype.store = function() {
@@ -224,23 +260,28 @@ module.exports = (function () {
 
   /*** Branch ***/
   Pipeline.prototype.copySplit = function() {
-    return this.add('copySplit', 'Pipes', arguments);
+    this.gremlin.appendPipes('copySplit', arguments);
+    return this;
   };
   Pipeline.prototype.exhaustMerge = function() {
-    return this.add('exhaustMerge', 'Main', arguments);
+    this.gremlin.appendMain('exhaustMerge', arguments);
+    return this;
   };
 
   Pipeline.prototype.fairMerge = function() {
-    return this.add('fairMerge', 'Main', arguments);
+    this.gremlin.appendMain('fairMerge', arguments);
+    return this;
   };
 
   // g.v(1).out().ifThenElse('{it.name=='josh'}','{it.age}','{it.name}')
   Pipeline.prototype.ifThenElse = function() {
-    return this.add('ifThenElse', 'Main', arguments);
+    this.gremlin.appendMain('ifThenElse', arguments);
+    return this;
   };
 
   Pipeline.prototype.loop = function() {
-    return this.add('loop', 'Main', arguments);
+    this.gremlin.appendMain('loop', arguments);
+    return this;
   };
 
   /*** Methods ***/
@@ -249,143 +290,176 @@ module.exports = (function () {
   };
 
   Pipeline.prototype.count = function() {
-    return this.add('count', 'Main', arguments);
+    this.gremlin.appendMain('count', arguments);
+    return this;
   };
 
   Pipeline.prototype.iterate = function() {
-    return this.add('iterate', 'Main', arguments);
+    this.gremlin.appendMain('iterate', arguments);
+    return this;
   };
 
   Pipeline.prototype.next = function() {
-    return this.add('next', 'Main', arguments);
+    this.gremlin.appendMain('next', arguments);
+    return this;
   };
 
   Pipeline.prototype.toList = function() {
-    return this.add('toList', 'Main', arguments);
+    this.gremlin.appendMain('toList', arguments);
+    return this;
   };
 
   Pipeline.prototype.keys = function() {
-    return this.add('keys', 'Main', arguments);
+    this.gremlin.appendMain('keys', arguments);
+    return this;
   };
 
   Pipeline.prototype.remove = function() {
-    return this.add('remove', 'Main', arguments);
+    this.gremlin.appendMain('remove', arguments);
+    return this;
   };
 
   Pipeline.prototype.values = function() {
-    return this.add('values', 'Main', arguments);
+    this.gremlin.appendMain('values', arguments);
+    return this;
   };
 
   Pipeline.prototype.put = function() {
-    return this.add('put', 'Pipes', arguments);
+    this.gremlin.appendPipes('put', arguments);
+    return this;
   };
 
   Pipeline.prototype.getPropertyKeys = function() {
-    return this.add('getPropertyKeys', 'Main', arguments);
+    this.gremlin.appendMain('getPropertyKeys', arguments);
+    return this;
   };
 
   Pipeline.prototype.setProperty = function() {
-    return this.add('setProperty', 'Main', arguments);
+    this.gremlin.appendMain('setProperty', arguments);
+    return this;
   };
 
   Pipeline.prototype.getProperty = function() {
-    return this.add('getProperty', 'Main', arguments);
+    this.gremlin.appendMain('getProperty', arguments);
+    return this;
   };
 
   // Titan specifics
   Pipeline.prototype.name = function() {
-    return this.add('name', 'Main', arguments);
+    this.gremlin.appendMain('name', arguments);
+    return this;
   };
 
   Pipeline.prototype.dataType = function() {
-    return this.add('dataType', 'Main', arguments);
+    this.gremlin.appendMain('dataType', arguments);
+    return this;
   };
 
   Pipeline.prototype.indexed = function() {
-    return this.add('indexed', 'Main', arguments);
+    this.gremlin.appendMain('indexed', arguments);
+    return this;
   };
 
   Pipeline.prototype.unique = function() {
-    return this.add('unique', 'Main', arguments);
+    this.gremlin.appendMain('unique', arguments);
+    return this;
   };
 
   Pipeline.prototype.makePropertyKey = function() {
-    return this.add('makePropertyKey', 'Main', arguments);
+    this.gremlin.appendMain('makePropertyKey', arguments);
+    return this;
   };
 
   Pipeline.prototype.group = function() {
-    return this.add('group', 'Main', arguments);
+    this.gremlin.appendMain('group', arguments);
+    return this;
   };
 
   Pipeline.prototype.makeEdgeLabel = function() {
-    return this.add('makeEdgeLabel', 'Main', arguments);
+    this.gremlin.appendMain('makeEdgeLabel', arguments);
+    return this;
   };
 
   Pipeline.prototype.query = function() {
-    return this.add('query', 'Main', arguments);
+    this.gremlin.appendMain('query', arguments);
+    return this;
   };
 
   // Titan v0.4.0+
   Pipeline.prototype.single = function() {
-    return this.add('single', 'Main', arguments);
+    this.gremlin.appendMain('single', arguments);
+    return this;
   };
 
   // Titan v0.4.0+
   Pipeline.prototype.list = function() {
-    return this.add('list', 'Main', arguments);
+    this.gremlin.appendMain('list', arguments);
+    return this;
   };
 
   // Titan v0.4.0+: replaces unique(Direction.IN)
   Pipeline.prototype.oneToMany = function() {
-    return this.add('oneToMany', 'Main', arguments);
+    this.gremlin.appendMain('oneToMany', arguments);
+    return this;
   };
 
   // Titan v0.4.0+: replaces unique(Direction.OUT)
   Pipeline.prototype.manyToOne = function() {
-    return this.add('manyToOne', 'Main', arguments);
+    this.gremlin.appendMain('manyToOne', arguments);
+    return this;
   };
 
   // Titan v0.4.0+: replaces unique(Direction.IN) and unique(Direction.OUT)
   Pipeline.prototype.oneToOne = function() {
-    return this.add('oneToOne', 'Main', arguments);
+    this.gremlin.appendMain('oneToOne', arguments);
+    return this;
   };
 
   // Titan v0.4.0+
   Pipeline.prototype.makeKey = function() {
-    return this.add('makeKey', 'Main', arguments);
+    this.gremlin.appendMain('makeKey', arguments);
+    return this;
   };
 
   // Titan v0.4.0+
   Pipeline.prototype.makeLabel = function() {
-    return this.add('makeLabel', 'Main', arguments);
+    this.gremlin.appendMain('makeLabel', arguments);
+    return this;
   };
 
   Pipeline.prototype.make = function() {
-    return this.add('make', 'Main', arguments);
+    this.gremlin.appendMain('make', arguments);
+    return this;
   };
 
   Pipeline.prototype.sortKey = function() {
-    return this.add('sortKey', 'Main', arguments);
+    this.gremlin.appendMain('sortKey', arguments);
+    return this;
   };
 
   Pipeline.prototype.signature = function() {
-    return this.add('signature', 'Main', arguments);
+    this.gremlin.appendMain('signature', arguments);
+    return this;
   };
 
   Pipeline.prototype.unidirected = function() {
-    return this.add('unidirected', 'Main', arguments);
+    this.gremlin.appendMain('unidirected', arguments);
+    return this;
   };
 
   Pipeline.prototype.createKeyIndex = function() {
-    return this.add('createKeyIndex', 'Main', arguments);
+    this.gremlin.appendMain('createKeyIndex', arguments);
+    return this;
   };
 
   Pipeline.prototype.getIndexes = function() {
-    return this.add('getIndexes', 'Main', arguments);
+    this.gremlin.appendMain('getIndexes', arguments);
+    return this;
   };
 
   Pipeline.prototype.hasIndex = function() {
-    return this.add('hasIndex', 'Main', arguments);
+    this.gremlin.appendMain('hasIndex', arguments);
+    return this;
   };
 
   return Pipeline;

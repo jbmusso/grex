@@ -58,7 +58,7 @@ module.exports = (function() {
    * @param {String} methodName
    * @param {Array} args Method's arguments
    */
-  Gremlin.prototype.queryMain = function(methodName, args) {
+  Gremlin.prototype.appendMain = function(methodName, args) {
     args = _.isArray(args[0]) ? args[0] : args;
 
     this.append('.' + methodName + this.argumentHandler.build(args));
@@ -71,10 +71,9 @@ module.exports = (function() {
    *
    * Do not pass in method name, just string range.
    *
-   * @param {String} methodName
-   * @param {Array} args Method's arguments
+   * @param {String} arg
    */
-  Gremlin.prototype.queryIndex = function(methodName, arg) {
+  Gremlin.prototype.appendIndex = function(arg) {
     this.append('['+ arg[0].toString() + ']');
   };
 
@@ -85,7 +84,7 @@ module.exports = (function() {
    * @param {String} methodName
    * @param {Array} args Method's arguments
    */
-  Gremlin.prototype.queryPipes = function(methodName, args) {
+  Gremlin.prototype.appendPipes = function(methodName, args) {
     args = _.isArray(args[0]) ? args[0] : args;
 
     this.append("." + methodName + "(");
@@ -106,7 +105,7 @@ module.exports = (function() {
    * @param {String} methodName
    * @param {Array} args Method's arguments
    */
-  Gremlin.prototype.queryCollection = function(methodName, args) {
+  Gremlin.prototype.appendCollection = function(methodName, args) {
     var param = '';
 
     if (_.isArray(args[0])) {
