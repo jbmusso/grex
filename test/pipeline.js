@@ -54,32 +54,35 @@ describe('Gremlin steps', function() {
       query.gremlin.script.should.equal("g.E().has('weight',T.gt,0.5f).outV().transform(){[it.id,it.age]}");
     });
 
-    it('should chain .select()', function() {
+    /**
+     * Select the named steps to emit after select with post-processing closures.
+     * @see http://gremlindocs.com/#transform/select
+     */
+    it('should handle no argument', function() {
       var query = gRex.gremlin().g.v(1).as('x').out('knows').as('y').select();
       query.gremlin.script.should.equal("g.v(1).as('x').out('knows').as('y').select()");
     });
 
-    it('should chain .select([])', function() {
+    it('should handle an array of strings', function() {
       var query = gRex.gremlin().g.v(1).as('x').out('knows').as('y').select(["y"]);
       query.gremlin.script.should.equal("g.v(1).as('x').out('knows').as('y').select([\"y\"])");
     });
 
-    it('should chain .select([]) & 1 closure', function() {
+    it('should handle an array of strings & 1 post-processing closure', function() {
       var query = gRex.gremlin().g.v(1).as('x').out('knows').as('y').select(["y"],"{it.name}");
       query.gremlin.script.should.equal("g.v(1).as('x').out('knows').as('y').select([\"y\"]){it.name}");
     });
 
-    it('should chain .select() & 2 closures', function() {
+    it('should handle no argument & 2 post-processing closures', function() {
       var query = gRex.gremlin().g.v(1).as('x').out('knows').as('y').select("{it.id}{it.name}");
       query.gremlin.script.should.equal("g.v(1).as('x').out('knows').as('y').select(){it.id}{it.name}");
     });
 
-    it("should chain .orderMap()", function() {
+    it("should handle ordering class argument", function() {
       var query = gRex.gremlin().g.V().both().groupCount().cap().orderMap(T.decr);
       query.gremlin.script.should.equal("g.V().both().groupCount().cap().orderMap(T.decr)");
     });
   });
-
 
   describe('Filter-based steps', function() {
     it('should chain .index() as []', function() {
