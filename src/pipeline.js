@@ -462,6 +462,11 @@ module.exports = (function () {
     return this;
   };
 
+  Pipeline.prototype.key = function() {
+    this.gremlin.append('.' + arguments[0]);
+    return this;
+  };
+
   return Pipeline;
 
 })();

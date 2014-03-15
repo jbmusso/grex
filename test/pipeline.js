@@ -98,6 +98,14 @@ describe('Gremlin steps', function() {
         query.gremlin.script.should.equal("g.V().both().groupCount().cap().orderMap(T.decr)");
       });
     });
+
+    // gRex/JavaScript specific
+    describe('.key()', function () {
+      it('should chain key name', function () {
+        var query = gRex.gremlin().g.v(1).key('name');
+        query.gremlin.script.should.equal("g.v(1).name");
+      });
+    });
   });
 
   describe('Filter-based steps', function() {
