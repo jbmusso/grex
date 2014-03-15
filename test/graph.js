@@ -16,10 +16,10 @@ before(function(done) {
   });
 });
 
-describe('Graph', function() {
+describe('Graph methods', function() {
   var vertex, edge;
 
-  describe('#addVertex()', function() {
+  describe('.addVertex()', function() {
     describe('when called with "{..}" arguments signature and no _id property', function() {
       before(function() {
         var g = gRex.gremlin().g;
@@ -68,7 +68,7 @@ describe('Graph', function() {
     });
   });
 
-  describe('#addEdge()', function() {
+  describe('.addEdge()', function() {
     describe('when called with "_outV, _inV, label, {..}" arguments signature', function() {
       before(function() {
         var g = gRex.gremlin().g;
@@ -98,4 +98,36 @@ describe('Graph', function() {
       });
     });
   });
+
+  describe('.createIndex()', function() {
+    it('should handle string, Element.class arguments', function () {
+      // it("should support g.createIndex()", function() {
+        var query = gRex.gremlin().g.createIndex("my-index", 'Vertex.class');
+        query.gremlin.script.should.equal("g.createIndex('my-index',Vertex.class)");
+      // });
+    });
+  });
+
+
+  describe('.idx()', function() {
+    it("should handle `name, {key: value}` arguments", function() {
+      var query = gRex.gremlin().g.idx("my-index", {'name':'marko'});
+      query.gremlin.script.should.equal("g.idx('my-index')[[name:'marko']]");
+    });
+
+    it("should support g.idx().put()", function() {
+      var gremlin = gRex.gremlin();
+      var query = gRex.gremlin().g.idx("my-index").put("name", "marko", gremlin.g.v(1));
+      query.gremlin.script.should.equal("g.idx('my-index').put('name','marko',g.v(1))");
+    });
+  });
+
+  describe('.dropIndex()', function() {
+    it("should handle `string` argument", function() {
+      var query = gRex.gremlin().g.dropIndex("my-index");
+      query.gremlin.script.should.equal("g.dropIndex('my-index')");
+    });
+  });
+
+
 });

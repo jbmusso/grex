@@ -4,7 +4,7 @@ var Gremlin = require('../src/gremlin');
 
 
 describe('Graph elements', function() {
-  describe('setProperty', function() {
+  describe('.setProperty()', function() {
     it('should set property', function() {
       var gremlin = new Gremlin(gRex);
       var vertex = new Vertex(gremlin, 'v');
@@ -15,7 +15,7 @@ describe('Graph elements', function() {
     });
   });
 
-  describe('addProperty', function() {
+  describe('.addProperty()', function() {
     it('should add property', function() {
       var gremlin = new Gremlin(gRex);
       var vertex = new Vertex(gremlin, 'v');
@@ -26,7 +26,7 @@ describe('Graph elements', function() {
     });
   });
 
-  describe('setProperties', function() {
+  describe('.setProperties()', function() {
     it('should set properties', function() {
       var gremlin = new Gremlin(gRex);
       var vertex = new Vertex(gremlin, 'v');
@@ -41,7 +41,7 @@ describe('Graph elements', function() {
     });
   });
 
-  describe('addProperties', function() {
+  describe('.addProperties()', function() {
     it('should add properties', function() {
       var gremlin = new Gremlin(gRex);
       var vertex = new Vertex(gremlin, 'v');
@@ -56,7 +56,7 @@ describe('Graph elements', function() {
     });
   });
 
-  describe('getProperties', function() {
+  describe('.getProperties()', function() {
     it('should return properties', function() {
       var gremlin = new Gremlin(gRex);
       var vertex = new Vertex(gremlin, 'v');
@@ -69,7 +69,7 @@ describe('Graph elements', function() {
     });
   });
 
-  describe('remove', function() {
+  describe('.remove()', function() {
     it('should remove element', function() {
       var gremlin = new Gremlin(gRex);
       var vertex = new Vertex(gremlin, 'v');
@@ -78,4 +78,20 @@ describe('Graph elements', function() {
       gremlin.script.should.equal('\nv.remove()');
     });
   });
+
+  describe('.keys()', function() {
+    it("should chain .keys()", function() {
+      var query = gRex.gremlin().g.v(1).keys();
+      query.gremlin.script.should.equal("g.v(1).keys()");
+    });
+  });
+
+  describe('.values', function() {
+    it("should chain .values()", function() {
+      var query = gRex.gremlin().g.v(1).values();
+      query.gremlin.script.should.equal("g.v(1).values()");
+    });
+  });
+
+
 });

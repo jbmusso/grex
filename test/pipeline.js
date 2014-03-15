@@ -149,6 +149,13 @@ describe('Gremlin steps', function() {
         query.gremlin.script.should.equal("g.V().has('age',T.lt,30).as('x').out('created').in('created').except('x')");
       });
     });
+
+    describe('.has()', function() {
+      it("should handle float type argument", function() {
+        var query = gRex.gremlin().g.v(1).outE().has("weight", T.gte, "0.5f");
+        query.gremlin.script.should.equal("g.v(1).outE().has('weight',T.gte,0.5f)");
+      });
+    });
   });
 
   describe('SideEffect-based steps', function() {
@@ -174,53 +181,6 @@ describe('Gremlin steps', function() {
         var query = gRex.gremlin().g.v(1).out().ifThenElse("{it.name=='josh'}{it.age}{it.name}");
         query.gremlin.script.should.equal("g.v(1).out().ifThenElse(){it.name=='josh'}{it.age}{it.name}");
       });
-    });
-  });
-});
-
-
-describe('Graph methods', function() {
-  describe('indexing', function() {
-    it("should support g.createIndex()", function() {
-      var query = gRex.gremlin().g.createIndex("my-index", 'Vertex.class');
-      query.gremlin.script.should.equal("g.createIndex('my-index',Vertex.class)");
-    });
-
-    it("should support g.idx().put()", function() {
-      var gremlin = gRex.gremlin();
-      var query = gRex.gremlin().g.idx("my-index").put("name", "marko", gremlin.g.v(1));
-      query.gremlin.script.should.equal("g.idx('my-index').put('name','marko',g.v(1))");
-    });
-
-    it("should support g.idx(name, {})", function() {
-      var query = gRex.gremlin().g.idx("my-index", {'name':'marko'});
-      query.gremlin.script.should.equal("g.idx('my-index')[[name:'marko']]");
-    });
-
-    it("should support g.dropIndex()", function() {
-      var query = gRex.gremlin().g.dropIndex("my-index");
-      query.gremlin.script.should.equal("g.dropIndex('my-index')");
-    });
-  });
-
-  describe('Elements', function() {
-    it("should chain .keys()", function() {
-      var query = gRex.gremlin().g.v(1).keys();
-      query.gremlin.script.should.equal("g.v(1).keys()");
-    });
-
-    it("should chain .values()", function() {
-      var query = gRex.gremlin().g.v(1).values();
-      query.gremlin.script.should.equal("g.v(1).values()");
-    });
-  });
-});
-
-describe('Misc', function() {
-  describe('float', function() {
-    it("should handle float values", function() {
-      var query = gRex.gremlin().g.v(1).outE().has("weight", T.gte, "0.5f");
-      query.gremlin.script.should.equal("g.v(1).outE().has('weight',T.gte,0.5f)");
     });
   });
 });
