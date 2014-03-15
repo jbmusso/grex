@@ -14,9 +14,7 @@ module.exports = (function () {
       if (this.isClosure(arg)) {
         append += arg;
       } else if (_.isObject(arg) && !(arg.hasOwnProperty('params'))) {
-        jsonString = JSON.stringify(arg);
-        jsonString = jsonString.replace('{', '[');
-        argList += jsonString.replace('}', ']') + ",";
+        argList += this.stringify(arg) + ",";
       } else if(retainArray && _.isArray(arg)) {
         argList += "[" + this.parse(arg) + "],";
       } else {
@@ -27,6 +25,10 @@ module.exports = (function () {
     argList = argList.slice(0, -1);
 
     return '(' + argList + ')' + append;
+  };
+
+  ArgumentHandler.prototype.stringify = function(argument) {
+    return JSON.stringify(argument).replace('{', '[').replace('}', ']');
   };
 
   ArgumentHandler.prototype.handleArray = function(args) {
