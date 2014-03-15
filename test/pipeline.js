@@ -184,6 +184,15 @@ describe('Gremlin steps', function() {
       });
     });
 
+    describe('.exhaustMerge', function () {
+      it('should chain .exhaustMerge()', function () {
+        var gremlin = gRex.gremlin();
+        var query = gremlin.g.v(1).out('knows').copySplit(gremlin._().out('created').key('name'), gremlin._().key('age')).exhaustMerge();
+
+        query.gremlin.script.should.equal("g.v(1).out('knows').copySplit(_().out('created').name,_().age).exhaustMerge()");
+      });
+    });
+
     describe('.ifThenElse()', function () {
       it("should chain .ifThenElse()", function() {
         var query = gRex.gremlin().g.v(1).out().ifThenElse("{it.name=='josh'}{it.age}{it.name}");
