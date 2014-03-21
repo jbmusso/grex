@@ -3,44 +3,19 @@ gRex
 
 [Gremlin](https://github.com/tinkerpop/gremlin/wiki) inspired [Rexster Graph Server](https://github.com/tinkerpop/rexster/wiki) client for NodeJS and the browser.
 
-## Dependencies
+gRex is a Gremlin generating library written in JavaScript which helps you build, send over HTTP and execute arbitrary strings of Gremlin against any Blueprint compliant Graph database.
 
-__batch kibble__ (Rexster extension)
+If you're interested in an Object-to-Graph mapper library, please checkout [Mogwai.js](https://github.com/gulthor/mogwai).
 
-Move the batch-kibble-XXX.jar, located in the modules ``lib`` folder, to the ``/ext`` folder under the rexster server directory.
-Add an ``allow`` tag to the database extensions configuration in the `rexster.xml` file.
-
-    <extensions>
-        <allows>
-            <allow>tp:gremlin</allow>
-            <allow>tp:batch</allow>
-        </allows>
-    </extensions>
-
-Batch kibble is currently required for handling transactions over http. It will be removed when transactions will be handled by the gremlin extension.
-
-## Usage
+## Installation
 
 gRex can be loaded as:
 
--   a ``<script>`` tag in the browser. Files are located in the client directory.
-
-    ```javascript
-     <script type="text/javascript" src="grex.min.js"></script>
-    ```
-
-    this exposes gRex as a global variable.
 
 -   a Node.js and CommonJS module available from NPM as the ``grex`` package
 
     ```
     $ npm install grex
-    ```
-
-    then in Node
-
-    ```
-    var gRex = require('grex');
     ```
 
 -   a RequireJS module
@@ -51,127 +26,114 @@ gRex can be loaded as:
     });
     ```
 
-You will notice that in the examples tokens are passed as string (i.e. 'T.gt'). However, gRex also exposes some objects for convenience to make it feel more natural. To access the objects reference them like so:
+-   a ``<script>`` tag in the browser. Files are located in the `/client` directory.
 
-    var T = gRex.T;
-    var Contains = gRex.Contains;
-    var Vertex = gRex.Vertex;
-    var Edge = gRex.Edge;
+    ```javascript
+     <script type="text/javascript" src="grex.min.js"></script>
+    ```
+
+    this exposes gRex as a global variable.
+
+    This is essentially useful when prototyping applications and obviously should not be used in production with graph database containing sensitive informations.
 
 
-
-You can now use these objects in place of the string representation in your queries.
-
-## Connecting to a database
+## Quick start: connecting to a database and executing a query
 ```javascript
-    //connect takes optional Options object and returns a Promise
-    gRex.connect({ 'database': 'myGraphDB',
-                   'host': 'my.host.com',
-                   'port': 8000 })
-    .then(function(graphDB){
-      //once connected the return value is a reference to the graph
-      trxn = graphDB.begin();
+    var settings = {
+      'database': 'myGraphDB',
+      'host': 'localhost',
+      'port': 8182
+    };
 
-      t1 = trxn.addVertex({name:'Test1a'});
-      t2 = trxn.addVertex({name:'Test2a'});
-      trxn.addEdge(t1, t2, 'linked', {name:"ALabel"})
+    // connect() takes optional Options object and Node style callback
+    gRex.connect(settings, function(err, client) {
+      if (err) {
+        console.error(err);
+      }
 
-      trxn.commit().then(function(result){
-          console.log("Added new vertices successfully. -> ", result);
-      }, function(err) {
-          console.error(err)
-      });
+      // Initialize a Gremlin object to work with
+      var gremlin = client.gremlin();
+
+      // Start appending some code
+      gremlin.g.v(1); // gremlin.script === 'g.v(1)'
+
+      // Send script for execution, and return results
+      gremlin.exec(function(err, result) {
+        // ...
+      })
     });
 ```
-__N.B.__ You can also use ``connect()`` with _Node style callbacks_. For example:
-```javascript
-    //connect takes optional Options object and Node style callback
-    gRex.connect({ 'database': 'myGraphDB',
-                   'host': 'my.host.com',
-                   'port': 8000 }, function(err, graphDB){
 
-      if(err) console.error(err);
+Note that `connect()` also returns a thenable promise.
 
-      //once connected the return value is a reference to the graph
-      trxn = graphDB.begin();
-
-      t1 = trxn.addVertex({name:'Test1a'});
-      t2 = trxn.addVertex({name:'Test2a'});
-      trxn.addEdge(t1, t2, 'linked', {name:"ALabel"})
-
-      trxn.commit(function(err, result){
-          if(err) console.error(err);
-          console.log("Added new vertices successfully. -> ", result);
-      });
-    });
-```
 ## Introduction
 
-gRex tries to implement Gremlin syntax as closely as possible. However, there are some differences.
+gRex tries to implement Gremlin (Groovy flavored) syntax as closely as possible. However, there are some notable differences.
 
 * All method calls require brackets __()__, even if there are no arguments.
-* __Closures__ do not translate to javascript. Closures need to passed in as a string argument to gRex methods.
+* Closures currently need to passed in as a string argument to methods. This will likely change in the future ([see issue#22](https://github.com/gulthor/grex/issues/22)).
 
-    ```
+    ```javascript
     g.v(1).out().gather("{it.size()}");
 
     g.v(1).out().ifThenElse("{it.name=='josh'}{it.age}{it.name}");
     ```
-* __Comparators__ and __Float__'s are not native javascript Types so they need to be passed in as a string to gRex methods. Floats need to be suffixed with a 'f'.
+* __Comparators__ and __Float__'s are not native javascript Types so they currently need to be passed in as a string to gRex methods. Floats need to be suffixed with a 'f'. This will probably change in future versions of gRex.
 
     ```
     g.v(1).outE().has("weight", "T.gte", "0.5f").property("weight")
     ```
-* Certain methods cannot be implemented. Such as ``aggregate``, ``store``, ``table``, ``tree`` and ``fill``. These methods require a local object to populate with data, which cannot be done in this environment.
+* Certain methods cannot (yet) be easily implemented. Such as ``aggregate``, ``store``, ``table``, ``tree`` and ``fill``. These methods require a local object to populate with data, which cannot be easily done in this environment.
+* Tokens/Classes: You will notice that in the examples tokens are passed as string (i.e. 'T.gt'). However, gRex also exposes some objects for convenience to make it feel more natural. To access the objects, reference them like so:
 
-## Getting Started
+  ```javascript
+    var T = gRex.T;
+    var Contains = gRex.Contains;
+    var Vertex = gRex.Vertex;
+    var Edge = gRex.Edge;
+  ```
 
-A good resource to understand the Gremlin API is [GremlinDocs](http://gremlindocs.com/). Below are examples of gremlin and it's equivalent gRex syntax.
 
-###Options
+You can now use these objects in place of the string representation in your queries.
 
-Options specify the location and name of the database.
 
-####host (default: localhost)
+## Getting started
 
-Location of Rexster server
+A good resource to understand the Gremlin API is [GremlinDocs](http://gremlindocs.com/). Below are examples of Gremlin and it's equivalent gRex syntax.
 
-####port (default: 8182)
+gRex uses the [Q](http://documentup.com/kriskowal/q/) module to return a Promise when making Ajax calls. Most asynchronous methods return a thenable promise, especially the `exec()` method.
 
-Rexster server port
+### Building Gremlin script
 
-####graph (default: tinkergraph)
+The main object you'll be working against is a instance of Gremlin class. Each object is basically appending strings to an internal `script` variable as you issue more commands.
 
-Graph database name
-
-####idRegex (default: false)
-
-This can remain as false, if IDs are number. If IDs are not numbers (i.e. alpha-numeric or string), but still pass parseFloat() test, then idRegex must be set. This property will enable gRex to distinguish between an ID and a float expression.
-
-```
-g.setOptions({ host: 'myDomain',
-               graph: 'myOrientdb',
-               idRegex: /^[0-9]+:[0-9]+$/
-             });
+```javascript
+var gremlin = gRex.gremlin() // Instantiate a new Gremlin script
+gremlin.g.V('name', 'marko').out() // gremlin.script == "g.V('name','marko').out"
 ```
 
-###Running Gremlin queries
-gRex uses the [Q](http://documentup.com/kriskowal/q/) module to return a Promise when making Ajax calls. GET requests are invoked with ``get()`` and the callback is captured by ``then(success, error);``. However, if you prefer Node style callbacks, simply pass the callback to ``get()``.
+### Executing Gremlin script
 
-__Example: Calls invoked with Promise style callback__
+A Gremlin script will be immediadly send to Rexster for execution when you issue the `.exec()` command.
+
+The previous example can thus be executed the following way :
+
 ```
-g.V('name', 'marko').out().get().then(function(result){
-                                        console.log(result);
-                                      },
-                                      function(err){
-                                        console.error(err);
-                                      });
-```
-__Example: Calls invoked with Node style callback__
-```
-g.V('name', 'marko').out().get(function(err, result) {
-    if(err) console.error(err);
-    console.log(result);
+// Node style callback
+gremlin.exec(function(err, result) {
+  if(err) {
+    console.error(err);
+  }
+  console.log(result);
+});
+
+// Promise style
+gremlin.exec()
+.then(function(result){
+  console.log(result);
+},
+function(err){
+  console.error(err);
 });
 ```
 ###Working with the Database
@@ -215,6 +177,8 @@ gRex>     trxn.commit(function(err, result){
                 console.log(result);
              });
 ```
+
+
 
 ## Property Data Types
 
@@ -482,6 +446,38 @@ trxn.commit().then
         console.log(err)
     });
 ```
+
+## API
+
+### gRex.connect()
+
+Options specify the location and name of the database.
+
+####host (default: localhost)
+
+Location of Rexster server
+
+####port (default: 8182)
+
+Rexster server port
+
+####graph (default: tinkergraph)
+
+Graph database name
+
+####idRegex (default: false)
+
+This can remain as false, if IDs are number. If IDs are not numbers (i.e. alpha-numeric or string), but still pass parseFloat() test, then idRegex must be set. This property will enable gRex to distinguish between an ID and a float expression.
+
+```
+g.setOptions({ host: 'myDomain',
+               graph: 'myOrientdb',
+               idRegex: /^[0-9]+:[0-9]+$/
+             });
+```
+
+
+
 
 ## Author
 
