@@ -102,18 +102,16 @@ module.exports = (function() {
    * @param {Array} args Method's arguments
    */
   Gremlin.prototype.appendPipes = function(methodName, args) {
+    var argumentList = [];
     args = _.isArray(args[0]) ? args[0] : args;
-
-    this.append("." + methodName + "(");
 
     _.each(args, function(arg) {
       var argObj = new Argument(arg, this.gRex.options);
       var partialScript = (arg.gremlin && arg.gremlin.script) || argObj.parse();
-      this.append(partialScript + ",");
+      argumentList.push(partialScript);
     }, this);
 
-    this.script = this.script.slice(0, -1); // Remove trailing comma
-    this.append(")");
+    this.append('.' + methodName + '('+ argumentList.join(',') +')');
   };
 
   /**
