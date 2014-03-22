@@ -16,8 +16,6 @@ module.exports = (function () {
 
   ArgumentList.prototype.toString = function() {
     var appendedArguments = this.appendedArguments.join(',');
-    // Remove unnecessary commas
-    appendedArguments = appendedArguments.substring(1, appendedArguments.length - 1);
 
     return '(' + this.parenthesizedArguments.join(',') + ')' + appendedArguments;
   };
@@ -25,17 +23,17 @@ module.exports = (function () {
   ArgumentList.prototype.buildArguments = function(retainArray) {
     _.each(this.rawArgs, function(arg) {
       if (this.isClosure(arg)) {
-        arg = new ClosureArgument(arg, this.options);
-        this.appendedArguments.push(arg.toString());
-      } else if(retainArray && _.isArray(arg)) {
-        arg = new Argument(arg, this.options);
-        this.parenthesizedArguments.push("[" + arg.parse() + "]");
+        built = new ClosureArgument(arg, this.options);
+        built.updateList(this);
+      } else if (retainArray && _.isArray(arg)) {
+        built = new Argument(arg, this.options);
+        this.parenthesizedArguments.push("[" + built.parse() + "]");
       } else if (_.isObject(arg)) {
-        arg = new ObjectArgument(arg);
-        this.parenthesizedArguments.push(arg.toString());
+        built = new ObjectArgument(arg);
+        built.updateList(this);
       } else {
-        arg = new Argument(arg, this.options);
-        this.parenthesizedArguments.push(arg.parse());
+        built = new Argument(arg, this.options);
+        built.updateList(this);
       }
     }, this);
   };
