@@ -14,17 +14,5 @@ module.exports = (function () {
     return argList.toString();
   };
 
-  ArgumentHandler.prototype.handleArray = function(args) {
-    var argumentList = [];
-
-    _.each(args, function(arg) {
-      argumentList.push("[" + this.parse(arg) + "]");
-    }, this);
-
-    return '(' + argumentList.join(',') + ')';
-  };
-
-
   return ArgumentHandler;
-
 })();

@@ -37,7 +37,7 @@ module.exports = (function() {
    */
   Gremlin.prototype._ = function() {
     var gremlin = new Gremlin(this.gRex);
-    gremlin.append('_' + gremlin.argumentHandler.handleArray(arguments));
+    gremlin.append('_' + gremlin.argumentHandler.buildString(arguments));
 
     return new Pipeline(gremlin);
   };
