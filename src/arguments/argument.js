@@ -48,13 +48,5 @@ module.exports = (function () {
     return _.isString(this.raw) && graphRegex.test(this.raw);
   };
 
-  Argument.prototype.isClosure = function(val) {
-    var closureRegex = /^\{.*\}$/;
-
-    return _.isString(val) && closureRegex.test(val);
-  };
-
-
-
   return Argument;
 })();
