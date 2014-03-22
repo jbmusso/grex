@@ -6,7 +6,7 @@ module.exports = (function () {
     Argument.apply(this, arguments);
   }
 
-  Argument.prototype.toString = function() {
+  ClosureArgument.prototype.toString = function() {
     return this.raw;
   };
 

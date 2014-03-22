@@ -15,13 +15,17 @@ module.exports = (function () {
   }
 
   ArgumentList.prototype.toString = function() {
-    return '(' + this.parenthesizedArguments.join(',') + ')' + this.appendedArguments.join(',');
+    var appendedArguments = this.appendedArguments.join(',');
+    // Remove unnecessary commas
+    appendedArguments = appendedArguments.substring(1, appendedArguments.length - 1);
+
+    return '(' + this.parenthesizedArguments.join(',') + ')' + appendedArguments;
   };
 
   ArgumentList.prototype.buildArguments = function(retainArray) {
     _.each(this.rawArgs, function(arg) {
       if (this.isClosure(arg)) {
-        arg = new ClosureArgument(arg);
+        arg = new ClosureArgument(arg, this.options);
         this.appendedArguments.push(arg.toString());
       } else if(retainArray && _.isArray(arg)) {
         arg = new Argument(arg, this.options);
