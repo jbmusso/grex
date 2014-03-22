@@ -2,6 +2,7 @@ var _ = require("lodash");
 
 var Graph = require('./graph');
 var Pipeline = require('./pipeline');
+var Argument = require('./arguments/argument');
 
 module.exports = (function() {
   function Gremlin(gRex, options) {
@@ -36,7 +37,7 @@ module.exports = (function() {
    */
   Gremlin.prototype._ = function() {
     var gremlin = new Gremlin(this.gRex);
-    gremlin.append('_' + gremlin.argumentHandler.handleArray(arguments));
+    gremlin.append('_' + gremlin.argumentHandler.buildString(arguments));
 
     return new Pipeline(gremlin);
   };
@@ -77,7 +78,7 @@ module.exports = (function() {
   Gremlin.prototype.appendMain = function(methodName, args) {
     args = _.isArray(args[0]) ? args[0] : args;
 
-    this.append('.' + methodName + this.argumentHandler.build(args));
+    this.append('.' + methodName + this.argumentHandler.buildString(args));
   };
 
   /**
@@ -101,17 +102,16 @@ module.exports = (function() {
    * @param {Array} args Method's arguments
    */
   Gremlin.prototype.appendPipes = function(methodName, args) {
+    var argumentList = [];
     args = _.isArray(args[0]) ? args[0] : args;
 
-    this.append("." + methodName + "(");
-
     _.each(args, function(arg) {
-      var partialScript = (arg.gremlin && arg.gremlin.script) || this.argumentHandler.parse(arg);
-      this.append(partialScript + ",");
+      var argObj = new Argument(arg, this.gRex.options);
+      var partialScript = (arg.gremlin && arg.gremlin.script) || argObj.parse();
+      argumentList.push(partialScript);
     }, this);
 
-    this.script = this.script.slice(0, -1); // Remove trailing comma
-    this.append(")");
+    this.append('.' + methodName + '('+ argumentList.join(',') +')');
   };
 
   /**
@@ -122,18 +122,17 @@ module.exports = (function() {
    * @param {Array} args Method's arguments
    */
   Gremlin.prototype.appendCollection = function(methodName, args) {
-    var param = '';
+    var argumentList = [];
 
     if (_.isArray(args[0])) {
       // Passing in an array of Pipeline with Gremlin script as arguments
       _.each(args[0], function(pipeline) {
-        param += pipeline.gremlin.script;
-        param += ",";
+        argumentList.push(pipeline.gremlin.script);
       });
 
-      this.append("." + methodName + "([" + param + "])");
+      this.append("." + methodName + "([" + argumentList.join(',') + "])");
     } else {
-      this.append("." + methodName + this.argumentHandler.build(args[0]));
+      this.append("." + methodName + this.argumentHandler.buildString(args[0]));
     }
   };
 

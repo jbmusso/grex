@@ -7,7 +7,7 @@ var Graph = require("./graph");
 var classes = require("./classes");
 
 var ResultFormatter = require("./resultformatter");
-var ArgumentHandler = require("./argumenthandler");
+var ArgumentHandler = require("./arguments/argumenthandler");
 
 
 module.exports = (function(){

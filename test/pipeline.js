@@ -78,12 +78,12 @@ describe('Gremlin steps', function() {
 
       it('should handle an array of strings', function() {
         var query = gRex.gremlin().g.v(1).as('x').out('knows').as('y').select(["y"]);
-        query.gremlin.script.should.equal("g.v(1).as('x').out('knows').as('y').select([\"y\"])");
+        query.gremlin.script.should.equal("g.v(1).as('x').out('knows').as('y').select(['y'])");
       });
 
       it('should handle an array of strings & 1 post-processing closure', function() {
         var query = gRex.gremlin().g.v(1).as('x').out('knows').as('y').select(["y"],"{it.name}");
-        query.gremlin.script.should.equal("g.v(1).as('x').out('knows').as('y').select([\"y\"]){it.name}");
+        query.gremlin.script.should.equal("g.v(1).as('x').out('knows').as('y').select(['y']){it.name}");
       });
 
       it('should handle no argument & 2 post-processing closures', function() {
@@ -146,7 +146,7 @@ describe('Gremlin steps', function() {
         var gremlin = gRex.gremlin();
         var query = gremlin.g.V().retain([gremlin.g.v(1), gremlin.g.v(2), gremlin.g.v(3)]);
 
-        query.gremlin.script.should.equal("g.V().retain([g.v(1),g.v(2),g.v(3),])");
+        query.gremlin.script.should.equal("g.V().retain([g.v(1),g.v(2),g.v(3)])");
       });
     });
 
