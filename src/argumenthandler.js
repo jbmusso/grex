@@ -17,13 +17,12 @@ module.exports = (function () {
       if (this.isClosure(arg)) {
         arg = new ClosureArgument(arg);
         append.push(arg.toString());
+      } else if(retainArray && _.isArray(arg)) {
+        arg = new Argument(arg, this.options);
+        argList.push("[" + arg.parse() + "]");
       } else if (_.isObject(arg)) {
         arg = new ObjectArgument(arg);
         argList.push(arg.toString());
-      } else if(retainArray && _.isArray(arg)) {
-        // console.log(obj);
-        arg = new Argument(arg, this.options);
-        argList.push("[" + arg.parse() + "]");
       } else {
         arg = new Argument(arg, this.options);
         argList.push(arg.parse());
