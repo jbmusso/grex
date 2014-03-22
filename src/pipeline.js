@@ -113,7 +113,7 @@ module.exports = (function () {
   };
 
   Pipeline.prototype.select = function() {
-    this.gremlin.append('.select' + this.gremlin.argumentHandler.build(arguments, true));
+    this.gremlin.append('.select' + this.gremlin.argumentHandler.buildString(arguments, true));
     return this;
   };
 

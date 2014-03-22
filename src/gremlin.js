@@ -78,7 +78,7 @@ module.exports = (function() {
   Gremlin.prototype.appendMain = function(methodName, args) {
     args = _.isArray(args[0]) ? args[0] : args;
 
-    this.append('.' + methodName + this.argumentHandler.build(args));
+    this.append('.' + methodName + this.argumentHandler.buildString(args));
   };
 
   /**
@@ -135,7 +135,7 @@ module.exports = (function() {
 
       this.append("." + methodName + "([" + param + "])");
     } else {
-      this.append("." + methodName + this.argumentHandler.build(args[0]));
+      this.append("." + methodName + this.argumentHandler.buildString(args[0]));
     }
   };
 

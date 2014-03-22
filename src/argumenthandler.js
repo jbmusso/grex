@@ -9,7 +9,7 @@ module.exports = (function () {
     this.options = options;
   }
 
-  ArgumentHandler.prototype.build = function(args, retainArray) {
+  ArgumentHandler.prototype.buildString = function(args, retainArray) {
     var argList = [];
     var append = [];
 
