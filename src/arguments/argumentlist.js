@@ -21,15 +21,15 @@ module.exports = (function () {
   };
 
   ArgumentList.prototype.buildArguments = function(retainArray) {
-    _.each(this.rawArgs, function(arg) {
-      if (this.isClosure(arg)) {
-        built = new ClosureArgument(arg, this);
-      } else if (retainArray && _.isArray(arg)) {
-        built = new ArrayArgument(arg, this);
-      } else if (_.isObject(arg)) {
-        built = new ObjectArgument(arg, this);
+    _.each(this.rawArgs, function(rawArg) {
+      if (this.isClosure(rawArg)) {
+        built = new ClosureArgument(rawArg, this);
+      } else if (retainArray && _.isArray(rawArg)) {
+        built = new ArrayArgument(rawArg, this);
+      } else if (_.isObject(rawArg)) {
+        built = new ObjectArgument(rawArg, this);
       } else {
-        built = new Argument(arg, this);
+        built = new Argument(rawArg, this);
       }
 
       built.updateList(this);
