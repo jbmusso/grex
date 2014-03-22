@@ -2,6 +2,7 @@ var _ = require("lodash");
 
 var Graph = require('./graph');
 var Pipeline = require('./pipeline');
+var Argument = require('./arguments/argument');
 
 module.exports = (function() {
   function Gremlin(gRex, options) {
@@ -106,7 +107,8 @@ module.exports = (function() {
     this.append("." + methodName + "(");
 
     _.each(args, function(arg) {
-      var partialScript = (arg.gremlin && arg.gremlin.script) || this.argumentHandler.parse(arg);
+      var argObj = new Argument(arg, this.gRex.options);
+      var partialScript = (arg.gremlin && arg.gremlin.script) || argObj.parse();
       this.append(partialScript + ",");
     }, this);
 
