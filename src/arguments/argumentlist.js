@@ -3,7 +3,7 @@ var _ = require('lodash');
 var Argument = require('./argument');
 var ClosureArgument = require('./closure');
 var ObjectArgument = require('./object');
-
+var ArrayArgument = require('./array');
 
 module.exports = (function () {
   function ArgumentList(rawArgs, options) {
@@ -23,18 +23,16 @@ module.exports = (function () {
   ArgumentList.prototype.buildArguments = function(retainArray) {
     _.each(this.rawArgs, function(arg) {
       if (this.isClosure(arg)) {
-        built = new ClosureArgument(arg, this.options);
-        built.updateList(this);
+        built = new ClosureArgument(arg, this);
       } else if (retainArray && _.isArray(arg)) {
-        built = new Argument(arg, this.options);
-        this.parenthesizedArguments.push("[" + built.parse() + "]");
+        built = new ArrayArgument(arg, this);
       } else if (_.isObject(arg)) {
-        built = new ObjectArgument(arg);
-        built.updateList(this);
+        built = new ObjectArgument(arg, this);
       } else {
-        built = new Argument(arg, this.options);
-        built.updateList(this);
+        built = new Argument(arg, this);
       }
+
+      built.updateList(this);
     }, this);
   };
 
