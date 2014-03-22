@@ -1,8 +1,8 @@
 var _ = require("lodash");
 
-var Argument = require('./arguments/argument');
-var ClosureArgument = require('./arguments/closure');
-var ObjectArgument = require('./arguments/object');
+var Argument = require('./argument');
+var ClosureArgument = require('./closure');
+var ObjectArgument = require('./object');
 
 module.exports = (function () {
   function ArgumentHandler(options) {
