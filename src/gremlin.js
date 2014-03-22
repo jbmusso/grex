@@ -124,16 +124,15 @@ module.exports = (function() {
    * @param {Array} args Method's arguments
    */
   Gremlin.prototype.appendCollection = function(methodName, args) {
-    var param = '';
+    var argumentList = [];
 
     if (_.isArray(args[0])) {
       // Passing in an array of Pipeline with Gremlin script as arguments
       _.each(args[0], function(pipeline) {
-        param += pipeline.gremlin.script;
-        param += ",";
+        argumentList.push(pipeline.gremlin.script);
       });
 
-      this.append("." + methodName + "([" + param + "])");
+      this.append("." + methodName + "([" + argumentList.join(',') + "])");
     } else {
       this.append("." + methodName + this.argumentHandler.buildString(args[0]));
     }

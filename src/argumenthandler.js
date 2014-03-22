@@ -34,15 +34,13 @@ module.exports = (function () {
   };
 
   ArgumentHandler.prototype.handleArray = function(args) {
-    var argumentList = '';
+    var argumentList = [];
 
     _.each(args, function(arg) {
-      argumentList += "[" + this.parse(arg) + "],";
+      argumentList.push("[" + this.parse(arg) + "]");
     }, this);
 
-    argumentList = argumentList.slice(0, -1);
-
-    return '(' + argumentList + ')';
+    return '(' + argumentList.join(',') + ')';
   };
 
   ArgumentHandler.prototype.isClosure = function(val) {
