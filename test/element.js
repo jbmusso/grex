@@ -1,80 +1,97 @@
-var ElementFactory = require("../src/elementfactory");
-
+var gRex = require('../index.js');
 var Vertex = require("../src/elements/vertex");
-var Edge = require("../src/elements/edge");
+var Gremlin = require('../src/gremlin');
 
-var edge, vertex;
 
-describe('Elements', function() {
-  describe('Factory', function() {
-    it('should build an Element of Vertex class', function() {
-      vertex = ElementFactory.build("vertex");
-      vertex.should.be.instanceof(Vertex);
-    });
+describe('Graph elements', function() {
+  describe('.setProperty()', function() {
+    it('should set property', function() {
+      var gremlin = new Gremlin(gRex);
+      var vertex = new Vertex(gremlin, 'v');
 
-    it('should build an Element of Edge class', function() {
-      edge = ElementFactory.build("edge");
-      edge.should.be.instanceof(Edge);
-      edge.should.have.property('_type', 'edge');
+      vertex.setProperty('name', 'bob');
+      vertex.should.have.property('name', 'bob');
+      gremlin.script.should.equal("\nv.setProperty('name','bob')");
     });
   });
 
-  describe('Vertex element', function() {
-    describe('Instantiation', function() {
-      it('should have a _type property set to "vertex"', function() {
-          vertex.should.have.property('_type', 'vertex');
-      });
+  describe('.addProperty()', function() {
+    it('should add property', function() {
+      var gremlin = new Gremlin(gRex);
+      var vertex = new Vertex(gremlin, 'v');
 
-      it('should have an _id property set to "null"', function() {
-          vertex.should.have.property('_id', null);
-      });
-    });
-
-    describe('setProperty', function() {
-      before(function() {
-        vertex.setProperty('name', 'bob');
-      });
-
-      it('should set properties', function() {
-        vertex.should.have.property('name', 'bob');
-      });
-    });
-
-    describe('setProperties', function() {
-      before(function() {
-        vertex.setProperties({
-          'foo': 'bar',
-          'baz': 'duh'
-        });
-      });
-
-      it('should set properties', function() {
-        vertex.should.have.property('foo', 'bar');
-        vertex.should.have.property('baz', 'duh');
-      });
-    });
-
-    describe('getProperties', function() {
-      var vertexProperties;
-      before(function() {
-        vertexProperties = vertex.getProperties();
-      });
-
-      it('should return properties', function() {
-        vertexProperties.should.have.property('_type', 'vertex');
-        vertexProperties.should.have.property('_id', null);
-        vertexProperties.should.have.property('name', 'bob');
-      });
+      vertex.addProperty('name', 'alice');
+      vertex.should.have.property('name', 'alice');
+      gremlin.script.should.equal("\nv.addProperty('name','alice')");
     });
   });
 
-  describe('Edge element', function() {
-    it('should have a _type property set to "vertex"', function() {
-        edge.should.have.property('_type', 'edge');
-    });
+  describe('.setProperties()', function() {
+    it('should set properties', function() {
+      var gremlin = new Gremlin(gRex);
+      var vertex = new Vertex(gremlin, 'v');
+      vertex.setProperties({
+        'foo': 'bar',
+        'baz': 'duh'
+      });
+      vertex.should.have.property('foo', 'bar');
+      vertex.should.have.property('baz', 'duh');
 
-    it('should have an _id property set to "null"', function() {
-        edge.should.have.property('_id', null);
+      gremlin.script.should.equal('\nv.setProperties(["foo":"bar","baz":"duh"])');
     });
   });
+
+  describe('.addProperties()', function() {
+    it('should add properties', function() {
+      var gremlin = new Gremlin(gRex);
+      var vertex = new Vertex(gremlin, 'v');
+      vertex.addProperties({
+        'foo': 'bar',
+        'baz': 'duh'
+      });
+      vertex.should.have.property('foo', 'bar');
+      vertex.should.have.property('baz', 'duh');
+
+      gremlin.script.should.equal('\nv.addProperties(["foo":"bar","baz":"duh"])');
+    });
+  });
+
+  describe('.getProperties()', function() {
+    it('should return properties', function() {
+      var gremlin = new Gremlin(gRex);
+      var vertex = new Vertex(gremlin, 'v');
+      vertex.setProperty('name', 'bob');
+
+      var vertexProperties = vertex.getProperties();
+      vertexProperties.should.have.property('_type', 'vertex');
+      vertexProperties.should.have.property('_id', null);
+      vertexProperties.should.have.property('name', 'bob');
+    });
+  });
+
+  describe('.remove()', function() {
+    it('should remove element', function() {
+      var gremlin = new Gremlin(gRex);
+      var vertex = new Vertex(gremlin, 'v');
+
+      vertex.remove();
+      gremlin.script.should.equal('\nv.remove()');
+    });
+  });
+
+  describe('.keys()', function() {
+    it("should chain .keys()", function() {
+      var query = gRex.gremlin().g.v(1).keys();
+      query.gremlin.script.should.equal("g.v(1).keys()");
+    });
+  });
+
+  describe('.values', function() {
+    it("should chain .values()", function() {
+      var query = gRex.gremlin().g.v(1).values();
+      query.gremlin.script.should.equal("g.v(1).values()");
+    });
+  });
+
+
 });

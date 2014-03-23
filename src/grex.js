@@ -1,65 +1,88 @@
-var q = require("q"),
-    _ = require("lodash"),
-    merge = require("./utils").merge,
-    Transaction = require("./transaction/transaction"),
-    queryMain = require("./gremlin");
+var Q = require("q"),
+    _ = require("lodash");
+var request = require("request");
+
+var Gremlin = require('./gremlin');
+var Graph = require("./graph");
+var classes = require("./classes");
 
 var ResultFormatter = require("./resultformatter");
+var ArgumentHandler = require("./arguments/argumenthandler");
 
 
 module.exports = (function(){
-    function Grex(options) {
-        this.options = _.defaults(options || {
-            'host': 'localhost',
-            'port': 8182,
-            'graph': 'tinkergraph',
-            'idRegex': false // OrientDB id regex -> /^[0-9]+:[0-9]+$/
-        });
+  function Grex(options) {
+    this.options = _.defaults(options || {
+      'host': 'localhost',
+      'port': 8182,
+      'graph': 'tinkergraph',
+      'idRegex': false // OrientDB id regex -> /^[0-9]+:[0-9]+$/
+    });
 
-        this.typeMap = {};
-        this.resultFormatter = new ResultFormatter();
+    this.resultFormatter = new ResultFormatter();
+    this.argumentHandler = new ArgumentHandler(this.options);
+
+    _.extend(this, classes);
+    this.ClassTypes = classes;
+  }
+
+  Grex.prototype.connect = function(options, callback) {
+    if(typeof options === 'function'){
+      callback = options;
+      options = undefined;
     }
 
-    Grex.prototype.connect = function(){
-        return q.fcall(function() {
-            return this;
-        }.bind(this));
+    return Q.fcall(function() {
+      return this;
+    }.bind(this))
+    .nodeify(callback);
+  };
+
+  /**
+   * Send a Gremlin script for execution on the server, fetch and format
+   * results.
+   *
+   * @param {String} script A raw Gremlin (Groovy) script to execute
+   */
+  Grex.prototype.exec = function(script) {
+    var deferred = Q.defer();
+
+    var uri = '/graphs/' + this.options.graph + '/tp/gremlin';
+    var url = 'http://' + this.options.host + ':' + this.options.port + uri;
+
+    var options = {
+      url: url,
+      qs: {
+        script: script,
+        'rexster.showTypes': true
+      },
+      json: true
     };
 
-    Grex.prototype.V = queryMain('V', true);
-    Grex.prototype._ = queryMain('_', true);
-    Grex.prototype.E = queryMain('E', true);
-    Grex.prototype.V =  queryMain('V', true);
+    request.get(options, function(err, res, body) {
+      if (err) {
+        return deferred.reject(err);
+      }
 
-    //Methods
-    Grex.prototype.e = queryMain('e', true);
-    Grex.prototype.idx = queryMain('idx', true);
-    Grex.prototype.v = queryMain('v', true);
+      var transformedResults = this.transformResults(body.results);
+      body.results = transformedResults.results;
+      body.typeMap = transformedResults.typeMap;
 
-    //Indexing
-    Grex.prototype.createIndex = queryMain('createIndex', true);
-    Grex.prototype.createKeyIndex = queryMain('createKeyIndex', true);
-    Grex.prototype.getIndices = queryMain('getIndices', true);
-    Grex.prototype.getIndexedKeys = queryMain('getIndexedKeys', true);
-    Grex.prototype.getIndex = queryMain('getIndex', true);
-    Grex.prototype.dropIndex = queryMain('dropIndex', true);
-    Grex.prototype.dropKeyIndex = queryMain('dropKeyIndex', true);
+      return deferred.resolve(body);
+    }.bind(this));
 
-    //Types
-    Grex.prototype.makeKey = queryMain('makeKey', true);
+    return deferred.promise;
+  };
 
-    Grex.prototype.clear =  queryMain('clear', true);
-    Grex.prototype.shutdown = queryMain('shutdown', true);
-    Grex.prototype.getFeatures = queryMain('getFeatures', true);
+  Grex.prototype.gremlin = function(options) {
+    var gremlin = new Gremlin(this, options);
 
-    // Titan specifics
-    Grex.prototype.getTypes = queryMain('getTypes', true);
+    return gremlin;
+  };
 
-    Grex.prototype.begin = function (typeMap) {
-        typeMap = typeMap ? merge(typeMap, this.typeMap) : this.typeMap;
+  Grex.prototype.transformResults = function(results) {
+    return this.resultFormatter.formatResults(results);
+  };
 
-        return new Transaction(this.options, typeMap);
-    };
-
-    return Grex;
+  return Grex;
 })();
