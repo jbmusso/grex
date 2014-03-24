@@ -1,79 +1,261 @@
-gRex
+Grex
 ====
 
 [Gremlin](https://github.com/tinkerpop/gremlin/wiki) inspired [Rexster Graph Server](https://github.com/tinkerpop/rexster/wiki) client for NodeJS and the browser.
 
-gRex is a Gremlin generating library written in JavaScript which helps you build, send over HTTP and execute arbitrary strings of Gremlin against any Blueprint compliant Graph database.
+Grex is a Gremlin generating library written in JavaScript which helps you build, send over HTTP and execute arbitrary strings of Gremlin against any Blueprint compliant Graph database.
 
-If you're interested in an Object-to-Graph mapper library, please checkout [Mogwai.js](https://github.com/gulthor/mogwai).
+If you're interested in an Object-to-Graph mapper library, you may want to also have a look at [Mogwai.js](https://github.com/gulthor/mogwai).
 
 ## Installation
 
-gRex can be loaded as:
+Grex works both in Node.js or in the browser.
 
-
--   a Node.js and CommonJS module available from NPM as the ``grex`` package
-
-Note: all asynchronous methods in gRex accept a dual callback/promise API (using [kriskowal/q](https://github.com/kriskowal/q)). Examples will however be given with the default Node.js callback style, with an error as first parameter.
-
--   a RequireJS module
-
-    // Once connected the return value is a reference to the graph
-    tx = g.begin();
-    t1 = tx.addVertex({ name: 'Test1a' });
-    t2 = tx.addVertex({ name: 'Test2a' });
-    tx.addEdge(t1, t2, 'linked', { name: "ALabel" })
-
-    tx.commit(function(err, result) {
-        if (err) console.error(err);
-        console.log("Added new vertices successfully. -> ", result);
-    });
-  });
+```
+$ npm install grex
 ```
 
--   a ``<script>`` tag in the browser. Files are located in the `/client` directory.
-
-    ```javascript
-     <script type="text/javascript" src="grex.min.js"></script>
-    ```
-
-    this exposes gRex as a global variable.
-
-    This is essentially useful when prototyping applications and obviously should not be used in production with graph database containing sensitive informations.
+You may also wish to use Grex in the browser, either as a RequireJS module or by inserting a `<script>` tag. Using Grex in the browser is essentially useful when prototyping applications and obviously should not be used in production with graph database containing sensitive informations.
 
 
-## Quick start: connecting to a database and executing a query
+## Quick start
+
+Grex does 3 things : connect to a database, generate a Gremlin (Groovy flavored string) and send the string for execution (retrieving the results if any).
+
 ```javascript
-    var settings = {
-      'database': 'myGraphDB',
-      'host': 'localhost',
-      'port': 8182
-    };
+var settings = {
+  'database': 'myGraphDB',
+  'host': 'localhost',
+  'port': 8182
+};
 
-    // connect() takes optional Options object and Node style callback
-    gRex.connect(settings, function(err, client) {
-      if (err) {
-        console.error(err);
-      }
+// 1. connect() takes two optional parameters: a settings Object and a Node style callback
+Grex.connect(settings, function(err, client) {
+  if (err) {
+    console.error(err);
+  }
 
-      // Initialize a Gremlin object to work with
-      var gremlin = client.gremlin();
+  // 2. Initialize a Gremlin object to work with
+  var gremlin = client.gremlin();
 
-      // Start appending some code
-      gremlin.g.v(1); // gremlin.script === 'g.v(1)'
+  // Start appending some code
+  gremlin.g.v(1); // gremlin.script === 'g.v(1)'
 
-      // Send script for execution, and return results
-      gremlin.exec(function(err, result) {
-        // ...
-      })
-    });
+  // 3. Send script for execution, and return a response with the results (if any)
+  gremlin.exec(function(err, response) {
+    // ...
+  })
+});
 ```
 
-Note that `connect()` also returns a thenable promise.
+## Documentation
 
-## Introduction
+Two good resources to understand the Gremlin API are [GremlinDocs](http://gremlindocs.com/) and [SQL2Gremlin](http://sql2gremlin.com).
 
-gRex tries to implement Gremlin (Groovy flavored) syntax as closely as possible. However, there are some notable differences.
+Grex uses the [Q](http://documentup.com/kriskowal/q/) module to return a Promise when calling the asynchronous `exec()` method.
+
+### Basic usage
+
+#### Building a Gremlin script
+
+The main object you'll be working with is an instance of Gremlin class.
+
+```javascript
+var gremlin = Grex.gremlin() // Instantiate a new Gremlin script class.
+gremlin.g.V('name', 'marko').out() // Appends strings
+// gremlin.script == "g.V('name','marko').out"
+```
+
+Grex exposes `Graph`, `Pipeline`, `Vertex` and `Edge` wrapper classes with multiple methods which help you automatically generate a valid Gremlin string.
+
+Each Gremlin instance is basically appending strings to an internal `script` variable as you issue more commands. Grex provides many high level method you should use when building your script (though experts are free to hack around and directly use the lower level Gremlin.line() or Gremlin.append() methods at their own risks).
+
+#### Executing Gremlin script
+
+A Gremlin script will be immediadly send to Rexster for execution when you issue the `.exec()` command.
+
+The previous example can thus be executed the following way :
+
+```javascript
+// Node style callback
+gremlin.exec(function(err, response) {
+  if(err) {
+    console.error(err);
+  }
+  console.log(response);
+});
+```
+
+### Transactions
+
+Multiple vertices and edges can be added in a transaction over one single http call.
+
+```javascript
+var gremlin = client.gremlin();
+var v1 = g.addVertex.addVertex({k1:'v1', 'k2':'v2', k3:'v3', id: 100}, 'vA');
+var v2 = g.addVertex.addVertex({k1:'v1', 'k2':'v2', k3:'v3', id: 200}, 'vB');
+g.addVertex.addEdge(v1, v2, 'pal' , { weight: '0.75f' });
+
+gremlin.exec(function(err, response) {
+  // Handle error or response
+})
+```
+
+This will generate and send the following Gremlin script for execution to Rexster:
+
+```groovy
+vA = g.addVertex(100, [k1: 'v1', k2: 'v2', k3: 'v3']);
+vB = g.addVertex(200, [k1: 'v1', k2: 'v2', k3: 'v3']);
+g.addEdge(vA, vB, 'pal', [weight: 0.75]);
+// Note that Grex will actually automatically strip spaces away
+```
+
+Because JavaScript lacks reflection, you're required to supply an optional string identifier as the last parameter. This identifier will be used in the generated Gremlin string.
+
+
+
+### API differences between Gremlin Groovy and Grex JavaScript
+
+For simplicity the callbacks are not included in the examples below. Gremlin generated strings are displayed first in the following examples.
+
+#### Support for multiple arguments or *Object* argument
+
+```groovy
+// Groovy
+g.V('name', 'marko').out
+```
+
+```javascript
+// JavaScript
+g.V('name', 'marko').out();
+g.V({name: 'marko'}).out();
+```
+
+#### Support for multiple arguments or *Array* argument
+```groovy
+// Groovy
+g.v(1, 4).out('knows', 'created').in
+```
+
+```javascript
+// JavaScript
+g.v(1, 4).out('knows', 'created').in();
+g.v([1, 4]).out(['knows', 'created']).in();
+```
+
+#### Array indexes
+
+```groovy
+// Groovy
+g.V[0].name
+```
+
+```javascript
+// JavaScript
+g.V().index(0).property('name');
+```
+
+#### Array ranges
+
+```groovy
+// Groovy
+g.V[0..<2].name
+```
+
+```javascript
+/// JavaScript
+g.V().range('0..<2').property('name');
+```
+
+#### Comparison tokens
+
+Comparison tokens are currently passed in as strings.
+
+```groovy
+// Groovy
+g.E.has('weight', T.gt, 0.5f).outV.transform{[it.id,it.age]}
+```
+
+```javascript
+// JavaScript
+g.E().has('weight', 'T.gt', '0.5f').outV().transform('{[it.id,it.age]}');
+```
+
+#### Passing of pipelines
+
+```groovy
+// Groovy
+g.V.and(_().both("knows"), _().both("created"))
+```
+
+```javascript
+// JavaScript
+g.V().and(g._().both("knows"), g._().both("created"))
+```
+
+```groovy
+// Groovy
+g.v(1).outE.or(_().has('id', T.eq, "9"), _().has('weight', T.lt, 0.6f))
+```
+
+```javascript
+// JavaScript
+g.v(1).outE().or(g._().has('id', 'T.eq', 9), g._().has('weight', 'T.lt', '0.6f'));
+```
+
+```groovy
+// Groovy
+g.V.retain([g.v(1), g.v(2), g.v(3)])
+```
+
+```javascript
+// JavaScript
+g.V().retain([gremlin.g.v(1), gremlin.g.v(2), gremlin.g.v(3)])
+```
+
+
+#### Closures
+
+Closures are currently passed in as strings. See https://github.com/gulthor/grex/issues/22 for a discussion on using JavaScript functions.
+
+```groovy
+// Groovy
+g.V.out.groupBy{it.name}{it.in}{it.unique().findAll{i -> i.age > 30}.name}.cap
+```
+
+```javascript
+// JavaScript
+g.V().out().groupBy('{it.name}{it.in}{it.unique().findAll{i -> i.age > 30}.name}').cap()
+```
+
+#### Java classes
+
+Java classes are currently passed in either as strings or as JavaScript objects.
+```groovy
+// Groovy
+g.createIndex("my-index", Vertex.class)
+```
+
+```javascript
+// JavaScript
+g.createIndex("my-index", "Vertex.class")
+```
+
+#### Retrieving indexed Elements
+
+```groovy
+// Groovy
+g.idx("my-index")[[name:"marko"]]
+```
+
+```javascript
+// JavaScript
+g.idx("my-index", {name:"marko"});
+```
+
+### Notable differences
+
+Grex tries to implement Gremlin (Groovy flavored) syntax as closely as possible. However, there are some notable differences.
 
 * All method calls require brackets __()__, even if there are no arguments.
 * Closures currently need to passed in as a string argument to methods. This will likely change in the future ([see issue#22](https://github.com/gulthor/grex/issues/22)).
@@ -83,499 +265,83 @@ gRex tries to implement Gremlin (Groovy flavored) syntax as closely as possible.
 
     g.v(1).out().ifThenElse("{it.name=='josh'}{it.age}{it.name}");
     ```
-* __Comparators__ and __Float__'s are not native javascript Types so they currently need to be passed in as a string to gRex methods. Floats need to be suffixed with a 'f'. This will probably change in future versions of gRex.
+* __Comparators__ and __Float__'s are not native javascript Types so they currently need to be passed in as a string to Grex methods. Floats need to be suffixed with a 'f'. This will probably change in future versions of Grex.
 
     ```
     g.v(1).outE().has("weight", "T.gte", "0.5f").property("weight")
     ```
 * Certain methods cannot (yet) be easily implemented. Such as ``aggregate``, ``store``, ``table``, ``tree`` and ``fill``. These methods require a local object to populate with data, which cannot be easily done in this environment.
-* Tokens/Classes: You will notice that in the examples tokens are passed as string (i.e. 'T.gt'). However, gRex also exposes some objects for convenience to make it feel more natural. To access the objects, reference them like so:
+* Tokens/Classes: You will notice that in the examples tokens are passed as string (i.e. 'T.gt'). However, Grex also exposes some objects for convenience to make it feel more natural. To access the objects, reference them like so:
 
   ```javascript
-    var T = gRex.T;
-    var Contains = gRex.Contains;
-    var Vertex = gRex.Vertex;
-    var Edge = gRex.Edge;
+    var T = Grex.T;
+    var Contains = Grex.Contains;
+    var Vertex = Grex.Vertex;
+    var Edge = Grex.Edge;
   ```
 
 
 You can now use these objects in place of the string representation in your queries.
 
 
-## Getting started
-
-A good resource to understand the Gremlin API is [GremlinDocs](http://gremlindocs.com/). Below are examples of Gremlin and it's equivalent gRex syntax.
-
-gRex uses the [Q](http://documentup.com/kriskowal/q/) module to return a Promise when making Ajax calls. Most asynchronous methods return a thenable promise, especially the `exec()` method.
-
-### Building Gremlin script
-
-The main object you'll be working against is a instance of Gremlin class. Each object is basically appending strings to an internal `script` variable as you issue more commands.
-
-```javascript
-var gremlin = gRex.gremlin() // Instantiate a new Gremlin script
-gremlin.g.V('name', 'marko').out() // gremlin.script == "g.V('name','marko').out"
-```
-
-### Executing Gremlin script
-
-A Gremlin script will be immediadly send to Rexster for execution when you issue the `.exec()` command.
-
-The previous example can thus be executed the following way :
-
-```
-// Node style callback
-gremlin.exec(function(err, result) {
-  if(err) {
-    console.error(err);
-  }
-  console.log(result);
-});
-
-// Promise style
-gremlin.exec()
-.then(function(result){
-  console.log(result);
-},
-function(err){
-  console.error(err);
-});
-```
-
-#### Example 9: Add to index
-
-```
-gremlin>  g.idx("my-index").put("name", "marko", g.v(1))
-
-gRex>     g.idx("my-index").put("name", "marko", g.v(1))
-```
-
-#### Example 10: Retrieving indexed Element
-
-```
-gremlin>  g.idx("my-index")[[name:"marko"]]
-
-gRex>     g.idx("my-index", {name:"marko"});
-```
-
-#### Example 11: Drop index
-
-```
-gremlin>  g.dropIndex("my-index", Vertex.class)
-
-gRex>     g.dropIndex("my-index", "Vertex.class")
-```
-
-#### Example 12: Create, Update, Delete
-
-gRex:
-```javascript
-var tx = g.begin();
-tx.addVertex(100, { k1:'v1', 'k2':'v2', k3:'v3' });
-tx.addVertex(200, { k1:'v1', 'k2':'v2', k3:'v3' });
-tx.addEdge(300, 100, 200,'pal', { weight: '0.75f' })
-tx.updateVertex(100, { k2: 'v4' });
-tx.removeVertex(100, ['k2', 'k3']);
-tx.removeVertex(200);
-tx.commit();
-```
-
-#### Example 13: Create with database generated id's
-
-```javascript
-var tx = g.begin();
-var v1, v2;
-
-v1 = tx.addVertex({ name: 'frank' });
-v2 = tx.addVertex({ name: 'Luca' });
-
-v1.addProperty('status', 'new');
-v1.setProperty('name', 'Frank');
-
-tx.addEdge(v1, v2, 'knows', { since:"2003/06/01" })
-
-v1 = tx.addVertex({name:'Stephen'});
-v2 = tx.addVertex({name:'James'});
-tx.addEdge(v2, v1, 'knows', { since:"2000/01/01" })
-
-tx.commit()
-.then(function(result) {
-  console.log("New vertices -> ", result);
-})
-.fail(function(err) {
-  console.error(err)
-});
-
-//This will return a JSON object with an array called newVertices. For example:
-
-{ success: true,
-  newVertices:
-   [ { name: 'Frank', _id: '#8:334', _type: 'vertex' },
-     { name: 'Luca', _id: '#8:336', _type: 'vertex' },
-     { name: 'Stephen', _id: '#8:335', _type: 'vertex' },
-     { name: 'James', _id: '#8:337', _type: 'vertex' } ]
-}
-```
-
-#### Example 14: Create index
-
-```javascript
-var y = "bob";
-var tx = g.begin();
-var vertex = tx.addVertex({ name:y });
-
-tx.commit()
-.then(function(result) {
-  console.log("Added a vertex successfully for", y);
-  return g.createIndex('actor', 'Vertex.class');
-})
-.then(function(result) {
-  return g.idx('actor').put('name', y, g.v(vertex._id);
-})
-.then(function(result) {
-  console.log("Index added successfully for", y);
-})
-.fail(function(err) {
-  console.error(err);
-});
-```
-
-
-
-## Property Data Types
-
-## API Documentation
-
-### gRex.connect(options, callback)
-
-`options` object specify the location and name of the database:
-
-* `host`: location of Rexster server (default: localhost)
-* `port`: Rexster server port (default: 8182)
-* `graph`: graph database name (default: tinkergraph)
-* `idRegex`: this can remain as false (default value), if IDs are numbers. If IDs are not numbers (i.e. alpha-numeric or string), but still pass parseFloat() test, then idRegex must be set. This property will enable gRex to distinguish between an ID and a float expression.
-
-```javascript
-  var settings = {
-    host: 'myDomain',
-    graph: 'myOrientdb',
-    idRegex: /^[0-9]+:[0-9]+$/
-  });
-```
-
-### Property Data Types
-
-[Rexster Graph Server](https://github.com/tinkerpop/rexster/wiki) supports the following Property Data Types:
-
-- Strings
-- Boolean
-- Integer
-- Long
-- Float
-- Double
-- List (Array)
-- Map
-
-gRex automatically preserves data types. It uses type values obtained from the server, when data is retrieved, to ascertain data types. If a property's data type is unknown, gRex will not try to infer the data type and will simply allow the value to be passed as a string, which is the default behaviour. However, it is possible to provide a type definition to a Transaction, which will then be used to pass type information to the server during a POST.
-
-#### Type Definition
-
-When Rexster returns data, it will include Type information, gRex will create a Type definition based on this information to be used in subsequent POST requests. Type definitions can only be generated for Objects that have been retrieved from the server. So, if you are updating or creating a 'Person' object the type definition will only be available if a 'Person' object was previously requested and retrieved from teh server.
-
-Also, if totally new properties need to have a Type definition, so that gRex can understand how to send the information to the server.
-
-A Type definition is an Object and is used globally. For example, if 'age' has been defined as type integer in a 'Person' object, then whenever gRex encounters an 'age' property, regardless of the Object, it will be treated as an integer. Although, if the 'age' property is embedded in another object, then it will need to be explicitly defined.
-
-You are only required to provide a Type definition for properties that are being added.
-
-#### Creating a Type Definition
-
-In order to use a Type Definition, you pass in an Object to the Transaction ``begin`` function.
-
-##### Simple Type Definition
-
-A Type definition is an Object Literal. The key is the property name for the Object you are providing a Type definition for and the value is the Type that is being assigned to that property. For example, to define a property as boolean for a key called 'active' you would do the following:
-
-```{ active: 'boolean' }```
-OR
-```{ active: 'b' }```
-
-This is the similar for all the simple Types.
-
-- Strings = 'string' or 's'
-- Boolean = 'boolean' or 'b'
-- Integer = 'integer' or 'i'
-- Long = 'long' or 'l'
-- Float = 'float' or 'f'
-- Double = 'double' or 'd'
-
-Complex types, such as ``list`` and ``map`` are a little different.
-
-##### List Type Definition
-To define a Type for are List (Array), you simply provide an Array as the value and provide the type name for each item in the array. You will need to know which index a particular Type will be located. Any items added to the array after item[3] will be added as the last Type defined in the array, in this instance the items will be added as integers.
-
-```{ items: ['string', 'string', 'boolean', 'integer'] }```
-
-##### Map Type Definition
-Map Type's are simply object literals. To define a map type you pass in objects much the same as defining a simple type above.
-
-```{ address: { number: 'integer', street: 'string', city: 'string'} }```
-
-Both List and Map Types can have embedded list and map types.
-
-* list with embedded map [NB. There is currently a bug for maps embedded in lists]
-```{ items: ['string', {age: 'integer'}, 'boolean', 'integer'] }```
-
-* map with embedded list
-```{ address: { number: 'integer', street: 'string', city: 'string', occupantNames:['string']} }```
-
-##### Type Definition Usage
-
-To use a Type definition, just pass it to the ``begin`` function of a transaction.
-
-```
-var typeDef = { active: 'boolean',
-                items: ['string', 'string', 'boolean', 'integer'],
-                address: { number: 'integer', street: 'string', city: 'string', occupantNames:['string']}
-            };
-var tx = new g.begin(typeDef);
-```
-
-If there is already a Type definition for a property, the passed in type definition is merged with the existing type definition and takes precedence.
-
-
-## Installation
-
-### Dependencies
-
-gRex requires __batch kibble__ (Rexster extension) to be installed first.
-
-Move the batch-kibble-XXX.jar, located in the modules ``lib`` folder, to the ``/ext`` folder under the rexster server directory.
-Add an ``allow`` tag to the database extensions configuration in the `rexster.xml` file.
-
-```xml
-  <extensions>
-    <allows>
-      <allow>tp:gremlin</allow>
-      <allow>tp:batch</allow>
-    </allows>
-  </extensions>
-```
-
-Batch kibble is currently required for handling transactions over http.
-
-
-### Usage
-
-gRex can be loaded as:
-
--   a ``<script>`` tag in the browser. Files are located in the client directory.
-
-    ```javascript
-     <script type="text/javascript" src="grex.min.js"></script>
-    ```
-
-    this exposes gRex as a global variable.
-
--   a Node.js and CommonJS module available from NPM as the ``grex`` package
-
-    ```
-    $ npm install grex
-    ```
-
-    then in Node
-
-    ```
-    var gRex = require('grex');
-    ```
-
--   a RequireJS module
-
-    ```
-    require(['gRex'], function (gRex) {
-        // Do something with gRex
-    });
-    ```
-
-You will notice that in the examples tokens are passed as string (i.e. 'T.gt'). However, gRex also exposes some objects for convenience to make it feel more natural. To access the objects reference them like so:
-
-    var T = gRex.T;
-    var Contains = gRex.Contains;
-    var Vertex = gRex.Vertex;
-    var Edge = gRex.Edge;
-
-
-
-You can now use these objects in place of the string representation in your queries.
-
-
-## Authors
-
-gRex>     g.V().retain([g.v(1), g.v(2), g.v(3)])
-```
-
-__Example 8: Create index__
-
-```
-gremlin>  g.createIndex("my-index", Vertex.class)
-
-gRex>     g.createIndex("my-index", "Vertex.class")
-```
-
-__Example 9: Add to index__
-
-```
-gremlin>  g.idx("my-index").put("name", "marko", g.v(1))
-
-gRex>     g.idx("my-index").put("name", "marko", g.v(1))
-```
-
-__Example 10: Retrieving indexed Element__
-
-```
-gremlin>  g.idx("my-index")[[name:"marko"]]
-
-gRex>     g.idx("my-index", {name:"marko"});
-```
-
-__Example 11: Drop index__
-
-```
-gremlin>  g.dropIndex("my-index", Vertex.class)
-
-gRex>     g.dropIndex("my-index", "Vertex.class")
-```
-
-__Example 12: Create, Update, Delete__
-
-```
-gRex>     var trxn = g.begin();
-
-gRex>     trxn.addVertex(100, {k1:'v1', 'k2':'v2', k3:'v3'});
-
-gRex>     trxn.addVertex(200, {k1:'v1', 'k2':'v2', k3:'v3'});
-
-gRex>     trxn.addEdge(300,100,200,'pal',{weight:'0.75f'})
-
-gRex>     trxn.updateVertex(100, {k2: 'v4'});
-
-gRex>     trxn.removeVertex(100, ['k2', 'k3']);
-
-gRex>     trxn.removeVertex(200);
-
-gRex>     trxn.commit()
-```
-
-__Example 13: Create with database generated id's__
-
-```
-var trxn = g.begin();
-var v1, v2;
-
-v1 = trxn.addVertex({name:'frank'});
-v2 = trxn.addVertex({name:'Luca'});
-
-v1.addProperty('status','new');
-v1.setProperty('name','Frank');
-
-trxn.addEdge(v1, v2, 'knows', {since:"2003/06/01"})
-
-v1 = trxn.addVertex({name:'Stephen'});
-v2 = trxn.addVertex({name:'James'});
-trxn.addEdge(v2, v1, 'knows', {since:"2000/01/01"})
-
-trxn.commit().then(function(result){
-    console.log("New vertices -> ", result);
-}, function(err) {
-    console.error(err)
-});
-
-//This will return a JSON object with an array called newVertices. For example:
-
-{ success: true,
-  newVertices:
-   [ { name: 'Frank', _id: '#8:334', _type: 'vertex' },
-     { name: 'Luca', _id: '#8:336', _type: 'vertex' },
-     { name: 'Stephen', _id: '#8:335', _type: 'vertex' },
-     { name: 'James', _id: '#8:337', _type: 'vertex' } ]
-}
-```
-
-__Example 14: Create index__
-
-```
-var y = "bob";
-var trxn = g.begin();
-var vertex = trxn.addVertex({name:y});
-
-trxn.commit().then
-    (function(result) {
-        console.log("Added a vertex successfully for", y);
-        g.createIndex('actor', 'Vertex.class').then
-            (function(result){
-                g.idx('actor').put('name', y, g.v(vertex._id)).then
-                    (function(result){
-                    console.log("Index added successfully for", y);
-                    }, function(err) {
-                        console.log(err)
-                    });
-            }, function(err) {
-                console.log(err)
-            });
-    }, function(err) {
-        console.log(err)
-    });
-```
-
 ## API
 
-### gRex.connect()
+### Grex
+
+#### Grex.connect(Object)
 
 Options specify the location and name of the database.
 
-####host (default: localhost)
-
-Location of Rexster server
-
-####port (default: 8182)
-
-Rexster server port
-
-####graph (default: tinkergraph)
-
-Graph database name
-
-####idRegex (default: false)
-
-This can remain as false, if IDs are number. If IDs are not numbers (i.e. alpha-numeric or string), but still pass parseFloat() test, then idRegex must be set. This property will enable gRex to distinguish between an ID and a float expression.
+* `host` (default: localhost): Location of Rexster server
+* `port` (default: 8182): Rexster server port
+* `graph` (default: tinkergraph): Graph database name
+* `idRegex` (default: false): This can remain as false, if IDs are number. If IDs are not numbers (i.e. alpha-numeric or string), but still pass parseFloat() test, then idRegex must be set. This property will enable Grex to distinguish between an ID and a float expression.
 
 ```
-g.setOptions({ host: 'myDomain',
-               graph: 'myOrientdb',
-               idRegex: /^[0-9]+:[0-9]+$/
-             });
+Grex.connect({
+  host: 'myDomain',
+  graph: 'myOrientdb',
+  idRegex: /^[0-9]+:[0-9]+$/
+});
 ```
 
+### Gremlin
 
+#### Gremlin.g
+
+A getter property. Returns a `new Graph()` wrapper instance. See https://github.com/gulthor/grex/blob/master/src/gremlin.js.
+
+Graph methods return convenient wrapper objects, which is either:
+* a new [`Pipeline`](https://github.com/gulthor/grex/blob/master/src/pipeline.js) instance (ie. by calling `g.v()`, `g.V()`, `g.E()`, etc.)
+* a new [`Vertex`](https://github.com/gulthor/grex/blob/master/src/elements/vertex.js) via `g.addVertex()` or new [`Edge`](https://github.com/gulthor/grex/blob/master/src/elements/edge.js) instance via `g.addEdge()`. Both classes inherits from [`Element`](https://github.com/gulthor/grex/blob/master/src/elements/element.js).
+
+See: https://github.com/gulthor/grex/blob/master/src/graph.js.
+
+#### Gremlin.exec(callback)
+
+Sends the generated `gremlin.script` to the server for execution. This method either takes a callback, or returns a promise.
+
+#### Gremlin.append(String)
+
+Appends an arbitrary string to the `gremlin.script`. This method is used internally but can be useful on some occasions. Use with caution.
+
+#### Gremlin.line(String)
+
+Appends an arbitrary string to the `gremlin.script` preceded by a `\n` character. This method is used internally but can be useful on some occasions. Use with caution.
 
 
 ## Author
 
-Frank Panetta  - [Follow @entrendipity](https://twitter.com/intent/follow?screen_name=entrendipity)
+Jean-Baptiste Musso - [@jbmusso](https://twitter.com/jbmusso).
 
-Jean-Baptiste Musso - [Follow @jbmusso](https://twitter.com/intent/follow?screen_name=jbmusso) / [Gulthor on GitHub](https://github.com/richtera)
+Based on the work by Frank Panetta - [@entrendipity](https://twitter.com/entrendipity).
 
-### Contributors
 
-Andreas Richter - [richtera](https://github.com/richtera)
+
+## Contributors
+
+https://github.com/gulthor/grex/graphs/contributors
 
 ##License
-###The MIT License (MIT)
 
-Copyright (c) 2013 entrendipity pty ltd
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+MIT (c) 2013-2014 Entrendipity Pty Ltd, Jean-Baptiste Musso.
