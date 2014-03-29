@@ -5,22 +5,21 @@ Grex
 
 Grex is a Gremlin generating library written in JavaScript which helps you build, send over HTTP and execute arbitrary strings of Gremlin against any Blueprint compliant Graph database.
 
-If you're interested in an Object-to-Graph mapper library, you may want to also have a look at [Mogwai.js](https://github.com/gulthor/mogwai).
+If you're interested in an Object-to-Graph mapper library, you may also want to have a look at [Mogwai.js](https://github.com/gulthor/mogwai).
 
 ## Installation
 
-Grex works both in Node.js or in the browser.
+Grex works both in Node.js or in the browser via Browserify.
 
 ```
 $ npm install grex
 ```
 
-You may also wish to use Grex in the browser, either as a RequireJS module or by inserting a `<script>` tag. Using Grex in the browser is essentially useful when prototyping applications and obviously should not be used in production with graph database containing sensitive informations.
-
+You may also wish to use Grex in the browser, essentially when prototyping applications. Obviously Grex may not be used in production with graph database containing sensitive informations.
 
 ## Quick start
 
-Grex does 3 things : connect to a database, generate a Gremlin (Groovy flavored string) and send the string for execution (retrieving the results if any).
+Grex does 3 things: connect to a database, generate a Gremlin (Groovy flavored string) and send the string for execution (retrieving the results if any).
 
 ```javascript
 var settings = {
@@ -72,12 +71,11 @@ Each Gremlin instance is basically appending strings to an internal `script` var
 
 #### Executing Gremlin script
 
-A Gremlin script will be immediadly send to Rexster for execution when you issue the `.exec()` command.
+A Gremlin script will be immediadly sent to Rexster for execution when you issue the `.exec()` command.
 
-The previous example can thus be executed the following way :
+The previous example can thus be executed the following way:
 
 ```javascript
-// Node style callback
 gremlin.exec(function(err, response) {
   if(err) {
     console.error(err);
@@ -190,7 +188,7 @@ g.V.and(_().both("knows"), _().both("created"))
 
 ```javascript
 // JavaScript
-g.V().and(g._().both("knows"), g._().both("created"))
+g.V().and(gremlin._().both("knows"), gremlin._().both("created"))
 ```
 
 ```groovy
@@ -200,7 +198,7 @@ g.v(1).outE.or(_().has('id', T.eq, "9"), _().has('weight', T.lt, 0.6f))
 
 ```javascript
 // JavaScript
-g.v(1).outE().or(g._().has('id', 'T.eq', 9), g._().has('weight', 'T.lt', '0.6f'));
+g.v(1).outE().or(gremlin._().has('id', 'T.eq', 9), gremlin._().has('weight', 'T.lt', '0.6f'));
 ```
 
 ```groovy
@@ -328,6 +326,15 @@ Appends an arbitrary string to the `gremlin.script`. This method is used interna
 #### Gremlin.line(String)
 
 Appends an arbitrary string to the `gremlin.script` preceded by a `\n` character. This method is used internally but can be useful on some occasions. Use with caution.
+
+
+## Todo
+
+* bound arguments (for better performance)
+* closure as JavaScript functions
+* simplified API (remove gremlin.g and gremlin._, remove Java .class, etc.)
+* Rexpro
+* performance checks and improvements
 
 
 ## Author
