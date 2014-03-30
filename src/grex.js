@@ -1,6 +1,8 @@
+var http = require('http');
+var querystring = require('querystring');
+
 var Q = require("q"),
     _ = require("lodash");
-var request = require("request");
 
 var Gremlin = require('./gremlin');
 var Graph = require("./graph");
@@ -47,29 +49,40 @@ module.exports = (function(){
   Grex.prototype.exec = function(script) {
     var deferred = Q.defer();
 
-    var uri = '/graphs/' + this.options.graph + '/tp/gremlin';
-    var url = 'http://' + this.options.host + ':' + this.options.port + uri;
-
-    var options = {
-      url: url,
-      qs: {
-        script: script,
-        'rexster.showTypes': true
-      },
-      json: true
+    var qs = {
+      script: script,
+      'rexster.showTypes': true
     };
 
-    request.get(options, function(err, res, body) {
-      if (err) {
-        return deferred.reject(err);
+    var options = {
+      hostname: this.options.host,
+      port: this.options.port,
+      path: '/graphs/' + this.options.graph + '/tp/gremlin?' + querystring.stringify(qs),
+      headers: {
+        'Content-type': 'application/json'
       }
+    };
 
-      var transformedResults = this.transformResults(body.results);
-      body.results = transformedResults.results;
-      body.typeMap = transformedResults.typeMap;
+    var req = http.get(options, function(res) {
+      var body = '';
 
-      return deferred.resolve(body);
+      res.on('data', function(chunk) {
+        body += chunk;
+      });
+
+      res.on('end', function() {
+        body = JSON.parse(body);
+        var transformedResults = this.transformResults(body.results);
+        body.results = transformedResults.results;
+        body.typeMap = transformedResults.typeMap;
+        return deferred.resolve(body);
+      }.bind(this));
+
     }.bind(this));
+
+    req.on('error', function() {
+      return deferred.reject(e);
+    });
 
     return deferred.promise;
   };
