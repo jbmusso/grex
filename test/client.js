@@ -1,19 +1,18 @@
-var gRex = require('../index.js');
+var gRex = require('../index.js'),
+    _    = require("lodash");
+
 
 var defaultOptions = {
-    'host': 'localhost',
-    'port': 8182,
-    'graph': 'tinkergraph',
-    'idRegex': false // OrientDB id regex -> /^[0-9]+:[0-9]+$/
-  };
+  'host': 'localhost',
+  'port': 8182,
+  'graph': 'tinkergraph',
+  'idRegex': false // OrientDB id regex -> /^[0-9]+:[0-9]+$/
+};
 
 
-
-describe('gRex Client', function() {
-
-
+describe('Client connection', function() {
   describe('when passing no parameters', function() {
-    it('should use defaults options', function(done) {
+    it('should use default options', function(done) {
       gRex.connect()
       .then(function(client) {
         client.options.should.eql(defaultOptions);
@@ -26,24 +25,29 @@ describe('gRex Client', function() {
   });
 
 
-  describe('when using custom options', function() {
-    it('should use this new options', function(done) {
-      var options = {
-        host: 'localhost',
-        port: 8182,
-        graph: 'graph',
-        idRegex: false
-      };
+  describe('when passing custom options', function() {
+    var client;
+    var options = {
+      'host': 'localhost',
+      'port': 8182,
+      'graph': 'gratefulgraph',
+      'idRegex': false // OrientDB id regex -> /^[0-9]+:[0-9]+$/
+    };
 
+    before(function(done) {
       gRex.connect(options)
-      .then(function(client) {
-        client.options.graph.should.equal(options.graph);
+      .then(function(gRexClient) {
+        client = gRexClient;
         done();
       })
       .fail(function(error) {
         console.error(error);
       });
     });
-  });
 
+    it('should use this new options', function(done) {
+      client.options.graph.should.equal(options.graph);
+      done();
+    });
+  });
 });
