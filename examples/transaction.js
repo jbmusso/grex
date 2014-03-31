@@ -3,11 +3,11 @@ var Grex = require('../index.js');
 var settings = {
   'host': 'localhost',
   'port': 8182,
-  'graph': 'orientdbsample',
-  'idRegex': /^[0-9]+:[0-9]+$/
+  'graph': 'tinkergraph',
+  'idRegex': false
 };
 
-Grex.connect(function(err, client) {
+Grex.connect(settings, function(err, client) {
   var gremlin = client.gremlin();
 
   // The following will add 4 vertices and 2 edges in a transaction
@@ -19,11 +19,11 @@ Grex.connect(function(err, client) {
   var v2 = gremlin.g.addVertex({ name:'Bar', age: 30 }, 'v2');
   gremlin.g.addEdge(v1, v2, 'knows', { met: "Somewhere", weight: 1.2 });
 
-  var v3 = trxn.addVertex({ name: 'Alice' });
-  var v4 = trxn.addVertex({ name: 'Bob' });
+  var v3 = gremlin.g.addVertex({ name: 'Alice' }, 'v3');
+  var v4 = gremlin.g.addVertex({ name: 'Bob' }, 'v4');
   gremlin.g.addEdge(v4, v3, 'likes', { key: "value" });
 
-  trxn.commit(function(err, response) {
+  gremlin.exec(function(err, response) {
     if (err) {
       console.log(err);
     } else {

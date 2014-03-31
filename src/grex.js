@@ -13,13 +13,16 @@ var ArgumentHandler = require("./arguments/argumenthandler");
 
 
 module.exports = (function(){
+
+  var defaultOptions = {
+    'host': 'localhost',
+    'port': 8182,
+    'graph': 'tinkergraph',
+    'idRegex': false // OrientDB id regex -> /^[0-9]+:[0-9]+$/
+  };
+
   function Grex(options) {
-    this.options = _.defaults(options || {
-      'host': 'localhost',
-      'port': 8182,
-      'graph': 'tinkergraph',
-      'idRegex': false // OrientDB id regex -> /^[0-9]+:[0-9]+$/
-    });
+    this.options = _.defaults(options, defaultOptions);
 
     this.resultFormatter = new ResultFormatter();
     this.argumentHandler = new ArgumentHandler(this.options);
@@ -32,6 +35,11 @@ module.exports = (function(){
     if(typeof options === 'function'){
       callback = options;
       options = undefined;
+    } else if (typeof options === 'object') {
+      this.options = _.defaults(options, this.options);
+    } else {
+      // Set options to previously setup options or switch back to the defaults
+      this.options = this.options || defaultOptions;
     }
 
     return Q.fcall(function() {
