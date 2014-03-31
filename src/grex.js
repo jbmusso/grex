@@ -14,7 +14,7 @@ var ArgumentHandler = require("./arguments/argumenthandler");
 
 module.exports = (function(){
   function Grex(options) {
-    this.options = _.defaults(options || {
+    this.options = _.defaults(options, {
       'host': 'localhost',
       'port': 8182,
       'graph': 'tinkergraph',
@@ -32,6 +32,8 @@ module.exports = (function(){
     if(typeof options === 'function'){
       callback = options;
       options = undefined;
+    } else {
+      this.options = _.defaults(options, this.options);
     }
 
     return Q.fcall(function() {
