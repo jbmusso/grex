@@ -1,5 +1,6 @@
 var gRex = require('../index.js'),
-    _    = require("lodash");
+    _    = require("lodash"),
+    Grex = require('../src/grex.js');
 
 
 var defaultOptions = {
@@ -50,4 +51,21 @@ describe('Client connection', function() {
       done();
     });
   });
+
+
+  describe('when instantiating Grex with custom options', function() {
+    var options = {
+      'host': 'localhost',
+      'port': 8182,
+      'graph': 'gratefulgraph',
+      'idRegex': false // OrientDB id regex -> /^[0-9]+:[0-9]+$/
+    };
+
+    it('should use the right options', function(done) {
+      var grex = new Grex(options);
+      grex.options.graph.should.equal(options.graph);
+      done();
+    });
+  });
+  
 });
