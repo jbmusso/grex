@@ -1,7 +1,7 @@
 {
   "name": "grex",
   "description": "Client for Rexster Graph Server",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "keywords": [
     "database",
     "graph",
