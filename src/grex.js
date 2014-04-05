@@ -57,7 +57,7 @@ module.exports = (function(){
     var deferred = Q.defer();
 
     var qs = {
-      script: script,
+      script: script.replace(/\$/g, "\\$"),
       'rexster.showTypes': true
     };
 
