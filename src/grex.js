@@ -51,14 +51,14 @@ module.exports = (function(){
    * Send a Gremlin script for execution on the server, fetch and format
    * results.
    *
-   * @param {String} script A raw Gremlin (Groovy) script to execute
+   * @param {Gremlin} gremlin A raw Gremlin (Groovy) script to execute
    */
-  Grex.prototype.exec = function(script) {
+  Grex.prototype.exec = function(gremlin) {
     var deferred = Q.defer();
 
     var qs = {
-      script: script.replace(/\$/g, "\\$"),
-      params: script.params,
+      script: gremlin.script.replace(/\$/g, "\\$"),
+      params: gremlin.params,
       'rexster.showTypes': true
     };
 

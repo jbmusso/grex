@@ -29,7 +29,7 @@ module.exports = (function() {
   };
 
   Gremlin.prototype.exec = function(callback) {
-    return this.gRex.exec(this.script).nodeify(callback);
+    return this.gRex.exec(this).nodeify(callback);
   };
 
   /**
