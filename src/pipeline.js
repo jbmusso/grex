@@ -18,6 +18,10 @@ module.exports = (function () {
     return this.gremlin.exec(callback);
   };
 
+  Pipeline.prototype.fetch = function(callback) {
+    return this.gremlin.fetch(callback);
+  };
+
   Pipeline.prototype.both = function() {
     this.gremlin.appendMain('both', arguments);
     return this;

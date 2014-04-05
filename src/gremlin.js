@@ -32,6 +32,10 @@ module.exports = (function() {
     return this.gRex.exec(this).nodeify(callback);
   };
 
+  Gremlin.prototype.fetch = function(callback) {
+    return this.gRex.fetch(this).nodeify(callback);
+  };
+
   /**
    * Transforms an arbitrary object into a Pipeline
    * @return {Pipeline}
