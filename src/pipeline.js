@@ -13,7 +13,8 @@ module.exports = (function () {
    *
    * @param {Function} callback
    */
-  Pipeline.prototype.exec = function(callback) {
+  Pipeline.prototype.exec =
+  Pipeline.prototype.execute = function(callback) {
     return this.gremlin.exec(callback);
   };
 
