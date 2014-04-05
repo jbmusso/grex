@@ -58,6 +58,7 @@ module.exports = (function(){
 
     var qs = {
       script: script.replace(/\$/g, "\\$"),
+      params: script.params,
       'rexster.showTypes': true
     };
 
