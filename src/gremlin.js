@@ -7,6 +7,7 @@ var Argument = require('./arguments/argument');
 module.exports = (function() {
   function Gremlin(gRex, options) {
     this.script = '';
+    this.params = {};
     this.gRex = gRex;
     this.argumentHandler = gRex.argumentHandler;
 
