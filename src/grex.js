@@ -12,15 +12,16 @@ var ResultFormatter = require("./resultformatter");
 var ArgumentHandler = require("./arguments/argumenthandler");
 
 
-var defaultOptions = {
-  'host': 'localhost',
-  'port': 8182,
-  'graph': 'tinkergraph',
-  'idRegex': false // OrientDB id regex -> /^[0-9]+:[0-9]+$/
-};
-
 module.exports = (function(){
   function Grex(options) {
+    var defaultOptions = {
+      host: 'localhost',
+      port: 8182,
+      graph: 'tinkergraph',
+      idRegex: false, // OrientDB id regex -> /^[0-9]+:[0-9]+$/
+      fetched: function(response, results) { return results; }
+    };
+
     this.options = _.defaults(options, defaultOptions);
 
     this.resultFormatter = new ResultFormatter();
@@ -93,6 +94,13 @@ module.exports = (function(){
     });
 
     return deferred.promise;
+  };
+
+  Grex.prototype.fetch = function(gremlin) {
+    return this.exec(gremlin)
+    .then(function(response) {
+      return this.options.fetched(response, response.results);
+    }.bind(this));
   };
 
   Grex.prototype.gremlin = function(options) {
