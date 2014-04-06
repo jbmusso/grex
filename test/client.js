@@ -21,10 +21,10 @@ describe('Client connection', function() {
       })
       .fail(function(error) {
         console.error(error);
+        done();
       });
-    });  
+    });
   });
-
 
   describe('when passing custom options', function() {
     var client;
@@ -43,6 +43,7 @@ describe('Client connection', function() {
       })
       .fail(function(error) {
         console.error(error);
+        done();
       });
     });
 
@@ -51,7 +52,6 @@ describe('Client connection', function() {
       done();
     });
   });
-
 
   describe('when instantiating Grex with custom options', function() {
     var options = {
@@ -67,5 +67,4 @@ describe('Client connection', function() {
       done();
     });
   });
-  
 });
