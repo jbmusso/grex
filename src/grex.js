@@ -14,15 +14,15 @@ var ArgumentHandler = require("./arguments/argumenthandler");
 
 module.exports = (function(){
   function Grex(options) {
-    var defaultOptions = {
+    this.defaultOptions = {
       host: 'localhost',
       port: 8182,
       graph: 'tinkergraph',
-      idRegex: false, // OrientDB id regex -> /^[0-9]+:[0-9]+$/
-      fetched: function(response, results) { return results; }
+      idRegex: false // OrientDB id regex -> /^[0-9]+:[0-9]+$/
+      // fetched: function(response, results) { return results; }
     };
 
-    this.options = _.defaults(options, defaultOptions);
+    this.options = _.defaults(options, this.defaultOptions);
 
     this.resultFormatter = new ResultFormatter();
     this.argumentHandler = new ArgumentHandler(this.options);
@@ -39,8 +39,10 @@ module.exports = (function(){
       this.options = _.defaults(options, this.options);
     } else {
       // Set options to previously setup options or switch back to the defaults
-      this.options = this.options || defaultOptions;
+      this.options = this.options || this.defaultOptions;
     }
+
+    this.fetchHandler = this.options.fetched || this.defaultFetchHandler;
 
     return Q.fcall(function() {
       return this;
@@ -99,8 +101,12 @@ module.exports = (function(){
   Grex.prototype.fetch = function(gremlin) {
     return this.exec(gremlin)
     .then(function(response) {
-      return this.options.fetched(response, response.results);
+      return this.fetchHandler(response, response.results);
     }.bind(this));
+  };
+
+  Grex.prototype.defaultFetchHandler = function(response, results) {
+    return results;
   };
 
   Grex.prototype.gremlin = function(options) {
