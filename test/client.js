@@ -1,6 +1,6 @@
-var gRex = require('../index.js'),
-    _    = require("lodash"),
-    Grex = require('../src/grex.js');
+var client = require('../index.js');
+var _    = require("lodash");
+var Client = require('../src/client.js');
 
 
 var defaultOptions = {
@@ -14,7 +14,7 @@ var defaultOptions = {
 describe('Client connection', function() {
   describe('when passing no parameters', function() {
     it('should use default options', function(done) {
-      gRex.connect()
+      client.connect()
       .then(function(client) {
         client.options.should.eql(defaultOptions);
         done();
@@ -27,7 +27,6 @@ describe('Client connection', function() {
   });
 
   describe('when passing custom options', function() {
-    var client;
     var options = {
       'host': 'localhost',
       'port': 8182,
@@ -36,9 +35,8 @@ describe('Client connection', function() {
     };
 
     before(function(done) {
-      gRex.connect(options)
-      .then(function(gRexClient) {
-        client = gRexClient;
+      client.connect(options)
+      .then(function(client) {
         done();
       })
       .fail(function(error) {
@@ -53,7 +51,7 @@ describe('Client connection', function() {
     });
   });
 
-  describe('when instantiating Grex with custom options', function() {
+  describe('when instantiating a client with custom options', function() {
     var options = {
       'host': 'localhost',
       'port': 8182,
@@ -62,8 +60,8 @@ describe('Client connection', function() {
     };
 
     it('should use the right options', function(done) {
-      var grex = new Grex(options);
-      grex.options.graph.should.equal(options.graph);
+      var client = new Client(options);
+      client.options.graph.should.equal(options.graph);
       done();
     });
   });

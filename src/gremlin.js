@@ -5,11 +5,11 @@ var Pipeline = require('./pipeline');
 var Argument = require('./arguments/argument');
 
 module.exports = (function() {
-  function Gremlin(gRex, options) {
+  function Gremlin(client, options) {
     this.script = '';
     this.params = {};
-    this.gRex = gRex;
-    this.argumentHandler = gRex.argumentHandler;
+    this.client = client;
+    this.argumentHandler = client.argumentHandler;
 
     var settings = _.defaults(options || {
       graph: 'g'
@@ -25,15 +25,15 @@ module.exports = (function() {
   }
 
   Gremlin.prototype.subScript = function() {
-    return new Gremlin(this.gRex);
+    return new Gremlin(this.client);
   };
 
   Gremlin.prototype.exec = function(callback) {
-    return this.gRex.exec(this).nodeify(callback);
+    return this.client.exec(this).nodeify(callback);
   };
 
   Gremlin.prototype.fetch = function(callback) {
-    return this.gRex.fetch(this).nodeify(callback);
+    return this.client.fetch(this).nodeify(callback);
   };
 
   /**
@@ -41,7 +41,7 @@ module.exports = (function() {
    * @return {Pipeline}
    */
   Gremlin.prototype._ = function() {
-    var gremlin = new Gremlin(this.gRex);
+    var gremlin = new Gremlin(this.client);
     gremlin.append('_' + gremlin.argumentHandler.buildString(arguments));
 
     return new Pipeline(gremlin);
@@ -111,7 +111,7 @@ module.exports = (function() {
     args = _.isArray(args[0]) ? args[0] : args;
 
     _.each(args, function(arg) {
-      var argObj = new Argument(arg, this.gRex.options);
+      var argObj = new Argument(arg, this.client.options);
       var partialScript = (arg.gremlin && arg.gremlin.script) || argObj.parse();
       argumentList.push(partialScript);
     }, this);

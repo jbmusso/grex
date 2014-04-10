@@ -1,9 +1,10 @@
 var http = require('http');
 var querystring = require('querystring');
 
-var Q = require("q"),
-    _ = require("lodash");
+var Q = require("q");
+var _ = require("lodash");
 
+var Client = require('./client');
 var Gremlin = require('./gremlin');
 var Graph = require("./graph");
 var classes = require("./classes");
@@ -13,7 +14,7 @@ var ArgumentHandler = require("./arguments/argumenthandler");
 
 
 module.exports = (function(){
-  function Grex(options) {
+  function Client(options) {
     this.defaultOptions = {
       host: 'localhost',
       port: 8182,
@@ -31,7 +32,7 @@ module.exports = (function(){
     this.ClassTypes = classes;
   }
 
-  Grex.prototype.connect = function(options, callback) {
+  Client.prototype.connect = function(options, callback) {
     if(typeof options === 'function'){
       callback = options;
       options = undefined;
@@ -56,7 +57,7 @@ module.exports = (function(){
    *
    * @param {Gremlin} gremlin A raw Gremlin (Groovy) script to execute
    */
-  Grex.prototype.exec = function(gremlin) {
+  Client.prototype.exec = function(gremlin) {
     var deferred = Q.defer();
 
     var qs = {
@@ -98,26 +99,26 @@ module.exports = (function(){
     return deferred.promise;
   };
 
-  Grex.prototype.fetch = function(gremlin) {
+  Client.prototype.fetch = function(gremlin) {
     return this.exec(gremlin)
     .then(function(response) {
       return this.fetchHandler(response, response.results);
     }.bind(this));
   };
 
-  Grex.prototype.defaultFetchHandler = function(response, results) {
+  Client.prototype.defaultFetchHandler = function(response, results) {
     return results;
   };
 
-  Grex.prototype.gremlin = function(options) {
+  Client.prototype.gremlin = function(options) {
     var gremlin = new Gremlin(this, options);
 
     return gremlin;
   };
 
-  Grex.prototype.transformResults = function(results) {
+  Client.prototype.transformResults = function(results) {
     return this.resultFormatter.formatResults(results);
   };
 
-  return Grex;
+  return Client;
 })();

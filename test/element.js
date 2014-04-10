@@ -1,4 +1,4 @@
-var gRex = require('../index.js');
+var client = require('../index.js');
 var Vertex = require("../src/elements/vertex");
 var Gremlin = require('../src/gremlin');
 
@@ -6,7 +6,7 @@ var Gremlin = require('../src/gremlin');
 describe('Graph elements', function() {
   describe('.setProperty()', function() {
     it('should set property', function() {
-      var gremlin = new Gremlin(gRex);
+      var gremlin = new Gremlin(client);
       var vertex = new Vertex(gremlin, 'v');
 
       vertex.setProperty('name', 'bob');
@@ -17,7 +17,7 @@ describe('Graph elements', function() {
 
   describe('.addProperty()', function() {
     it('should add property', function() {
-      var gremlin = new Gremlin(gRex);
+      var gremlin = new Gremlin(client);
       var vertex = new Vertex(gremlin, 'v');
 
       vertex.addProperty('name', 'alice');
@@ -28,7 +28,7 @@ describe('Graph elements', function() {
 
   describe('.setProperties()', function() {
     it('should set properties', function() {
-      var gremlin = new Gremlin(gRex);
+      var gremlin = new Gremlin(client);
       var vertex = new Vertex(gremlin, 'v');
       vertex.setProperties({
         'foo': 'bar',
@@ -43,7 +43,7 @@ describe('Graph elements', function() {
 
   describe('.addProperties()', function() {
     it('should add properties', function() {
-      var gremlin = new Gremlin(gRex);
+      var gremlin = new Gremlin(client);
       var vertex = new Vertex(gremlin, 'v');
       vertex.addProperties({
         'foo': 'bar',
@@ -58,7 +58,7 @@ describe('Graph elements', function() {
 
   describe('.getProperties()', function() {
     it('should return properties', function() {
-      var gremlin = new Gremlin(gRex);
+      var gremlin = new Gremlin(client);
       var vertex = new Vertex(gremlin, 'v');
       vertex.setProperty('name', 'bob');
 
@@ -71,7 +71,7 @@ describe('Graph elements', function() {
 
   describe('.remove()', function() {
     it('should remove element', function() {
-      var gremlin = new Gremlin(gRex);
+      var gremlin = new Gremlin(client);
       var vertex = new Vertex(gremlin, 'v');
 
       vertex.remove();
@@ -81,14 +81,14 @@ describe('Graph elements', function() {
 
   describe('.keys()', function() {
     it("should chain .keys()", function() {
-      var query = gRex.gremlin().g.v(1).keys();
+      var query = client.gremlin().g.v(1).keys();
       query.gremlin.script.should.equal("g.v(1).keys()");
     });
   });
 
   describe('.values', function() {
     it("should chain .values()", function() {
-      var query = gRex.gremlin().g.v(1).values();
+      var query = client.gremlin().g.v(1).values();
       query.gremlin.script.should.equal("g.v(1).values()");
     });
   });

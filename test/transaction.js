@@ -1,9 +1,9 @@
-var gRex = require('../index.js');
+var client = require('../index.js');
 
 before(function(done){
-  gRex.connect()
+  client.connect()
   .then(function(result) {
-    gRex = result;
+    client = result;
     done();
   })
   .fail(function(error) {
@@ -18,7 +18,7 @@ var james, waldo;
 describe('Transaction commit', function() {
   describe('when adding elements to the graph in a transaction', function() {
     it('should add a vertex in a transaction', function(done) {
-      var gremlin = gRex.gremlin();
+      var gremlin = client.gremlin();
       gremlin.g.addVertex({ name: "Alice" });
 
       gremlin.exec(function(err, result) {
@@ -28,7 +28,7 @@ describe('Transaction commit', function() {
     });
 
     it('should add two vertices and an edge in a transaction', function(done) {
-      var gremlin = gRex.gremlin();
+      var gremlin = client.gremlin();
 
       bob = gremlin.g.addVertex({ name: 'Bob' }, 'bob');
       waldo = gremlin.g.addVertex({ name: 'Ryan' }, 'waldo');
@@ -42,7 +42,7 @@ describe('Transaction commit', function() {
 
     // Clean up: remove james and waldo from the database
     // after(function(done) {
-    //   var gremlin = gRex.gremlin;
+    //   var gremlin = client.gremlin;
     //   james.remove();
     //   waldo.remove();
 
@@ -69,7 +69,7 @@ describe('Transaction commit', function() {
     });
 
     // it('should remove vertices in a transaction', function(done) {
-    //   var gremlin = gRex.gremlin;
+    //   var gremlin = client.gremlin;
 
     //   alice.remove();
     //   bob.remove();
