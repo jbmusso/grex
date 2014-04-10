@@ -2,6 +2,7 @@ var _ = require("lodash");
 
 
 var GremlinFunction = require('./gremlin/function');
+var IdxGremlinFunction = require('./gremlin/idx');
 
 var Pipeline = require('./pipeline');
 var Vertex = require('./elements/vertex');
@@ -35,22 +36,8 @@ module.exports = (function() {
   };
 
   Graph.prototype.idx = function() {
-    var indexName = arguments[0];
-    var properties = arguments[1];
-
-    this.gremlin.append('g');
-    this.gremlin.append(".idx('" + indexName + "')");
-
-    if (properties) {
-      var appendArg = '';
-
-      _.each(properties, function(value, key) {
-        appendArg = key + ":'" + value + "'";
-      });
-
-      appendArg = "[["+ appendArg + "]]";
-      this.gremlin.append(appendArg);
-    }
+    var func = new IdxGremlinFunction(arguments);
+    this.gremlin.append('g' + func);
 
     return new Pipeline(this.gremlin);
   };
