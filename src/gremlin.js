@@ -73,20 +73,6 @@ module.exports = (function() {
   };
 
   /**
-   * Populate a Gremlin script string with default behavior. Used for most
-   * commands.
-   * This method optionally takes a new Pipeline object as second parameter.
-   *
-   * @param {String} methodName
-   * @param {Array} args Method's arguments
-   */
-  Gremlin.prototype.appendMain = function(methodName, args) {
-    args = _.isArray(args[0]) ? args[0] : args;
-
-    this.append('.' + methodName + this.argumentHandler.buildString(args));
-  };
-
-  /**
    * Alternative 'index' and 'range' commands, ie:
    *   index() => [i]
    *   range() => [1..2]
