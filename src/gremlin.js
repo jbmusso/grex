@@ -92,28 +92,6 @@ module.exports = (function() {
     this.append('.' + methodName + '('+ argumentList.join(',') +')');
   };
 
-  /**
-   * Used for retain & except commands, ie:
-   *   g.V().retain([g.v(1), g.v(2), g.v(3)])
-   *
-   * @param {String} methodName
-   * @param {Array} args Method's arguments
-   */
-  Gremlin.prototype.appendCollection = function(methodName, args) {
-    var argumentList = [];
-
-    if (_.isArray(args[0])) {
-      // Passing in an array of Pipeline with Gremlin script as arguments
-      _.each(args[0], function(pipeline) {
-        argumentList.push(pipeline.gremlin.script);
-      });
-
-      this.append("." + methodName + "([" + argumentList.join(',') + "])");
-    } else {
-      this.append("." + methodName + this.argumentHandler.buildString(args[0]));
-    }
-  };
-
   return Gremlin;
 
 })();

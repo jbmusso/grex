@@ -1,6 +1,8 @@
 var Gremlin = require('./gremlin');
 var GremlinStep = require('./gremlin/step');
 var CollectionAccessor = require('./gremlin/collectionaccessor');
+var CollectionStep = require('./gremlin/collectionstep');
+
 
 module.exports = (function () {
   function Pipeline(gremlin) {
@@ -213,7 +215,9 @@ module.exports = (function () {
   };
 
   Pipeline.prototype.except = function() {
-    this.gremlin.appendCollection('except', arguments);
+    var step = new CollectionStep('except', arguments);
+    this.gremlin.append(step.toString());
+
     return this;
   };
 
@@ -258,7 +262,9 @@ module.exports = (function () {
   };
 
   Pipeline.prototype.retain = function() {
-    this.gremlin.appendCollection('retain', arguments);
+    var step = new CollectionStep('retain', arguments);
+    this.gremlin.append(step.toString());
+
     return this;
   };
 
