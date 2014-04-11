@@ -73,19 +73,6 @@ module.exports = (function() {
   };
 
   /**
-   * Alternative 'index' and 'range' commands, ie:
-   *   index() => [i]
-   *   range() => [1..2]
-   *
-   * Do not pass in method name, just string range.
-   *
-   * @param {String} arg
-   */
-  Gremlin.prototype.appendIndex = function(arg) {
-    this.append('['+ arg[0].toString() + ']');
-  };
-
-  /**
    * Used for 'and', 'or' & 'put commands, ie:
    *   g.v(1).outE().or(g._().has('id', 'T.eq', 9), g._().has('weight', 'T.lt', '0.6f'))
    *
