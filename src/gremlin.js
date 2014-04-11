@@ -1,7 +1,7 @@
 var _ = require("lodash");
 
-var Graph = require('./graph');
-var Pipeline = require('./pipeline');
+var Graph = require('./objects/graph');
+var Pipeline = require('./objects/pipeline');
 var Argument = require('./arguments/argument');
 
 module.exports = (function() {

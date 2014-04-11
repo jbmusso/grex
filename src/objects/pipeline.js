@@ -1,8 +1,8 @@
-var Gremlin = require('./gremlin');
-var GremlinStep = require('./gremlin/step');
-var CollectionAccessor = require('./gremlin/collectionaccessor');
-var CollectionStep = require('./gremlin/collectionstep');
-var PipesStep = require('./gremlin/pipesstep');
+var Gremlin = require('../gremlin');
+var GremlinStep = require('../functions/step');
+var CollectionAccessor = require('../functions/collectionaccessor');
+var CollectionStep = require('../functions/collectionstep');
+var PipesStep = require('../functions/pipesstep');
 
 
 module.exports = (function () {

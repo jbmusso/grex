@@ -6,7 +6,7 @@ var _ = require("lodash");
 
 var Client = require('./client');
 var Gremlin = require('./gremlin');
-var Graph = require("./graph");
+var Graph = require("./objects/graph");
 var classes = require("./classes");
 
 var ResultFormatter = require("./resultformatter");

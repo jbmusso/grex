@@ -1,12 +1,12 @@
 var _ = require("lodash");
 
 
-var GremlinFunction = require('./gremlin/function');
-var IdxGremlinFunction = require('./gremlin/idx');
+var GremlinFunction = require('../functions/function');
+var IdxGremlinFunction = require('../functions/idx');
 
 var Pipeline = require('./pipeline');
-var Vertex = require('./elements/vertex');
-var Edge = require('./elements/edge');
+var Vertex = require('./vertex');
+var Edge = require('./edge');
 
 module.exports = (function() {
   function Graph(parentGremlin) {

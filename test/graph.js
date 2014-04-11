@@ -1,8 +1,8 @@
 /*jshint expr: true*/ // won't complain for (1).should.be.an.Number;
 
 var client = require('../index.js');
-var Vertex = require("../src/elements/vertex");
-var Edge = require("../src/elements/edge");
+var Vertex = require("../src/objects/vertex");
+var Edge = require("../src/objects/edge");
 var T = client.T;
 var Contains = client.Contains;
 
