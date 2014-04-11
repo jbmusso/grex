@@ -2,6 +2,7 @@ var Gremlin = require('./gremlin');
 var GremlinStep = require('./gremlin/step');
 var CollectionAccessor = require('./gremlin/collectionaccessor');
 var CollectionStep = require('./gremlin/collectionstep');
+var PipesStep = require('./gremlin/pipesstep');
 
 
 module.exports = (function () {
@@ -196,7 +197,9 @@ module.exports = (function () {
   };
 
   Pipeline.prototype.and = function() {
-    this.gremlin.appendPipes('and', arguments);
+    var step = new PipesStep('and', arguments);
+    this.gremlin.append(step.toString());
+
     return this;
   };
 
@@ -250,7 +253,9 @@ module.exports = (function () {
   };
 
   Pipeline.prototype.or = function() {
-    this.gremlin.appendPipes('or', arguments);
+    var step = new PipesStep('or', arguments);
+    this.gremlin.append(step.toString());
+
     return this;
   };
 
@@ -351,7 +356,9 @@ module.exports = (function () {
 
   /*** Branch ***/
   Pipeline.prototype.copySplit = function() {
-    this.gremlin.appendPipes('copySplit', arguments);
+    var step = new PipesStep('copySplit', arguments);
+    this.gremlin.append(step.toString());
+
     return this;
   };
   Pipeline.prototype.exhaustMerge = function() {
@@ -438,7 +445,9 @@ module.exports = (function () {
   };
 
   Pipeline.prototype.put = function() {
-    this.gremlin.appendPipes('put', arguments);
+    var step = new PipesStep('put', arguments);
+    this.gremlin.append(step.toString());
+
     return this;
   };
 

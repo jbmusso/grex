@@ -31,7 +31,7 @@ module.exports = (function () {
     }
 
     // Cater for ids that are not numbers but pass parseFloat test
-    if (this.isRegexId() || _.isNaN(parseFloat(argument))) {
+    if (false && _.isString(this.raw) || _.isNaN(parseFloat(argument))) {
       return "'" + argument + "'";
     }
 
@@ -43,7 +43,7 @@ module.exports = (function () {
   };
 
   Argument.prototype.isRegexId = function() {
-    return !!this.options.idRegex && _.isString(this.raw) && this.options.idRegex.test(this.raw);
+    return false && _.isString(this.raw);
   };
 
   Argument.prototype.isGraphReference = function() {

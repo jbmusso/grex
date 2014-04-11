@@ -67,30 +67,10 @@ module.exports = (function() {
     this.script += '\n'+ line;
   };
 
-
   Gremlin.prototype.stringifyArgument = function(argument) {
     return JSON.stringify(argument).replace('{', '[').replace('}', ']');
   };
 
-  /**
-   * Used for 'and', 'or' & 'put commands, ie:
-   *   g.v(1).outE().or(g._().has('id', 'T.eq', 9), g._().has('weight', 'T.lt', '0.6f'))
-   *
-   * @param {String} methodName
-   * @param {Array} args Method's arguments
-   */
-  Gremlin.prototype.appendPipes = function(methodName, args) {
-    var argumentList = [];
-    args = _.isArray(args[0]) ? args[0] : args;
-
-    _.each(args, function(arg) {
-      var argObj = new Argument(arg, this.client.options);
-      var partialScript = (arg.gremlin && arg.gremlin.script) || argObj.parse();
-      argumentList.push(partialScript);
-    }, this);
-
-    this.append('.' + methodName + '('+ argumentList.join(',') +')');
-  };
 
   return Gremlin;
 
