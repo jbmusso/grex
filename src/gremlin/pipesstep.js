@@ -20,7 +20,7 @@ module.exports = (function() {
     args = _.isArray(args[0]) ? args[0] : args;
 
     _.each(args, function(arg) {
-      var argObj = new Argument(arg, this.args.options);
+      var argObj = new Argument(arg);
       var partialScript = (arg.gremlin && arg.gremlin.script) || argObj.parse();
       argumentList.push(partialScript);
     }, this);

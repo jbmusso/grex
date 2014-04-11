@@ -18,9 +18,7 @@ module.exports = (function(){
     this.defaultOptions = {
       host: 'localhost',
       port: 8182,
-      graph: 'tinkergraph',
-      idRegex: false // OrientDB id regex -> /^[0-9]+:[0-9]+$/
-      // fetched: function(response, results) { return results; }
+      graph: 'tinkergraph'
     };
 
     this.options = _.defaults(options, this.defaultOptions);
