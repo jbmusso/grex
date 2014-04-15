@@ -27,8 +27,7 @@ describe('Client connection', function() {
     var options = {
       'host': 'localhost',
       'port': 8182,
-      'graph': 'gratefulgraph',
-      'idRegex': false // OrientDB id regex -> /^[0-9]+:[0-9]+$/
+      'graph': 'gratefulgraph'
     };
 
     before(function(done) {
@@ -47,8 +46,7 @@ describe('Client connection', function() {
     var options = {
       'host': 'localhost',
       'port': 8182,
-      'graph': 'gratefulgraph',
-      'idRegex': false // OrientDB id regex -> /^[0-9]+:[0-9]+$/
+      'graph': 'gratefulgraph'
     };
 
     it('should use the right options', function(done) {

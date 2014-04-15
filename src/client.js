@@ -31,16 +31,12 @@ module.exports = (function(){
   }
 
   Client.prototype.connect = function(options, callback) {
-    if(typeof options === 'function'){
+    if (typeof options === 'function') {
       callback = options;
-      options = undefined;
-    } else if (typeof options === 'object') {
-      this.options = _.defaults(options, this.options);
-    } else {
-      // Set options to previously setup options or switch back to the defaults
-      this.options = this.options || this.defaultOptions;
+      options = {};
     }
 
+    this.options = _.defaults(options || {}, this.defaultOptions);
     this.fetchHandler = this.options.fetched || this.defaultFetchHandler;
 
     return Q.fcall(function() {

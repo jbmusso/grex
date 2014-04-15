@@ -1,18 +1,17 @@
 /*jshint expr: true*/ // won't complain for (1).should.be.an.Number;
 
-var client = require('../index.js');
+var grex = require('../index.js');
 var Vertex = require("../src/gremlin/vertex");
 var Edge = require("../src/gremlin/edge");
-var T = client.T;
-var Contains = client.Contains;
+var T = grex.T;
+var Contains = grex.Contains;
+
+var client;
 
 before(function(done) {
-  client.connect()
-  .then(function(result) {
+  grex.connect(function(err, gremlinClient) {
+    client = gremlinClient;
     done();
-  })
-  .fail(function(error) {
-    console.error(error);
   });
 });
 
