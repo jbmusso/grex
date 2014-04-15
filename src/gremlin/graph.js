@@ -4,6 +4,7 @@ var _ = require("lodash");
 var GremlinMethod = require('./functions/method');
 var IdxGremlinFunction = require('./functions/graph/idx');
 var AddVertexMethod = require('./functions/graph/addvertex');
+var AddEdgeMethod = require('./functions/graph/addedge');
 
 var Pipeline = require('./pipeline');
 var Vertex = require('./vertex');
@@ -160,30 +161,15 @@ module.exports = (function() {
   };
 
   Graph.prototype.addEdge = function(v1, v2, label, properties, identifier) {
-    var edge = new Edge(this.gremlin);
-    var optionalId = '';
-
-    edge.identifier = identifier; // Non-enumerable property
-
-    if (properties._id) {
-      edge._id = properties._id;
-      optionalId = edge._id + ',';
-    }
-
-    edge._outV = arguments[0];
-    edge._inV = arguments[1];
-    edge._label = arguments[2];
-
-    _.each(properties, function(value, key) {
-      edge[key] = value;
+    var method = new AddEdgeMethod({
+      v1: v1,
+      v2: v2,
+      label: label,
+      properties: properties
     });
+    var edge = method.exec(this.gremlin, identifier);
 
-    delete properties._id;
-
-    var gremlinLine = 'g.addEdge('+ optionalId + edge._outV.identifier +','+ edge._inV.identifier +',"'+ edge._label +'",'+ this.gremlin.stringifyArgument(properties) +')';
-
-    this.gremlin.line(gremlinLine);
-
+    this.gremlin.line(method.toString());
     this.parentGremlin.append(this.gremlin.script);
 
     return edge;
