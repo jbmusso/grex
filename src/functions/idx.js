@@ -1,13 +1,13 @@
 var inherits = require('util').inherits;
 
-var GremlinFunction = require('./function');
+var GremlinMethod = require('./function');
 
 module.exports = (function() {
   function IdxGremlinFunction() {
-    GremlinFunction.call(this, 'idx', arguments[0]);
+    GremlinMethod.call(this, 'idx', arguments[0]);
   }
 
-  inherits(IdxGremlinFunction, GremlinFunction);
+  inherits(IdxGremlinFunction, GremlinMethod);
 
   IdxGremlinFunction.prototype.toString = function() {
     var str = ".idx('" + this.args.rawArgs[0] + "')";

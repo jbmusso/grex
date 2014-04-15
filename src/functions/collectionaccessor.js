@@ -1,13 +1,13 @@
 var inherits = require('util').inherits;
 
-var GremlinFunction = require('./function');
+var GremlinMethod = require('./method');
 
 module.exports = (function() {
   function CollectionAccessor() {
-    GremlinFunction.call(this, null, arguments[0]);
+    GremlinMethod.call(this, null, arguments[0]);
   }
 
-  inherits(CollectionAccessor, GremlinFunction);
+  inherits(CollectionAccessor, GremlinMethod);
 
   CollectionAccessor.prototype.toString = function() {
     var str = '['+ this.args.rawArgs[0].toString() + ']';
