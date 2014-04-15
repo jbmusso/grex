@@ -1,13 +1,11 @@
-var client = require('../index.js');
+var grex = require('../index.js');
+
+var client;
 
 before(function(done){
-  client.connect()
-  .then(function(result) {
-    client = result;
+  grex.connect(function(err, gremlinClient) {
+    client = gremlinClient;
     done();
-  })
-  .fail(function(error) {
-    console.error(error);
   });
 });
 

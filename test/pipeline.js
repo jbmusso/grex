@@ -1,20 +1,16 @@
-var client = require('../index.js');
-var T = client.T;
-var Contains = client.Contains;
-var Vertex = client.Vertex;
-var Edge = client.Edge;
+var grex = require('../index.js');
+var T = grex.T;
+var Contains = grex.Contains;
+var Vertex = grex.Vertex;
+var Edge = grex.Edge;
 
-// var client;
+var client;
 
 before(function(done) {
-  client.connect()
-    .then(function(result) {
-      client = result;
-      done();
-    })
-    .fail(function(error) {
-      console.error(error);
-    });
+  grex.connect(function(err, gremlinClient) {
+    client = gremlinClient;
+    done();
+  });
 });
 
 describe('Gremlin steps', function() {
