@@ -6,11 +6,11 @@ var _ = require("lodash");
 
 var Client = require('./client');
 var Gremlin = require('./gremlin');
-var Graph = require("./objects/graph");
+var Graph = require("./gremlin/graph");
 var classes = require("./classes");
 
 var ResultFormatter = require("./resultformatter");
-var ArgumentHandler = require("./arguments/argumenthandler");
+var ArgumentHandler = require("./gremlin/arguments/argumenthandler");
 
 
 module.exports = (function(){
