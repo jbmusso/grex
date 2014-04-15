@@ -6,8 +6,7 @@ var Client = require('../src/client.js');
 var defaultOptions = {
   'host': 'localhost',
   'port': 8182,
-  'graph': 'tinkergraph',
-  'idRegex': false // OrientDB id regex -> /^[0-9]+:[0-9]+$/
+  'graph': 'tinkergraph'
 };
 
 

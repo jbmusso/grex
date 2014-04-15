@@ -1,9 +1,8 @@
 var _ = require('lodash');
 
 module.exports = (function () {
-  function Argument(raw, options) {
+  function Argument(raw) {
     this.raw = raw;
-    this.options = options;
   }
 
   Argument.prototype.toString = function() {
@@ -31,7 +30,7 @@ module.exports = (function () {
     }
 
     // Cater for ids that are not numbers but pass parseFloat test
-    if (this.isRegexId() || _.isNaN(parseFloat(argument))) {
+    if (false && _.isString(this.raw) || _.isNaN(parseFloat(argument))) {
       return "'" + argument + "'";
     }
 
@@ -40,10 +39,6 @@ module.exports = (function () {
     }
 
     return argument;
-  };
-
-  Argument.prototype.isRegexId = function() {
-    return !!this.options.idRegex && _.isString(this.raw) && this.options.idRegex.test(this.raw);
   };
 
   Argument.prototype.isGraphReference = function() {

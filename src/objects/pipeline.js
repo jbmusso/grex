@@ -1,5 +1,9 @@
-var Gremlin = require('./gremlin');
-var GremlinStep = require('./gremlin/step');
+var Gremlin = require('../gremlin');
+var GremlinStep = require('../functions/step');
+var CollectionAccessor = require('../functions/collectionaccessor');
+var CollectionStep = require('../functions/collectionstep');
+var PipesStep = require('../functions/pipesstep');
+
 
 module.exports = (function () {
   function Pipeline(gremlin) {
@@ -178,18 +182,24 @@ module.exports = (function () {
   /*** Filter ***/
   // index(i)
   Pipeline.prototype.index = function() {
-    this.gremlin.appendIndex(arguments);
+    var step = new CollectionAccessor(arguments);
+    this.gremlin.append(step.toString());
+
     return this;
   };
 
   // range('[i..j]')
   Pipeline.prototype.range = function() {
-    this.gremlin.appendIndex(arguments);
+    var step = new CollectionAccessor(arguments);
+    this.gremlin.append(step.toString());
+
     return this;
   };
 
   Pipeline.prototype.and = function() {
-    this.gremlin.appendPipes('and', arguments);
+    var step = new PipesStep('and', arguments);
+    this.gremlin.append(step.toString());
+
     return this;
   };
 
@@ -208,7 +218,9 @@ module.exports = (function () {
   };
 
   Pipeline.prototype.except = function() {
-    this.gremlin.appendCollection('except', arguments);
+    var step = new CollectionStep('except', arguments);
+    this.gremlin.append(step.toString());
+
     return this;
   };
 
@@ -241,7 +253,9 @@ module.exports = (function () {
   };
 
   Pipeline.prototype.or = function() {
-    this.gremlin.appendPipes('or', arguments);
+    var step = new PipesStep('or', arguments);
+    this.gremlin.append(step.toString());
+
     return this;
   };
 
@@ -253,7 +267,9 @@ module.exports = (function () {
   };
 
   Pipeline.prototype.retain = function() {
-    this.gremlin.appendCollection('retain', arguments);
+    var step = new CollectionStep('retain', arguments);
+    this.gremlin.append(step.toString());
+
     return this;
   };
 
@@ -340,7 +356,9 @@ module.exports = (function () {
 
   /*** Branch ***/
   Pipeline.prototype.copySplit = function() {
-    this.gremlin.appendPipes('copySplit', arguments);
+    var step = new PipesStep('copySplit', arguments);
+    this.gremlin.append(step.toString());
+
     return this;
   };
   Pipeline.prototype.exhaustMerge = function() {
@@ -427,7 +445,9 @@ module.exports = (function () {
   };
 
   Pipeline.prototype.put = function() {
-    this.gremlin.appendPipes('put', arguments);
+    var step = new PipesStep('put', arguments);
+    this.gremlin.append(step.toString());
+
     return this;
   };
 

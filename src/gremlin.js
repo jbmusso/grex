@@ -1,7 +1,7 @@
 var _ = require("lodash");
 
-var Graph = require('./graph');
-var Pipeline = require('./pipeline');
+var Graph = require('./objects/graph');
+var Pipeline = require('./objects/pipeline');
 var Argument = require('./arguments/argument');
 
 module.exports = (function() {
@@ -67,65 +67,10 @@ module.exports = (function() {
     this.script += '\n'+ line;
   };
 
-
   Gremlin.prototype.stringifyArgument = function(argument) {
     return JSON.stringify(argument).replace('{', '[').replace('}', ']');
   };
 
-  /**
-   * Alternative 'index' and 'range' commands, ie:
-   *   index() => [i]
-   *   range() => [1..2]
-   *
-   * Do not pass in method name, just string range.
-   *
-   * @param {String} arg
-   */
-  Gremlin.prototype.appendIndex = function(arg) {
-    this.append('['+ arg[0].toString() + ']');
-  };
-
-  /**
-   * Used for 'and', 'or' & 'put commands, ie:
-   *   g.v(1).outE().or(g._().has('id', 'T.eq', 9), g._().has('weight', 'T.lt', '0.6f'))
-   *
-   * @param {String} methodName
-   * @param {Array} args Method's arguments
-   */
-  Gremlin.prototype.appendPipes = function(methodName, args) {
-    var argumentList = [];
-    args = _.isArray(args[0]) ? args[0] : args;
-
-    _.each(args, function(arg) {
-      var argObj = new Argument(arg, this.client.options);
-      var partialScript = (arg.gremlin && arg.gremlin.script) || argObj.parse();
-      argumentList.push(partialScript);
-    }, this);
-
-    this.append('.' + methodName + '('+ argumentList.join(',') +')');
-  };
-
-  /**
-   * Used for retain & except commands, ie:
-   *   g.V().retain([g.v(1), g.v(2), g.v(3)])
-   *
-   * @param {String} methodName
-   * @param {Array} args Method's arguments
-   */
-  Gremlin.prototype.appendCollection = function(methodName, args) {
-    var argumentList = [];
-
-    if (_.isArray(args[0])) {
-      // Passing in an array of Pipeline with Gremlin script as arguments
-      _.each(args[0], function(pipeline) {
-        argumentList.push(pipeline.gremlin.script);
-      });
-
-      this.append("." + methodName + "([" + argumentList.join(',') + "])");
-    } else {
-      this.append("." + methodName + this.argumentHandler.buildString(args[0]));
-    }
-  };
 
   return Gremlin;
 

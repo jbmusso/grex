@@ -6,7 +6,7 @@ var _ = require("lodash");
 
 var Client = require('./client');
 var Gremlin = require('./gremlin');
-var Graph = require("./graph");
+var Graph = require("./objects/graph");
 var classes = require("./classes");
 
 var ResultFormatter = require("./resultformatter");
@@ -18,9 +18,7 @@ module.exports = (function(){
     this.defaultOptions = {
       host: 'localhost',
       port: 8182,
-      graph: 'tinkergraph',
-      idRegex: false // OrientDB id regex -> /^[0-9]+:[0-9]+$/
-      // fetched: function(response, results) { return results; }
+      graph: 'tinkergraph'
     };
 
     this.options = _.defaults(options, this.defaultOptions);
