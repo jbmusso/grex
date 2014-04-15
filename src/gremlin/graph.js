@@ -2,7 +2,7 @@ var _ = require("lodash");
 
 
 var GremlinMethod = require('./functions/method');
-var IdxGremlinFunction = require('./functions/idx');
+var IdxGremlinFunction = require('./functions/graph/idx');
 
 var Pipeline = require('./pipeline');
 var Vertex = require('./vertex');
