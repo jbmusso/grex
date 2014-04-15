@@ -3,7 +3,7 @@ var inherits = require('util').inherits;
 var _ = require('lodash');
 
 var GremlinStep = require('./step');
-var Argument = require('../arguments/argument');
+var Argument = require('../../arguments/argument');
 
 module.exports = (function() {
   function PipesStep() {

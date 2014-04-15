@@ -1,6 +1,6 @@
 var inherits = require('util').inherits;
 
-var GremlinMethod = require('./method');
+var GremlinMethod = require('../method');
 
 module.exports = (function() {
   function GremlinStep(name, args) {
