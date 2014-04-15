@@ -3,6 +3,7 @@ var _ = require("lodash");
 var Graph = require('./objects/graph');
 var Pipeline = require('./objects/pipeline');
 var Argument = require('./arguments/argument');
+var GremlinFunction = require('./functions/function');
 
 module.exports = (function() {
   function Gremlin(client, options) {
@@ -42,7 +43,8 @@ module.exports = (function() {
    */
   Gremlin.prototype._ = function() {
     var gremlin = new Gremlin(this.client);
-    gremlin.append('_' + gremlin.argumentHandler.buildString(arguments));
+    var func = new GremlinFunction('_', arguments);
+    gremlin.append(func.toString());
 
     return new Pipeline(gremlin);
   };
