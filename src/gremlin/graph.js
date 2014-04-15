@@ -3,6 +3,7 @@ var _ = require("lodash");
 
 var GremlinMethod = require('./functions/method');
 var IdxGremlinFunction = require('./functions/graph/idx');
+var AddVertexMethod = require('./functions/graph/addvertex');
 
 var Pipeline = require('./pipeline');
 var Vertex = require('./vertex');
@@ -140,7 +141,8 @@ module.exports = (function() {
   /**
    * Build a Gremlin line used for adding a Vertex in the graph.
    * Note: for databases which accept custom _id properties (ie. non generated)
-   * the user must pass a valid _id value in the properties map.
+   * the user must pass a valid _id value in the `properties` map rather thant
+   * supply an optional argument parameter as first argument (TinkerPop style).
    * This slight change to the API of addVertex makes it easier to use
    * in a JavaScript environment.
    *
@@ -148,19 +150,10 @@ module.exports = (function() {
    * @param {String} identifier Optional variable name used within the script context
    */
   Graph.prototype.addVertex = function(properties, identifier) {
-    var vertex = new Vertex(this.gremlin);
-    var id = properties._id ? properties._id +',' : '';
-    var identifierPrefix = identifier ? identifier + ' = ' : '';
+    var method = new AddVertexMethod(properties);
+    var vertex = method.exec(this.gremlin, identifier);
 
-    vertex.identifier = identifier; // Non-enumerable property
-
-    _.each(properties, function(value, key) {
-      vertex[key] = value;
-    });
-
-    var gremlinLine = identifierPrefix +'g.addVertex('+ id + this.gremlin.stringifyArgument(properties) +')';
-    this.gremlin.line(gremlinLine);
-
+    this.gremlin.line(method.toString());
     this.parentGremlin.append(this.gremlin.script);
 
     return vertex;
