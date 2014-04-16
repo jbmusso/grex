@@ -3,6 +3,7 @@ var _ = require('lodash');
 var GetPropertiesMethod = require('./functions/element/getproperties');
 var SetPropertiesMethod = require('./functions/element/setproperties');
 var AddPropertiesMethod = require('./functions/element/addproperties');
+var SetPropertyMethod = require('./functions/element/setproperty');
 
 /*
 * Abstract Element class
@@ -35,11 +36,10 @@ module.exports = (function() {
   };
 
   Element.prototype.setProperty = function(key, value) {
-    this[key] = value;
+    var method = new SetPropertyMethod({ key: key, value: value });
+    this.gremlin.line(this.identifier + method.toGroovy());
 
-    this.gremlin.line(this.identifier + ".setProperty('"+key+"','"+value+"')");
-
-    return this;
+    return method.run(this);
   };
 
   Element.prototype.setProperties = function(properties) {
