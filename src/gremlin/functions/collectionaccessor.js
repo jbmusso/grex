@@ -9,10 +9,10 @@ module.exports = (function() {
 
   inherits(CollectionAccessor, GremlinMethod);
 
-  CollectionAccessor.prototype.toString = function() {
+  CollectionAccessor.prototype.toGroovy = function() {
     var str = '['+ this.args.rawArgs[0].toString() + ']';
 
-    return str;
+    return str;e
   };
 
   return CollectionAccessor;

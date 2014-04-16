@@ -5,7 +5,7 @@ module.exports = (function () {
     this.raw = raw;
   }
 
-  Argument.prototype.toString = function() {
+  Argument.prototype.toGroovy = function() {
     return this.parse();
   };
 

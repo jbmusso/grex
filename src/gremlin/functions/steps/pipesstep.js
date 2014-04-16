@@ -12,7 +12,7 @@ module.exports = (function() {
 
   inherits(PipesStep, GremlinStep);
 
-  PipesStep.prototype.toString = function() {
+  PipesStep.prototype.toGroovy = function() {
     var str = '';
     var argumentList = [];
     var args = this.args.rawArgs;

@@ -10,7 +10,7 @@ module.exports = (function () {
     var argList = new ArgumentList(args);
     argList.buildArguments(retainArray);
 
-    return argList.toString();
+    return argList.toGroovy();
   };
 
   return ArgumentHandler;

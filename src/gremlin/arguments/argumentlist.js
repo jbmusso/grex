@@ -13,7 +13,7 @@ module.exports = (function () {
     this.appendedArguments = [];
   }
 
-  ArgumentList.prototype.toString = function() {
+  ArgumentList.prototype.toGroovy = function() {
     var appendedArguments = this.appendedArguments.join(',');
 
     return '(' + this.parenthesizedArguments.join(',') + ')' + appendedArguments;

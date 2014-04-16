@@ -44,7 +44,7 @@ module.exports = (function() {
   Gremlin.prototype._ = function() {
     var gremlin = new Gremlin(this.client);
     var func = new GremlinFunction('_', arguments);
-    gremlin.append(func.toString());
+    gremlin.append(func.toGroovy());
 
     return new Pipeline(gremlin);
   };

@@ -9,7 +9,7 @@ module.exports = (function() {
 
   inherits(IdxGremlinFunction, GremlinMethod);
 
-  IdxGremlinFunction.prototype.toString = function() {
+  IdxGremlinFunction.prototype.toGroovy = function() {
     var str = ".idx('" + this.args.rawArgs[0] + "')";
     var properties = this.args.rawArgs[1];
 

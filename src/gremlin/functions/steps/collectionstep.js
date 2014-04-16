@@ -11,7 +11,7 @@ module.exports = (function() {
 
   inherits(CollectionStep, GremlinStep);
 
-  CollectionStep.prototype.toString = function() {
+  CollectionStep.prototype.toGroovy = function() {
     var str = '';
     var argumentList = [];
     var args = this.args.rawArgs;

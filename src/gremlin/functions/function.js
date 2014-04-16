@@ -6,10 +6,10 @@ module.exports = (function() {
     this.args = new ArgumentList(args);
   }
 
-  GremlinFunction.prototype.toString = function() {
+  GremlinFunction.prototype.toGroovy = function() {
     this.args.buildArguments();
 
-    return this.name + '' + this.args.toString();
+    return this.name + '' + this.args.toGroovy();
   };
 
   return GremlinFunction;

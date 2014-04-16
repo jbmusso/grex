@@ -8,12 +8,12 @@ module.exports = (function() {
 
   inherits(ClosureArgument, Argument);
 
-  ClosureArgument.prototype.toString = function() {
+  ClosureArgument.prototype.toGroovy = function() {
     return this.raw;
   };
 
   ClosureArgument.prototype.updateList = function(argumentList) {
-    argumentList.appendedArguments.push(this.toString());
+    argumentList.appendedArguments.push(this.toGroovy());
   };
 
   return ClosureArgument;

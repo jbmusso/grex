@@ -8,12 +8,12 @@ module.exports = (function() {
 
   inherits(ObjectArgument, Argument);
 
-  ObjectArgument.prototype.toString = function() {
+  ObjectArgument.prototype.toGroovy = function() {
     return JSON.stringify(this.raw).replace('{', '[').replace('}', ']');
   };
 
   ObjectArgument.prototype.updateList = function(argumentList) {
-    argumentList.parenthesizedArguments.push(this.toString());
+    argumentList.parenthesizedArguments.push(this.toGroovy());
   };
 
   return ObjectArgument;
