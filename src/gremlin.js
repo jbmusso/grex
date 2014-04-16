@@ -69,11 +69,5 @@ module.exports = (function() {
     this.script += '\n'+ line;
   };
 
-  Gremlin.prototype.stringifyArgument = function(argument) {
-    return JSON.stringify(argument).replace('{', '[').replace('}', ']');
-  };
-
-
   return Gremlin;
-
 })();
