@@ -1,7 +1,5 @@
 var inherits = require('util').inherits;
 
-var _ = require('lodash');
-
 var GremlinMethod = require('../function');
 
 module.exports = (function() {
