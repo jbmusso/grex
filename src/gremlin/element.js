@@ -1,6 +1,7 @@
 var _ = require('lodash');
 
 var GetPropertiesMethod = require('./functions/element/getproperties');
+var SetPropertiesMethod = require('./functions/element/setproperties');
 
 /*
 * Abstract Element class
@@ -41,15 +42,10 @@ module.exports = (function() {
   };
 
   Element.prototype.setProperties = function(properties) {
-    _.each(properties, function(value, key) {
-      this[key] = value;
-    }, this);
+    var method = new SetPropertiesMethod(properties);
+    this.gremlin.line(this.identifier + method.toGroovy());
 
-    var line = this.identifier +'.setProperties('+ this.gremlin.stringifyArgument(properties) +')';
-
-    this.gremlin.line(line);
-
-    return this;
+    return method.run(this);
   };
 
   /**
