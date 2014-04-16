@@ -3,7 +3,7 @@ var GremlinStep = require('./functions/steps/step');
 var CollectionAccessor = require('./functions/collectionaccessor');
 var CollectionStep = require('./functions/steps/collectionstep');
 var PipesStep = require('./functions/steps/pipesstep');
-
+var SelectStep = require('./functions/steps/select');
 
 module.exports = (function () {
   function Pipeline(gremlin) {
@@ -161,7 +161,9 @@ module.exports = (function () {
   };
 
   Pipeline.prototype.select = function() {
-    this.gremlin.append('.select' + this.gremlin.argumentHandler.buildString(arguments, true));
+    var step = new SelectStep(arguments);
+    this.gremlin.append(step.toGroovy());
+
     return this;
   };
 

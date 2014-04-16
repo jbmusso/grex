@@ -10,7 +10,6 @@ module.exports = (function() {
     this.script = '';
     this.params = {};
     this.client = client;
-    this.argumentHandler = client.argumentHandler;
 
     var settings = _.defaults(options || {
       graph: 'g'

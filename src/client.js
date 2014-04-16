@@ -10,7 +10,6 @@ var Graph = require("./gremlin/graph");
 var classes = require("./classes");
 
 var ResultFormatter = require("./resultformatter");
-var ArgumentHandler = require("./gremlin/arguments/argumenthandler");
 
 
 module.exports = (function(){
@@ -24,7 +23,6 @@ module.exports = (function(){
     this.options = _.defaults(options, this.defaultOptions);
 
     this.resultFormatter = new ResultFormatter();
-    this.argumentHandler = new ArgumentHandler(this.options);
 
     _.extend(this, classes);
     this.ClassTypes = classes;
