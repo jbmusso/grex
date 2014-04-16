@@ -41,5 +41,9 @@ module.exports = (function () {
     return _.isString(val) && closureRegex.test(val);
   };
 
+  ArgumentList.prototype.stringifyArgument = function(argument) {
+    return JSON.stringify(argument).replace('{', '[').replace('}', ']');
+  };
+
   return ArgumentList;
 })();

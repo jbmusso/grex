@@ -29,7 +29,7 @@ module.exports = (function() {
 
     var id = this.vertex._id ? this.vertex._id +',' : '';
 
-    var str = identifierPrefix +'g.addVertex('+ id + this.vertex.gremlin.stringifyArgument(this.args.rawArgs) +')';
+    var str = identifierPrefix +'g.addVertex('+ id + this.args.stringifyArgument(this.args.rawArgs) +')';
 
     return str;
   };

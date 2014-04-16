@@ -40,7 +40,7 @@ module.exports = (function() {
   AddEdgeMethod.prototype.toGroovy = function() {
     var identifierPrefix = this.edge.identifier ? this.edge.identifier + ' = ' : '';
     var id = this.edge._id ? this.edge._id + ',' : '';
-    var str = identifierPrefix + 'g.addEdge('+ id + this.edge._outV.identifier +','+ this.edge._inV.identifier +',"'+ this.edge._label +'",'+ this.edge.gremlin.stringifyArgument(this.args.rawArgs.properties) +')';
+    var str = identifierPrefix + 'g.addEdge('+ id + this.edge._outV.identifier +','+ this.edge._inV.identifier +',"'+ this.edge._label +'",'+ this.args.stringifyArgument(this.args.rawArgs.properties) +')';
 
     return str;
   };
