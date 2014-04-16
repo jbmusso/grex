@@ -9,7 +9,7 @@ module.exports = (function() {
   GremlinFunction.prototype.toGroovy = function() {
     this.args.buildArguments();
 
-    return this.name + '' + this.args.toGroovy();
+    return this.name + this.args.toGroovy();
   };
 
   return GremlinFunction;

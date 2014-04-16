@@ -22,9 +22,9 @@ module.exports = (function() {
         argumentList.push(pipeline.gremlin.script);
       });
 
-      str += "." + this.name + "([" + argumentList.join(',') + "])";
+      str = "." + this.name + "([" + argumentList.join(',') + "])";
     } else {
-      str += "." + this.name + "('"+ this.args.rawArgs[0] + "')";
+      str = "." + this.name + "('"+ this.args.rawArgs[0] + "')";
     }
 
     return str;
