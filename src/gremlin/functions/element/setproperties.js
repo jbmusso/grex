@@ -1,7 +1,5 @@
 var inherits = require('util').inherits;
 
-var _ = require('lodash');
-
 var GremlinMethod = require('../function');
 
 module.exports = (function() {
@@ -12,9 +10,12 @@ module.exports = (function() {
   inherits(SetPropertiesMethod, GremlinMethod);
 
   SetPropertiesMethod.prototype.run = function(element) {
-    _.each(this.args.rawArgs, function(value, key) {
-      element[key] = value;
-    });
+    var key;
+    var args = this.args.rawArgs;
+
+    for (key in args) {
+      element[key] = args[key];
+    }
 
     return element;
   };
