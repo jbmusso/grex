@@ -12,7 +12,7 @@ module.exports = (function() {
   CollectionAccessor.prototype.toGroovy = function() {
     var str = '['+ this.args.rawArgs[0].toString() + ']';
 
-    return str;e
+    return str;
   };
 
   return CollectionAccessor;
