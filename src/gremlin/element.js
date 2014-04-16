@@ -4,6 +4,7 @@ var GetPropertiesMethod = require('./functions/element/getproperties');
 var SetPropertiesMethod = require('./functions/element/setproperties');
 var AddPropertiesMethod = require('./functions/element/addproperties');
 var SetPropertyMethod = require('./functions/element/setproperty');
+var AddPropertyMethod = require('./functions/element/addproperty');
 
 /*
 * Abstract Element class
@@ -59,10 +60,10 @@ module.exports = (function() {
    * @param {Object} value
    */
   Element.prototype.addProperty = function(key, value) {
-    this[key] = value;
-    this.gremlin.line(this.identifier + ".addProperty('"+key+"','"+value+"')");
+    var method = new AddPropertyMethod({ key: key, value: value });
+    this.gremlin.line(this.identifier + method.toGroovy());
 
-    return this;
+    return method.run(this);
   };
 
   /**
