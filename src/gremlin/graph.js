@@ -7,8 +7,6 @@ var AddVertexMethod = require('./functions/graph/addvertex');
 var AddEdgeMethod = require('./functions/graph/addedge');
 
 var Pipeline = require('./pipeline');
-var Vertex = require('./vertex');
-var Edge = require('./edge');
 
 module.exports = (function() {
   function Graph(parentGremlin) {
@@ -161,12 +159,14 @@ module.exports = (function() {
   };
 
   Graph.prototype.addEdge = function(v1, v2, label, properties, identifier) {
-    var method = new AddEdgeMethod({
+    var params = {
       v1: v1,
       v2: v2,
       label: label,
       properties: properties
-    });
+    };
+
+    var method = new AddEdgeMethod(params);
     var edge = method.run(this.gremlin, identifier);
 
     this.gremlin.line(method.toGroovy());
