@@ -7,6 +7,7 @@ var ArrayArgument = require('./array');
 
 module.exports = (function () {
   function ArgumentList(rawArgs) {
+    this.arguments = [].slice.call(rawArgs || []);
     this.rawArgs = rawArgs;
 
     this.parenthesizedArguments = [];
@@ -20,15 +21,15 @@ module.exports = (function () {
   };
 
   ArgumentList.prototype.buildArguments = function(retainArray) {
-    _.each(this.rawArgs, function(rawArg) {
-      if (this.isClosure(rawArg)) {
-        built = new ClosureArgument(rawArg);
-      } else if (retainArray && _.isArray(rawArg)) {
-        built = new ArrayArgument(rawArg);
-      } else if (_.isObject(rawArg)) {
-        built = new ObjectArgument(rawArg);
+    _.each(this.arguments, function(argument) {
+      if (this.isClosure(argument)) {
+        built = new ClosureArgument(argument);
+      } else if (retainArray && _.isArray(argument)) {
+        built = new ArrayArgument(argument);
+      } else if (_.isObject(argument)) {
+        built = new ObjectArgument(argument);
       } else {
-        built = new Argument(rawArg);
+        built = new Argument(argument);
       }
 
       built.updateList(this);
