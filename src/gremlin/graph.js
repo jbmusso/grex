@@ -152,9 +152,9 @@ module.exports = (function() {
    */
   Graph.prototype.addVertex = function(properties, identifier) {
     var method = new AddVertexMethod(properties);
-    var vertex = method.exec(this.gremlin, identifier);
+    var vertex = method.run(this.gremlin, identifier);
 
-    this.gremlin.line(method.toString());
+    this.gremlin.line(method.toGroovy());
     this.parentGremlin.append(this.gremlin.script);
 
     return vertex;
@@ -167,9 +167,9 @@ module.exports = (function() {
       label: label,
       properties: properties
     });
-    var edge = method.exec(this.gremlin, identifier);
+    var edge = method.run(this.gremlin, identifier);
 
-    this.gremlin.line(method.toString());
+    this.gremlin.line(method.toGroovy());
     this.parentGremlin.append(this.gremlin.script);
 
     return edge;

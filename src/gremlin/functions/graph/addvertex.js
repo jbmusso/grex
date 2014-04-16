@@ -12,7 +12,7 @@ module.exports = (function() {
 
   inherits(AddVertexMethod, GremlinMethod);
 
-  AddVertexMethod.prototype.exec = function(gremlin, identifier) {
+  AddVertexMethod.prototype.run = function(gremlin, identifier) {
     this.vertex = new Vertex(gremlin);
 
     this.vertex.identifier = identifier; // Non-enumerable property
@@ -24,7 +24,7 @@ module.exports = (function() {
     return this.vertex;
   };
 
-  AddVertexMethod.prototype.toString = function() {
+  AddVertexMethod.prototype.toGroovy = function() {
     var identifierPrefix = this.vertex.identifier ? this.vertex.identifier + ' = ' : '';
 
     var id = this.vertex._id ? this.vertex._id +',' : '';

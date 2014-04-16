@@ -12,7 +12,7 @@ module.exports = (function() {
 
   inherits(AddEdgeMethod, GremlinMethod);
 
-  AddEdgeMethod.prototype.exec = function(gremlin, identifier) {
+  AddEdgeMethod.prototype.run = function(gremlin, identifier) {
     this.edge = new Edge(gremlin);
 
     this.edge.identifier = identifier; // Non-enumerable property
@@ -36,7 +36,7 @@ module.exports = (function() {
     return this.edge;
   };
 
-  AddEdgeMethod.prototype.toString = function() {
+  AddEdgeMethod.prototype.toGroovy = function() {
     var identifierPrefix = this.edge.identifier ? this.edge.identifier + ' = ' : '';
     var id = this.edge._id ? this.edge._id + ',' : '';
 
