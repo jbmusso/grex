@@ -6,16 +6,12 @@ var Argument = require('./gremlin/arguments/argument');
 var GremlinFunction = require('./gremlin/functions/function');
 
 module.exports = (function() {
-  function Gremlin(client, options) {
+  function Gremlin(client) {
     this.script = '';
     this.params = {};
     this.client = client;
 
-    var settings = _.defaults(options || {
-      graph: 'g'
-    });
-
-    Object.defineProperty(this, settings.graph, {
+    Object.defineProperty(this, 'g', {
       get: function() {
         var graph = new Graph(this);
 

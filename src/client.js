@@ -102,8 +102,8 @@ module.exports = (function(){
     return results;
   };
 
-  Client.prototype.gremlin = function(options) {
-    var gremlin = new Gremlin(this, options);
+  Client.prototype.gremlin = function() {
+    var gremlin = new Gremlin(this);
 
     return gremlin;
   };
