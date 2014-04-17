@@ -10,9 +10,7 @@ module.exports = (function() {
   inherits(SelectStep, GremlinStep);
 
   SelectStep.prototype.toGroovy = function() {
-    this.args.buildArguments(true); // retain array square brackets []
-
-    return '.select' + this.args.toGroovy();
+    return '.select' + this.args.toGroovy().replace(/\"/g, '\'');
   };
 
   return SelectStep;
