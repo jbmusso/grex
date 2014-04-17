@@ -20,11 +20,11 @@ module.exports = (function () {
     return '(' + this.parenthesizedArguments.join(',') + ')' + appendedArguments;
   };
 
-  ArgumentList.prototype.buildArguments = function(retainArray) {
+  ArgumentList.prototype.buildArguments = function() {
     _.each(this.arguments, function(argument) {
       if (this.isClosure(argument)) {
         built = new ClosureArgument(argument);
-      } else if (retainArray && _.isArray(argument)) {
+      } else if (_.isArray(argument)) {
         built = new ArrayArgument(argument);
       } else if (_.isObject(argument)) {
         built = new ObjectArgument(argument);
