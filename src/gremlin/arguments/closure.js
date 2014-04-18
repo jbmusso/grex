@@ -13,7 +13,7 @@ module.exports = (function() {
   };
 
   ClosureArgument.prototype.updateList = function(argumentList) {
-    argumentList.appendedArguments.push(this.toGroovy());
+    argumentList.closures.push(this.toGroovy());
   };
 
   return ClosureArgument;

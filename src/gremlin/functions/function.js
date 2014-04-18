@@ -8,7 +8,14 @@ module.exports = (function() {
   }
 
   GremlinFunction.prototype.toGroovy = function() {
-    return this.name + this.args.toGroovy();
+    return this.name + this.groovifyArguments();
+  };
+
+  GremlinFunction.prototype.groovifyArguments = function() {
+    var closures = this.args.closures.join(',');
+
+    return '(' + this.args.parenthesizedArguments.join(',') + ')' + closures;
+
   };
 
   return GremlinFunction;

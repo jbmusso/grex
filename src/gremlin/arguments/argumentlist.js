@@ -11,13 +11,21 @@ module.exports = (function () {
     this.rawArgs = rawArgs;
 
     this.parenthesizedArguments = [];
-    this.appendedArguments = [];
+    this.closures = [];
   }
 
   ArgumentList.prototype.toGroovy = function() {
-    var appendedArguments = this.appendedArguments.join(',');
+    var groovy = '';
 
-    return '(' + this.parenthesizedArguments.join(',') + ')' + appendedArguments;
+    if (this.parenthesizedArguments.length > 0) {
+      groovy += '(' + this.parenthesizedArguments.join(',') + ')';
+    }
+
+    if (this.closures.length > 0) {
+      groovy += this.closures.join(',');
+    }
+
+    return groovy;
   };
 
   ArgumentList.prototype.buildArguments = function() {
