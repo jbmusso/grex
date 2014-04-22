@@ -4,6 +4,7 @@ var Argument = require('./argument');
 var ClosureArgument = require('./closure');
 var ObjectArgument = require('./object');
 var ArrayArgument = require('./array');
+var ClassArgument = require('./class');
 
 module.exports = (function () {
   function ArgumentList(rawArgs) {
@@ -34,6 +35,8 @@ module.exports = (function () {
         built = new ClosureArgument(argument);
       } else if (_.isArray(argument)) {
         built = new ArrayArgument(argument);
+      } else if (_.isFunction(argument)) {
+        built = new ClassArgument(argument);
       } else if (_.isObject(argument)) {
         built = new ObjectArgument(argument);
       } else {

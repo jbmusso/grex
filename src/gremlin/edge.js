@@ -6,10 +6,14 @@ module.exports = (function (){
   function Edge() {
     this._type = "edge";
 
-    Element.apply(this, arguments); // Call parent constructor
+    Element.apply(this, arguments);
   }
 
   inherits(Edge, Element);
+
+  Edge.toGroovy = function() {
+    return 'Edge.class';
+  };
 
   return Edge;
 

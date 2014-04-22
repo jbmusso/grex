@@ -100,13 +100,10 @@ describe('Graph methods', function() {
 
   describe('.createIndex()', function() {
     it('should handle string, Element.class arguments', function () {
-      // it("should support g.createIndex()", function() {
-        var query = client.gremlin().g.createIndex("my-index", 'Vertex.class');
-        query.gremlin.script.should.equal("g.createIndex('my-index',Vertex.class)");
-      // });
+      var query = client.gremlin().g.createIndex("my-index", Vertex);
+      query.gremlin.script.should.equal("g.createIndex('my-index',Vertex.class)");
     });
   });
-
 
   describe('.idx()', function() {
     it("should handle `name, {key: value}` arguments", function() {
@@ -127,6 +124,4 @@ describe('Graph methods', function() {
       query.gremlin.script.should.equal("g.dropIndex('my-index')");
     });
   });
-
-
 });
