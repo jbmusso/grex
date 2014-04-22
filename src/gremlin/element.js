@@ -6,11 +6,10 @@ var AddPropertiesMethod = require('./functions/element/addproperties');
 var SetPropertyMethod = require('./functions/element/setproperty');
 var AddPropertyMethod = require('./functions/element/addproperty');
 
-/*
-* Abstract Element class
-*/
+/**
+ * Abstract Element class
+ */
 module.exports = (function() {
-  // Graph Elements are currently Vertex or Edge
   function Element(gremlin, identifier) {
     this._id = null;
     this.identifier = identifier;
@@ -22,7 +21,7 @@ module.exports = (function() {
     });
   }
 
-  // Keep track of a temporary transaction id for each element
+  // Keep track of a temporary identifier for each element
   Object.defineProperty(Element.prototype, "identifier", {
     value: null,
     enumerable: false,

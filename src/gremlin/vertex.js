@@ -2,7 +2,7 @@ var inherits = require("inherits");
 
 var Element = require("./element");
 
-module.exports = (function (){
+module.exports = (function () {
   function Vertex() {
     this._type = "vertex";
 

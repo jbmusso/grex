@@ -28,6 +28,15 @@ module.exports = (function(){
     this.ClassTypes = classes;
   }
 
+  /**
+   * Connect the Client to Rexster server.
+   * While this method currently has an asynchronous behavior, it actually
+   * does synchronous stuff.
+   *
+   * Accept the double promise/callback API.
+   *
+   * @param {Function} callback
+   */
   Client.prototype.connect = function(options, callback) {
     if (typeof options === 'function') {
       callback = options;
@@ -44,10 +53,10 @@ module.exports = (function(){
   };
 
   /**
-   * Send a Gremlin script for execution on the server, fetch and format
+   * Send a Gremlin script to Rexster for execution via HTTP, fetch and format
    * results.
    *
-   * @param {Gremlin} gremlin A raw Gremlin (Groovy) script to execute
+   * @param {Gremlin} gremlin A Gremlin-Groovy script to execute
    */
   Client.prototype.exec = function(gremlin) {
     var deferred = Q.defer();
@@ -91,6 +100,12 @@ module.exports = (function(){
     return deferred.promise;
   };
 
+  /**
+   * Send a Gremlin script to Rexster for execution via HTTP, fetch and format
+   * results as instantiated elements (typically Vertices and Edges).
+   *
+   * @param {Gremlin} gremlin
+   */
   Client.prototype.fetch = function(gremlin) {
     return this.exec(gremlin)
     .then(function(response) {
@@ -98,10 +113,21 @@ module.exports = (function(){
     }.bind(this));
   };
 
+  /**
+   * A noop, default handler for Client.fetch().
+   *
+   * @param {String} response - the complete HTTP response body
+   * @param {Array} results - array of results, shorthand for response.results
+   */
   Client.prototype.defaultFetchHandler = function(response, results) {
     return results;
   };
 
+  /**
+   * Instantiate and return a new Gremlin script
+   *
+   * @return {Gremlin}
+   */
   Client.prototype.gremlin = function() {
     var gremlin = new Gremlin(this);
 

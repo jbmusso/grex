@@ -11,10 +11,12 @@ module.exports = (function () {
   }
 
   /**
-   * Execute a query against the server.
-   * Support the dual callback/promise API.
+   * Send the underlying Gremlin script to the server for execution, returning
+   * raw results.
    *
-   * WARNING: this method will likely be deprecated in the future.
+   * This method is a shorthand for Gremlin.exec().
+   *
+   * Support the dual callback/promise API.
    *
    * @param {Function} callback
    */
@@ -23,9 +25,20 @@ module.exports = (function () {
     return this.gremlin.exec(callback);
   };
 
+  /**
+   * Send the underlying Gremlin script to the server for execution, returning
+   * instantiated results.
+   *
+   * This method is a shorthand for Gremlin.fetch().
+   *
+   * Support the dual callback/promise API.
+   *
+   * @param {Function} callback
+   */
   Pipeline.prototype.fetch = function(callback) {
     return this.gremlin.fetch(callback);
   };
+
 
   Pipeline.prototype.both = function() {
     var step = new GremlinStep('both', arguments);

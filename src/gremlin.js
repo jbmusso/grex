@@ -11,6 +11,7 @@ module.exports = (function() {
     this.params = {};
     this.client = client;
 
+    // Define a default 'g' getter, returning a Graph
     Object.defineProperty(this, 'g', {
       get: function() {
         var graph = new Graph(this);
@@ -20,20 +21,38 @@ module.exports = (function() {
     });
   }
 
+  /**
+   * Instantiate a new Gremlin script
+   *
+   * @return {Gremlin}
+   */
   Gremlin.prototype.subScript = function() {
     return new Gremlin(this.client);
   };
 
+  /**
+   * Send the script to the server for execution, returning raw results.
+   *
+   * @param {Function}
+   */
   Gremlin.prototype.exec = function(callback) {
     return this.client.exec(this).nodeify(callback);
   };
 
+  /**
+   * Send the script to the server for execution, returning instantiated
+   * results.
+   *
+   * @param {Function}
+   */
   Gremlin.prototype.fetch = function(callback) {
     return this.client.fetch(this).nodeify(callback);
   };
 
   /**
-   * Transforms an arbitrary object into a Pipeline
+   * Return a Pipeline object with its own internal Gremlin object to append
+   * string to.
+   *
    * @return {Pipeline}
    */
   Gremlin.prototype._ = function() {
@@ -45,7 +64,7 @@ module.exports = (function() {
   };
 
   /**
-   * Append an arbitrary Gremlin string to current script.
+   * Append an arbitrary string to the script.
    *
    * @private
    * @param {String} script
@@ -55,7 +74,7 @@ module.exports = (function() {
   };
 
   /**
-   * Append an arbitrary Gremlin string to current script as a new line.
+   * Append an arbitrary string to the script as a new line.
    *
    * @public
    * @param {String} line

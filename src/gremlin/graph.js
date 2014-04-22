@@ -140,14 +140,17 @@ module.exports = (function() {
 
   /**
    * Build a Gremlin line used for adding a Vertex in the graph.
+   *
    * Note: for databases which accept custom _id properties (ie. non generated)
-   * the user must pass a valid _id value in the `properties` map rather thant
+   * the user must pass a valid _id value in the `properties` map rather than
    * supply an optional argument parameter as first argument (TinkerPop style).
    * This slight change to the API of addVertex makes it easier to use
    * in a JavaScript environment.
    *
    * @param {Object} properties
-   * @param {String} identifier Optional variable name used within the script context
+   * @param {String} identifier Optional variable name used within the script
+   *    context
+   * @return {Vertex}
    */
   Graph.prototype.addVertex = function(properties, identifier) {
     var method = new AddVertexMethod(properties);
@@ -159,6 +162,15 @@ module.exports = (function() {
     return vertex;
   };
 
+  /**
+   * @param {Vertex|Number} v1
+   * @param {Vertex|Number} v2
+   * @param {String} label
+   * @param {Object} properties
+   * @param {String} identifier Optional variable name used within the script
+   *    context
+   * @return {Edge}
+   */
   Graph.prototype.addEdge = function(v1, v2, label, properties, identifier) {
     var params = {
       v1: v1,
