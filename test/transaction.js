@@ -3,8 +3,8 @@ var grex = require('../index.js');
 var client;
 
 before(function(done){
-  grex.connect(function(err, gremlinClient) {
-    client = gremlinClient;
+  grex.connect(function(err, rexsterClient) {
+    client = rexsterClient;
     done();
   });
 });

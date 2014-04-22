@@ -1,8 +1,8 @@
 var should = require('should');
 
-var client = require('../index.js');
+var grex = require('../index.js');
 var _    = require("lodash");
-var Client = require('../src/client.js');
+var RexsterClient = require('../src/rexsterclient.js');
 
 
 var defaultOptions = {
@@ -12,10 +12,10 @@ var defaultOptions = {
 };
 
 
-describe('Client connection', function() {
+describe('RexsterClient', function() {
   describe('when passing no parameters', function() {
     it('should use default options', function(done) {
-      client.connect(function(err, client) {
+      grex.connect(function(err, client) {
         should.not.exist(err);
         client.options.should.eql(defaultOptions);
         done();
@@ -31,13 +31,13 @@ describe('Client connection', function() {
     };
 
     before(function(done) {
-      client.connect(options, function(err, client) {
+      grex.connect(options, function(err, client) {
         done();
       });
     });
 
     it('should use this new options', function(done) {
-      client.options.graph.should.equal(options.graph);
+      grex.options.graph.should.equal(options.graph);
       done();
     });
   });
@@ -50,7 +50,7 @@ describe('Client connection', function() {
     };
 
     it('should use the right options', function(done) {
-      var client = new Client(options);
+      var client = new RexsterClient(options);
       client.options.graph.should.equal(options.graph);
       done();
     });

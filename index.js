@@ -1,3 +1,3 @@
-var Client = require('./src/client.js');
+var RexsterClient = require('./src/rexsterclient.js');
 
-module.exports = new Client();
+module.exports = new RexsterClient();

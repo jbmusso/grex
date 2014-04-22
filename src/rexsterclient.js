@@ -4,7 +4,6 @@ var querystring = require('querystring');
 var Q = require("q");
 var _ = require("lodash");
 
-var Client = require('./client');
 var GremlinScript = require('./gremlinscript');
 var Graph = require("./gremlin/graph");
 var classes = require("./classes");
@@ -13,7 +12,7 @@ var ResultFormatter = require("./resultformatter");
 
 
 module.exports = (function(){
-  function Client(options) {
+  function RexsterClient(options) {
     this.defaultOptions = {
       host: 'localhost',
       port: 8182,
@@ -29,7 +28,7 @@ module.exports = (function(){
   }
 
   /**
-   * Connect the Client to Rexster server.
+   * Establish a connection with Rexster server.
    * While this method currently has an asynchronous behavior, it actually
    * does synchronous stuff.
    *
@@ -37,7 +36,7 @@ module.exports = (function(){
    *
    * @param {Function} callback
    */
-  Client.prototype.connect = function(options, callback) {
+  RexsterClient.prototype.connect = function(options, callback) {
     if (typeof options === 'function') {
       callback = options;
       options = {};
@@ -58,7 +57,7 @@ module.exports = (function(){
    *
    * @param {GremlinScript} gremlin A Gremlin-Groovy script to execute
    */
-  Client.prototype.exec = function(gremlin) {
+  RexsterClient.prototype.exec = function(gremlin) {
     var deferred = Q.defer();
 
     var qs = {
@@ -106,7 +105,7 @@ module.exports = (function(){
    *
    * @param {GremlinScript} gremlin
    */
-  Client.prototype.fetch = function(gremlin) {
+  RexsterClient.prototype.fetch = function(gremlin) {
     return this.exec(gremlin)
     .then(function(response) {
       return this.fetchHandler(response, response.results);
@@ -114,12 +113,12 @@ module.exports = (function(){
   };
 
   /**
-   * A noop, default handler for Client.fetch().
+   * A noop, default handler for RexsterClient.fetch().
    *
    * @param {String} response - the complete HTTP response body
    * @param {Array} results - array of results, shorthand for response.results
    */
-  Client.prototype.defaultFetchHandler = function(response, results) {
+  RexsterClient.prototype.defaultFetchHandler = function(response, results) {
     return results;
   };
 
@@ -128,15 +127,15 @@ module.exports = (function(){
    *
    * @return {GremlinScript}
    */
-  Client.prototype.gremlin = function() {
+  RexsterClient.prototype.gremlin = function() {
     var gremlin = new GremlinScript(this);
 
     return gremlin;
   };
 
-  Client.prototype.transformResults = function(results) {
+  RexsterClient.prototype.transformResults = function(results) {
     return this.resultFormatter.formatResults(results);
   };
 
-  return Client;
+  return RexsterClient;
 })();
