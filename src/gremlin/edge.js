@@ -15,6 +15,12 @@ module.exports = (function (){
     return 'Edge.class';
   };
 
+  Object.defineProperty(Edge, 'class', {
+    get: function() {
+      return this.toGroovy();
+    }
+  });
+
   return Edge;
 
 })();

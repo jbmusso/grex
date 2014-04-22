@@ -15,6 +15,12 @@ module.exports = (function () {
     return 'Vertex.class';
   };
 
+  Object.defineProperty(Vertex, 'class', {
+    get: function() {
+      return this.toGroovy();
+    }
+  });
+
   return Vertex;
 
 })();

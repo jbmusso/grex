@@ -1,4 +1,14 @@
-module.exports = {
+var Vertex = require('./gremlin/vertex');
+var Edge = require('./gremlin/edge');
+
+var JavaClass = require('./javaclass');
+
+var classes = {
+  Vertex: Vertex,
+  Edge: Edge,
+  Geoshape: new JavaClass('Geoshape'),
+  'String': new JavaClass('String'),
+  Integer: new JavaClass('Integer'),
   T: {
     'gt': 'T.gt',
     'gte': 'T.gte',
@@ -17,37 +27,14 @@ module.exports = {
     'NOT_IN': 'Contains.NOT_IN'
   },
 
-  Vertex: {
-    'class': 'Vertex.class'
-  },
-
-  Edge: {
-    'class': 'Edge.class'
-  },
-
-  'String': {
-    'class': 'String.class'
-  },
-
-  Integer: {
-    'class': 'Integer.class'
-  },
-
-  Geoshape: {
-    'class': 'Geoshape.class'
-  },
-
   Direction: {
     'OUT': 'Direction.OUT',
     'IN': 'Direction.IN',
     'BOTH': 'Direction.BOTH'
   },
 
-  TitanKey: {
-    'class': 'TitanKey.class'
-  },
-
-  TitanLabel : {
-    'class': 'TitanLabel.class'
-  }
+  TitanKey: new JavaClass('TitanKey'),
+  TitanLabel : new JavaClass('TitanLabel'),
 };
+
+module.exports = classes;
