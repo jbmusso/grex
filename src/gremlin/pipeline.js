@@ -1,4 +1,4 @@
-var Gremlin = require('../gremlin');
+var GremlinScript = require('../gremlinscript');
 var GremlinStep = require('./functions/steps/step');
 var CollectionAccessor = require('./functions/collectionaccessor');
 var CollectionStep = require('./functions/steps/collectionstep');
@@ -11,10 +11,10 @@ module.exports = (function () {
   }
 
   /**
-   * Send the underlying Gremlin script to the server for execution, returning
+   * Send the underlying GremlinScript to the server for execution, returning
    * raw results.
    *
-   * This method is a shorthand for Gremlin.exec().
+   * This method is a shorthand for GremlinScript.exec().
    *
    * Support the dual callback/promise API.
    *
@@ -26,10 +26,10 @@ module.exports = (function () {
   };
 
   /**
-   * Send the underlying Gremlin script to the server for execution, returning
+   * Send the underlying GremlinScript script to the server for execution, returning
    * instantiated results.
    *
-   * This method is a shorthand for Gremlin.fetch().
+   * This method is a shorthand for GremlinScript.fetch().
    *
    * Support the dual callback/promise API.
    *

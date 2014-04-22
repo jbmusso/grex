@@ -6,7 +6,7 @@ var Argument = require('./gremlin/arguments/argument');
 var GremlinFunction = require('./gremlin/functions/function');
 
 module.exports = (function() {
-  function Gremlin(client) {
+  function GremlinScript(client) {
     this.script = '';
     this.params = {};
     this.client = client;
@@ -22,12 +22,12 @@ module.exports = (function() {
   }
 
   /**
-   * Instantiate a new Gremlin script
+   * Instantiate and return a new GremlinScript instance
    *
-   * @return {Gremlin}
+   * @return {GremlinScript}
    */
-  Gremlin.prototype.subScript = function() {
-    return new Gremlin(this.client);
+  GremlinScript.prototype.subScript = function() {
+    return new GremlinScript(this.client);
   };
 
   /**
@@ -35,7 +35,7 @@ module.exports = (function() {
    *
    * @param {Function}
    */
-  Gremlin.prototype.exec = function(callback) {
+  GremlinScript.prototype.exec = function(callback) {
     return this.client.exec(this).nodeify(callback);
   };
 
@@ -45,18 +45,18 @@ module.exports = (function() {
    *
    * @param {Function}
    */
-  Gremlin.prototype.fetch = function(callback) {
+  GremlinScript.prototype.fetch = function(callback) {
     return this.client.fetch(this).nodeify(callback);
   };
 
   /**
-   * Return a Pipeline object with its own internal Gremlin object to append
+   * Return a Pipeline object with its own internal GremlinScript object to append
    * string to.
    *
    * @return {Pipeline}
    */
-  Gremlin.prototype._ = function() {
-    var gremlin = new Gremlin(this.client);
+  GremlinScript.prototype._ = function() {
+    var gremlin = new GremlinScript(this.client);
     var func = new GremlinFunction('_', arguments);
     gremlin.append(func.toGroovy());
 
@@ -69,7 +69,7 @@ module.exports = (function() {
    * @private
    * @param {String} script
    */
-  Gremlin.prototype.append = function(script) {
+  GremlinScript.prototype.append = function(script) {
     this.script += script;
   };
 
@@ -79,9 +79,9 @@ module.exports = (function() {
    * @public
    * @param {String} line
    */
-  Gremlin.prototype.line = function(line) {
+  GremlinScript.prototype.line = function(line) {
     this.script += '\n'+ line;
   };
 
-  return Gremlin;
+  return GremlinScript;
 })();

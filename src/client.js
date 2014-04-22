@@ -5,7 +5,7 @@ var Q = require("q");
 var _ = require("lodash");
 
 var Client = require('./client');
-var Gremlin = require('./gremlin');
+var GremlinScript = require('./gremlinscript');
 var Graph = require("./gremlin/graph");
 var classes = require("./classes");
 
@@ -53,10 +53,10 @@ module.exports = (function(){
   };
 
   /**
-   * Send a Gremlin script to Rexster for execution via HTTP, fetch and format
+   * Send a GremlinScript script to Rexster for execution via HTTP, fetch and format
    * results.
    *
-   * @param {Gremlin} gremlin A Gremlin-Groovy script to execute
+   * @param {GremlinScript} gremlin A Gremlin-Groovy script to execute
    */
   Client.prototype.exec = function(gremlin) {
     var deferred = Q.defer();
@@ -104,7 +104,7 @@ module.exports = (function(){
    * Send a Gremlin script to Rexster for execution via HTTP, fetch and format
    * results as instantiated elements (typically Vertices and Edges).
    *
-   * @param {Gremlin} gremlin
+   * @param {GremlinScript} gremlin
    */
   Client.prototype.fetch = function(gremlin) {
     return this.exec(gremlin)
@@ -124,12 +124,12 @@ module.exports = (function(){
   };
 
   /**
-   * Instantiate and return a new Gremlin script
+   * Instantiate and return a new GremlinScript instance
    *
-   * @return {Gremlin}
+   * @return {GremlinScript}
    */
   Client.prototype.gremlin = function() {
-    var gremlin = new Gremlin(this);
+    var gremlin = new GremlinScript(this);
 
     return gremlin;
   };

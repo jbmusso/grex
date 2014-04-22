@@ -1,6 +1,6 @@
 var client = require('../index.js');
 var Vertex = require("../src/gremlin/vertex");
-var Gremlin = require('../src/gremlin');
+var Gremlin = require('../src/gremlinscript');
 
 
 describe('Graph elements', function() {
