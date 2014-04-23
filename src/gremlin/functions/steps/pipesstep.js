@@ -15,7 +15,7 @@ module.exports = (function() {
   PipesStep.prototype.toGroovy = function() {
     var str = '';
     var argumentList = [];
-    var args = this.arguments.rawArgs;
+    var args = this.arguments.raw;
 
     args = _.isArray(args[0]) ? args[0] : args;
 

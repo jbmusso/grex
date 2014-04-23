@@ -10,8 +10,8 @@ module.exports = (function() {
   inherits(SetPropertyMethod, GremlinMethod);
 
   SetPropertyMethod.prototype.run = function(element) {
-    var key = this.arguments.rawArgs.key;
-    var value = this.arguments.rawArgs.value;
+    var key = this.arguments.raw.key;
+    var value = this.arguments.raw.value;
 
     element[key] = value;
 
@@ -19,8 +19,8 @@ module.exports = (function() {
   };
 
   SetPropertyMethod.prototype.toGroovy = function() {
-    var key = this.arguments.rawArgs.key;
-    var value = this.arguments.rawArgs.value;
+    var key = this.arguments.raw.key;
+    var value = this.arguments.raw.value;
 
     return ".setProperty('" + key + "','" + value + "')";
   };

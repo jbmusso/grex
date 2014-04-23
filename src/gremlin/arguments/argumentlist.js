@@ -7,9 +7,9 @@ var ArrayArgument = require('./array');
 var ClassArgument = require('./class');
 
 module.exports = (function () {
-  function ArgumentList(rawArgs) {
-    this.arguments = [].slice.call(rawArgs || []);
-    this.rawArgs = rawArgs;
+  function ArgumentList(raw) {
+    this.arguments = [].slice.call(raw || []);
+    this.raw = raw;
 
     this.parenthesizedArguments = [];
     this.closures = [];
