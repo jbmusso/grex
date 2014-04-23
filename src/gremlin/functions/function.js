@@ -22,25 +22,16 @@ module.exports = (function() {
 
   GremlinFunction.prototype.groovifyArguments = function() {
     var args = [];
-    var groovy = '(';
 
-    if (this.parenthesizedArguments.length > 0) {
-      _.each(this.parenthesizedArguments, function(argument) {
-        args.push(argument.toGroovy());
-      });
+    // Append arguments between parentheses, if any
+    groovy = '(' + _.map(this.parenthesizedArguments, function(argument) {
+      return argument.toGroovy();
+    }).join(',') + ')';
 
-      groovy += args.join(',');
-    }
-
-    groovy += ')';
-
-    if (this.closures.length > 0) {
-      var closures = [];
-      _.each(this.closures, function(closure) {
-        closures.push(closure.toGroovy());
-      });
-      groovy += closures.join(',');
-    }
+    // Append closures, if any
+    groovy += _.map(this.closures, function(closure) {
+      return closure.toGroovy();
+    }).join(',');
 
     return groovy;
   };
