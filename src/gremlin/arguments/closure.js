@@ -12,9 +12,5 @@ module.exports = (function() {
     return this.value;
   };
 
-  ClosureArgument.prototype.updateList = function() {
-    this.func.closures.push(this.toGroovy());
-  };
-
   return ClosureArgument;
 })();

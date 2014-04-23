@@ -12,9 +12,5 @@ module.exports = (function() {
     return JSON.stringify(this.value).replace('{', '[').replace('}', ']');
   };
 
-  ObjectArgument.prototype.updateList = function() {
-    this.func.parenthesizedArguments.push(this.toGroovy());
-  };
-
   return ObjectArgument;
 })();

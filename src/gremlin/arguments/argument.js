@@ -10,10 +10,6 @@ module.exports = (function () {
     return this.parse();
   };
 
-  Argument.prototype.updateList = function() {
-    this.func.parenthesizedArguments.push(this.parse());
-  };
-
   Argument.prototype.parse = function() {
     var argument = this.value;
 

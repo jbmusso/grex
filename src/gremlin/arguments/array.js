@@ -8,8 +8,8 @@ module.exports = (function () {
 
   inherits(ArrayArgument, Argument);
 
-  ArrayArgument.prototype.updateList = function() {
-    this.func.parenthesizedArguments.push("[" + this.parse() + "]");
+  ArrayArgument.prototype.toGroovy = function() {
+    return "[" + this.parse() + "]";
   };
 
   return ArrayArgument;
