@@ -5,7 +5,7 @@ var ClosureArgument = require('../arguments/closure');
 var ObjectArgument = require('../arguments/object');
 var ArrayArgument = require('../arguments/array');
 var ClassArgument = require('../arguments/class');
-
+var NumberArgument = require('../arguments/number');
 
 module.exports = (function() {
   function GremlinFunction(name, args) {
@@ -58,6 +58,9 @@ module.exports = (function() {
         this.parenthesizedArguments.push(built);
       } else if (_.isObject(argument)) {
         built = new ObjectArgument(argument, this);
+        this.parenthesizedArguments.push(built);
+      } else if (_.isNumber(argument)) {
+        built = new NumberArgument(argument, this);
         this.parenthesizedArguments.push(built);
       } else {
         built = new Argument(argument, this);
