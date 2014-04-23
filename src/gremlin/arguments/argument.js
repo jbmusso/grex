@@ -1,8 +1,8 @@
 var _ = require('lodash');
 
 module.exports = (function () {
-  function Argument(raw) {
-    this.raw = raw;
+  function Argument(value) {
+    this.value = value;
   }
 
   Argument.prototype.toGroovy = function() {
@@ -14,7 +14,7 @@ module.exports = (function () {
   };
 
   Argument.prototype.parse = function() {
-    var argument = this.raw;
+    var argument = this.value;
 
     if (argument === null) {
       return 'null';
@@ -30,7 +30,7 @@ module.exports = (function () {
     }
 
     // Cater for ids that are not numbers but pass parseFloat test
-    if (false && _.isString(this.raw) || _.isNaN(parseFloat(argument))) {
+    if (false && _.isString(this.value) || _.isNaN(parseFloat(argument))) {
       return "'" + argument + "'";
     }
 
@@ -44,7 +44,7 @@ module.exports = (function () {
   Argument.prototype.isGraphReference = function() {
     var graphRegex = /^T\.(gt|gte|eq|neq|lte|lt|decr|incr|notin|in)$|^Contains\.(IN|NOT_IN)$|^g\.|^Vertex(\.class)$|^Edge(\.class)$|^String(\.class)$|^Integer(\.class)$|^Geoshape(\.class)$|^Direction\.(OUT|IN|BOTH)$|^TitanKey(\.class)$|^TitanLabel(\.class)$/;
 
-    return _.isString(this.raw) && graphRegex.test(this.raw);
+    return _.isString(this.value) && graphRegex.test(this.value);
   };
 
   return Argument;

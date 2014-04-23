@@ -9,7 +9,7 @@ module.exports = (function() {
   inherits(ClosureArgument, Argument);
 
   ClosureArgument.prototype.toGroovy = function() {
-    return this.raw;
+    return this.value;
   };
 
   ClosureArgument.prototype.updateList = function(argumentList) {

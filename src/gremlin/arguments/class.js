@@ -9,7 +9,7 @@ module.exports = (function() {
   inherits(ClassArgument, Argument);
 
   ClassArgument.prototype.toGroovy = function() {
-    return this.raw.toGroovy();
+    return this.value.toGroovy();
   };
 
   ClassArgument.prototype.updateList = function(argumentList) {
