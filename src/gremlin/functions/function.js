@@ -44,7 +44,7 @@ module.exports = (function() {
       } else if (_.isArray(argument)) {
         built = new ArrayArgument(argument, this);
         this.parenthesizedArguments.push(built);
-      } else if (_.isFunction(argument)) {
+      } else if (this.isClass(argument)) {
         built = new ClassArgument(argument, this);
         this.parenthesizedArguments.push(built);
       } else if (_.isObject(argument)) {
@@ -64,6 +64,10 @@ module.exports = (function() {
     var closureRegex = /^\{.*\}$/;
 
     return _.isString(val) && closureRegex.test(val);
+  };
+
+  GremlinFunction.prototype.isClass = function(argument) {
+    return !!argument.class;
   };
 
   GremlinFunction.prototype.stringifyArgument = function(argument) {
