@@ -17,7 +17,7 @@ module.exports = (function() {
 
     this.vertex.identifier = identifier; // Non-enumerable property
 
-    _.each(this.arguments.raw, function(value, key) {
+    _.each(this.arguments, function(value, key) {
       this.vertex[key] = value;
     }, this);
 
@@ -29,7 +29,7 @@ module.exports = (function() {
 
     var id = this.vertex._id ? this.vertex._id +',' : '';
 
-    var str = identifierPrefix +'g.addVertex('+ id + this.arguments.stringifyArgument(this.arguments.raw) +')';
+    var str = identifierPrefix +'g.addVertex('+ id + this.stringifyArgument(this.arguments) +')';
 
     return str;
   };

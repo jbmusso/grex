@@ -8,8 +8,8 @@ module.exports = (function () {
 
   inherits(ArrayArgument, Argument);
 
-  ArrayArgument.prototype.updateList = function(argumentList) {
-    argumentList.parenthesizedArguments.push("[" + this.parse() + "]");
+  ArrayArgument.prototype.updateList = function() {
+    this.func.parenthesizedArguments.push("[" + this.parse() + "]");
   };
 
   return ArrayArgument;

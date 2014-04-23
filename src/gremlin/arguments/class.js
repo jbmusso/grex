@@ -12,8 +12,8 @@ module.exports = (function() {
     return this.value.toGroovy();
   };
 
-  ClassArgument.prototype.updateList = function(argumentList) {
-    argumentList.parenthesizedArguments.push(this.toGroovy());
+  ClassArgument.prototype.updateList = function() {
+    this.func.parenthesizedArguments.push(this.toGroovy());
   };
 
   return ClassArgument;

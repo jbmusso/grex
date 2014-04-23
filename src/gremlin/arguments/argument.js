@@ -1,16 +1,17 @@
 var _ = require('lodash');
 
 module.exports = (function () {
-  function Argument(value) {
+  function Argument(value, func) {
     this.value = value;
+    this.func = func;
   }
 
   Argument.prototype.toGroovy = function() {
     return this.parse();
   };
 
-  Argument.prototype.updateList = function(argumentList) {
-    argumentList.parenthesizedArguments.push(this.parse());
+  Argument.prototype.updateList = function() {
+    this.func.parenthesizedArguments.push(this.parse());
   };
 
   Argument.prototype.parse = function() {

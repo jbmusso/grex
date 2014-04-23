@@ -16,23 +16,21 @@ module.exports = (function() {
     this.edge = new Edge(gremlin);
     this.edge.identifier = identifier; // Non-enumerable property
 
-
-
-    if (this.arguments.raw.properties._id) {
-      this.edge._id = this.arguments.raw.properties._id;
+    if (this.arguments.properties._id) {
+      this.edge._id = this.arguments.properties._id;
     }
 
-    this.edge._outV = this.arguments.raw.v1;
-    this.edge._inV = this.arguments.raw.v2;
-    this.edge._label = this.arguments.raw.label;
+    this.edge._outV = this.arguments.v1;
+    this.edge._inV = this.arguments.v2;
+    this.edge._label = this.arguments.label;
 
-    var properties = this.arguments.raw.properties;
+    var properties = this.arguments.properties;
 
     _.each(properties, function(value, key) {
       this.edge[key] = value;
     }, this);
 
-    delete this.arguments.raw._id;
+    delete this.arguments._id;
 
     return this.edge;
   };
@@ -40,7 +38,7 @@ module.exports = (function() {
   AddEdgeMethod.prototype.toGroovy = function() {
     var identifierPrefix = this.edge.identifier ? this.edge.identifier + ' = ' : '';
     var id = this.edge._id ? this.edge._id + ',' : '';
-    var str = identifierPrefix + 'g.addEdge('+ id + this.edge._outV.identifier +','+ this.edge._inV.identifier +',"'+ this.edge._label +'",'+ this.arguments.stringifyArgument(this.arguments.raw.properties) +')';
+    var str = identifierPrefix + 'g.addEdge('+ id + this.edge._outV.identifier +','+ this.edge._inV.identifier +',"'+ this.edge._label +'",'+ this.stringifyArgument(this.arguments.properties) +')';
 
     return str;
   };

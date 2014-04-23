@@ -82,16 +82,14 @@ describe('Graph elements', function() {
   describe('.keys()', function() {
     it("should chain .keys()", function() {
       var query = client.gremlin().g.v(1).keys();
-      query.gremlin.script.should.equal("g.v(1).keys");
+      query.gremlin.script.should.equal("g.v(1).keys()");
     });
   });
 
   describe('.values', function() {
     it("should chain .values()", function() {
       var query = client.gremlin().g.v(1).values();
-      query.gremlin.script.should.equal("g.v(1).values");
+      query.gremlin.script.should.equal("g.v(1).values()");
     });
   });
-
-
 });
