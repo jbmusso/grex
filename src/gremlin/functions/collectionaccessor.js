@@ -10,7 +10,7 @@ module.exports = (function() {
   inherits(CollectionAccessor, GremlinMethod);
 
   CollectionAccessor.prototype.toGroovy = function() {
-    var str = '['+ this.args.rawArgs[0].toString() + ']';
+    var str = '['+ this.arguments.rawArgs[0].toString() + ']';
 
     return str;
   };

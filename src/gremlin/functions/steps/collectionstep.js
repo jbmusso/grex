@@ -14,7 +14,7 @@ module.exports = (function() {
   CollectionStep.prototype.toGroovy = function() {
     var str = '';
     var argumentList = [];
-    var args = this.args.rawArgs;
+    var args = this.arguments.rawArgs;
 
     if (_.isArray(args[0])) {
       // Passing in an array of Pipeline with Gremlin script as arguments
@@ -24,7 +24,7 @@ module.exports = (function() {
 
       str = "." + this.name + "([" + argumentList.join(',') + "])";
     } else {
-      str = "." + this.name + "('"+ this.args.rawArgs[0] + "')";
+      str = "." + this.name + "('"+ this.arguments.rawArgs[0] + "')";
     }
 
     return str;

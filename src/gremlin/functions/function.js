@@ -3,8 +3,8 @@ var ArgumentList = require('../arguments/argumentlist');
 module.exports = (function() {
   function GremlinFunction(name, args) {
     this.name = name;
-    this.args = new ArgumentList(args);
-    this.args.buildArguments();
+    this.arguments = new ArgumentList(args);
+    this.arguments.buildArguments();
   }
 
   GremlinFunction.prototype.toGroovy = function() {
@@ -12,9 +12,9 @@ module.exports = (function() {
   };
 
   GremlinFunction.prototype.groovifyArguments = function() {
-    var closures = this.args.closures.join(',');
+    var closures = this.arguments.closures.join(',');
 
-    return '(' + this.args.parenthesizedArguments.join(',') + ')' + closures;
+    return '(' + this.arguments.parenthesizedArguments.join(',') + ')' + closures;
 
   };
 

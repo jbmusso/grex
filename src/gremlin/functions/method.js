@@ -8,7 +8,7 @@ module.exports = (function() {
   }
 
   GremlinMethod.prototype.toGroovy = function() {
-    return '.' + this.name + this.args.toGroovy();
+    return '.' + this.name + this.arguments.toGroovy();
   };
 
   return GremlinMethod;

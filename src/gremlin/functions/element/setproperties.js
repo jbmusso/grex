@@ -11,7 +11,7 @@ module.exports = (function() {
 
   SetPropertiesMethod.prototype.run = function(element) {
     var key;
-    var args = this.args.rawArgs;
+    var args = this.arguments.rawArgs;
 
     for (key in args) {
       element[key] = args[key];
@@ -21,7 +21,7 @@ module.exports = (function() {
   };
 
   SetPropertiesMethod.prototype.toGroovy = function() {
-    return '.setProperties('+ this.args.stringifyArgument(this.args.rawArgs) +')';
+    return '.setProperties('+ this.arguments.stringifyArgument(this.arguments.rawArgs) +')';
   };
 
   return SetPropertiesMethod;
