@@ -323,7 +323,7 @@ describe('Gremlin steps', function() {
       });
     });
 
-    describe('ha)', function() {
+    describe('has', function() {
       it("should handle float type argument", function() {
         var query = client.gremlin().g.v(1).outE().has("weight", T.gte, "0.5f");
         query.gremlin.script.should.equal("g.v(1).outE().has('weight',T.gte,0.5f)");
@@ -340,7 +340,7 @@ describe('Gremlin steps', function() {
       });
     });
 
-    describe('exhaustMer', function () {
+    describe('exhaustMerge', function () {
       it('should chain .exhaustMerge()', function () {
         var gremlin = client.gremlin();
         var query = gremlin.g.v(1).out('knows').copySplit(gremlin._().out('created').key('name'), gremlin._().key('age')).exhaustMerge();
