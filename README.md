@@ -9,19 +9,24 @@ If you're interested in an Object-to-Graph mapper library, you may also want to 
 
 ## Installation
 
-Grex works both in Node.js or in the browser via Browserify.
+Grex works in Node.js.
 
 ```
 $ npm install grex
 ```
 
-You may also wish to use Grex in the browser, essentially when prototyping applications. Obviously Grex may not be used in production with graph database containing sensitive informations.
+It currently doesn't work in the browser anymore, though it shouldn't be too hard to fix. Pull request welcome!
 
 ## Quick start
 
-Grex does 3 things: connect to a database, generate a Gremlin (Groovy flavored string) and send the string for execution (retrieving the results if any).
+Grex does three things:
+* establish a connection to Rexster
+* generate a Gremlin (Groovy flavored string)
+* send the string for execution (retrieving the results if any).
 
 ```javascript
+var grex = require('grex');
+
 var settings = {
   'database': 'myGraphDB',
   'host': 'localhost',
@@ -29,7 +34,7 @@ var settings = {
 };
 
 // 1. connect() takes two optional parameters: a settings Object and a Node style callback
-Grex.connect(settings, function(err, client) {
+grex.connect(settings, function(err, client) {
   if (err) {
     console.error(err);
   }
@@ -40,7 +45,7 @@ Grex.connect(settings, function(err, client) {
   // Start appending some code
   gremlin.g.v(1); // gremlin.script === 'g.v(1)'
 
-  // 3. Send script for execution, and return a response with the results (if any)
+  // 3. Send script for execution, and return a raw response object with a 'results' Array property.
   gremlin.exec(function(err, response) {
     // ...
   })
@@ -57,21 +62,23 @@ Grex uses the [Q](http://documentup.com/kriskowal/q/) module to return a Promise
 
 #### Building a Gremlin script
 
-The main object you'll be working with is an instance of Gremlin class.
+The main object you'll be working with is an instance of GremlinScript class.
 
 ```javascript
-var gremlin = Grex.gremlin() // Instantiate a new Gremlin script class.
-gremlin.g.V('name', 'marko').out() // Appends strings
+var grex = require('grex');
+
+var gremlin = grex.gremlin(); // Instantiate a new GremlinScript script class.
+gremlin.g.V('name', 'marko').out(); // Appends strings
 // gremlin.script == "g.V('name','marko').out"
 ```
 
 Grex exposes `Graph`, `Pipeline`, `Vertex` and `Edge` wrapper classes with multiple methods which help you automatically generate a valid Gremlin string.
 
-Each Gremlin instance is basically appending strings to an internal `script` variable as you issue more commands. Grex provides many high level method you should use when building your script (though experts are free to hack around and directly use the lower level Gremlin.line() or Gremlin.append() methods at their own risks).
+Each Gremlin instance is basically appending strings to an internal `script` variable as you chain more methods to these wrapper classes. Grex provides many high level method you should use when building your script. Experts are free to hack around and directly use the lower level `gremlin.line()` or `gremlin.append()` methods to directly append an arbitrary string of Gremlin to the `gremlin.script` property.
 
 #### Executing Gremlin script
 
-A Gremlin script will be immediadly sent to Rexster for execution when you issue the `.exec()` command.
+A Gremlin script will be immediadly sent to Rexster for execution when you chain the `.exec()` command.
 
 The previous example can thus be executed the following way:
 
@@ -84,9 +91,17 @@ gremlin.exec(function(err, response) {
 });
 ```
 
+You can also chain `.exec()` in the Pipeline. This is especially useful if you wish to execute single line scripts:
+
+```javascript
+grex.gremlin().g.V('name', 'marko').out().exec(function(err, response) {
+  // ...
+});
+```
+
 ### Transactions
 
-Multiple vertices and edges can be added in a transaction over one single http call.
+Because grex sends one big string of Gremlin in a single HTTP request, the library supports full transaction.
 
 ```javascript
 var gremlin = client.gremlin();
@@ -99,13 +114,13 @@ gremlin.exec(function(err, response) {
 })
 ```
 
-This will generate and send the following Gremlin script for execution to Rexster:
+The above code will generate and send the following Gremlin script for execution to Rexster:
 
 ```groovy
+// Note that Grex actually does not generate the extra spaces shown here.
 vA = g.addVertex(100, [k1: 'v1', k2: 'v2', k3: 'v3']);
 vB = g.addVertex(200, [k1: 'v1', k2: 'v2', k3: 'v3']);
 g.addEdge(vA, vB, 'pal', [weight: 0.75]);
-// Note that Grex will actually automatically strip spaces away
 ```
 
 Because JavaScript lacks reflection, you're required to supply an optional string identifier as the last parameter. This identifier will be used in the generated Gremlin string.
@@ -167,7 +182,7 @@ g.V().range('0..<2').property('name');
 
 #### Comparison tokens
 
-Comparison tokens are currently passed in as strings.
+You may pass comparison tokens as strings or as appropriate JavaScript objects which grex directly exposes.
 
 ```groovy
 // Groovy
@@ -177,6 +192,10 @@ g.E.has('weight', T.gt, 0.5f).outV.transform{[it.id,it.age]}
 ```javascript
 // JavaScript
 g.E().has('weight', 'T.gt', '0.5f').outV().transform('{[it.id,it.age]}');
+
+// alternatively
+var T = grex.T;
+g.E().has('weight', T.gt, '0.5f').outV().transform('{[it.id,it.age]}');
 ```
 
 #### Passing of pipelines
@@ -211,10 +230,11 @@ g.V.retain([g.v(1), g.v(2), g.v(3)])
 g.V().retain([gremlin.g.v(1), gremlin.g.v(2), gremlin.g.v(3)])
 ```
 
+Note: it is currently required to use `gremlin.g.` instead of `g.`. This may hopefully change in the future though a bit of refactoring is needed. Suggestions welcomed!
 
 #### Closures
 
-Closures are currently passed in as strings. See https://github.com/gulthor/grex/issues/22 for a discussion on using JavaScript functions.
+Closures are currently passed in as strings.
 
 ```groovy
 // Groovy
@@ -236,7 +256,12 @@ g.createIndex("my-index", Vertex.class)
 
 ```javascript
 // JavaScript
-g.createIndex("my-index", "Vertex.class")
+g.createIndex("my-index", "Vertex.class");
+
+// alternatively
+var Vertex = grex.Vertex;
+g.createIndex("my-index", Vertex);
+
 ```
 
 #### Retrieving indexed Elements
@@ -255,8 +280,8 @@ g.idx("my-index", {name:"marko"});
 
 Grex tries to implement Gremlin (Groovy flavored) syntax as closely as possible. However, there are some notable differences.
 
-* All method calls require brackets __()__, even if there are no arguments.
-* Closures currently need to passed in as a string argument to methods. This will likely change in the future ([see issue#22](https://github.com/gulthor/grex/issues/22)).
+* All method calls require parentheses __()__, even if there are no arguments. The generated Groovy code will also use parentheses, which is most likely faster to execute (see [Method Notation vs. Property Notation](https://github.com/tinkerpop/gremlin/wiki/Gremlin-Groovy-Path-Optimizations#method-notation-vs-property-notation)).
+* Closures currently need to passed in as a string argument to methods. This will likely change in the future ([see issue#22](https://github.com/gulthor/grex/issues/22)). It could be supported with a different API or maybe using ES6 Proxies. Suggestions welcomed!
 
     ```javascript
     g.v(1).out().gather("{it.size()}");
@@ -268,19 +293,17 @@ Grex tries to implement Gremlin (Groovy flavored) syntax as closely as possible.
     ```
     g.v(1).outE().has("weight", "T.gte", "0.5f").property("weight")
     ```
-* Certain methods cannot (yet) be easily implemented. Such as ``aggregate``, ``store``, ``table``, ``tree`` and ``fill``. These methods require a local object to populate with data, which cannot be easily done in this environment.
-* Tokens/Classes: You will notice that in the examples tokens are passed as string (i.e. 'T.gt'). However, Grex also exposes some objects for convenience to make it feel more natural. To access the objects, reference them like so:
+* Certain methods cannot (yet) be easily implemented. Such as `aggregate`, `store`, `table`, `tree` and `fill`. These methods require a local object to populate with data, which cannot be easily done in this environment. You may however use `gremlin.append()` or `gremlin.line()` to bypass this limitation.
+* Tokens/Classes: You will notice that in the examples tokens are passed as string (i.e. 'T.gt'). However, Grex also exposes some objects for convenience that you can use in place of string representations in your queries. To access the objects, reference them like so:
 
   ```javascript
-    var T = Grex.T;
-    var Contains = Grex.Contains;
-    var Vertex = Grex.Vertex;
-    var Edge = Grex.Edge;
+    var T = grex.T;
+    var Contains = grex.Contains;
+    var Vertex = grex.Vertex;
+    var Edge = grex.Edge;
+    // etc.
+    // Most tokens/classes are exposed. Feel free to open an issue if some are missing.
   ```
-
-
-You can now use these objects in place of the string representation in your queries.
-
 
 ## API
 
@@ -302,6 +325,8 @@ Grex.connect({
   idRegex: /^[0-9]+:[0-9]+$/
 });
 ```
+
+This method has an asynchronous API although it does exclusively synchronous stuff. This will however make it compatible when Tinkerpop3 is released (support for Websocket).
 
 ### Gremlin
 
