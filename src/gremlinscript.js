@@ -1,7 +1,7 @@
 var _ = require("lodash");
 
-var Graph = require('./gremlin/graph');
-var Pipeline = require('./gremlin/pipeline');
+var Graph = require('./gremlin/objects/graph');
+var Pipeline = require('./gremlin/objects/pipeline');
 var Argument = require('./gremlin/arguments/argument');
 var GremlinFunction = require('./gremlin/functions/function');
 

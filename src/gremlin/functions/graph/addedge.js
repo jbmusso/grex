@@ -3,7 +3,7 @@ var inherits = require('util').inherits;
 var _ = require('lodash');
 
 var GremlinMethod = require('../function');
-var Edge = require('../../edge');
+var Edge = require('../../objects/edge');
 
 module.exports = (function() {
   function AddEdgeMethod() {

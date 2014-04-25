@@ -2,7 +2,7 @@ var inherits = require('util').inherits;
 
 var _ = require('lodash');
 
-var Vertex = require('../../vertex');
+var Vertex = require('../../objects/vertex');
 var GremlinMethod = require('../function');
 
 module.exports = (function() {

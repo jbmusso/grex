@@ -1,8 +1,8 @@
 /*jshint expr: true*/ // won't complain for (1).should.be.an.Number;
 
 var grex = require('../index.js');
-var Vertex = require("../src/gremlin/vertex");
-var Edge = require("../src/gremlin/edge");
+var Vertex = require("../src/gremlin/objects/vertex");
+var Edge = require("../src/gremlin/objects/edge");
 var T = grex.T;
 var Contains = grex.Contains;
 

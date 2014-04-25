@@ -1,5 +1,5 @@
 var client = require('../index.js');
-var Vertex = require("../src/gremlin/vertex");
+var Vertex = require("../src/gremlin/objects/vertex");
 var Gremlin = require('../src/gremlinscript');
 
 

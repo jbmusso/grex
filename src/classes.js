@@ -1,5 +1,5 @@
-var Vertex = require('./gremlin/vertex');
-var Edge = require('./gremlin/edge');
+var Vertex = require('./gremlin/objects/vertex');
+var Edge = require('./gremlin/objects/edge');
 
 var JavaClass = require('./javaclass');
 

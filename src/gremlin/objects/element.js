@@ -1,10 +1,10 @@
 var _ = require('lodash');
 
-var GetPropertiesMethod = require('./functions/element/getproperties');
-var SetPropertiesMethod = require('./functions/element/setproperties');
-var AddPropertiesMethod = require('./functions/element/addproperties');
-var SetPropertyMethod = require('./functions/element/setproperty');
-var AddPropertyMethod = require('./functions/element/addproperty');
+var GetPropertiesMethod = require('../functions/element/getproperties');
+var SetPropertiesMethod = require('../functions/element/setproperties');
+var AddPropertiesMethod = require('../functions/element/addproperties');
+var SetPropertyMethod = require('../functions/element/setproperty');
+var AddPropertyMethod = require('../functions/element/addproperty');
 
 /**
  * Abstract Element class

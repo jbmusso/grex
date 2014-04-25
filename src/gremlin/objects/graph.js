@@ -1,10 +1,10 @@
 var _ = require("lodash");
 
 
-var GremlinMethod = require('./functions/method');
-var IdxGremlinFunction = require('./functions/graph/idx');
-var AddVertexMethod = require('./functions/graph/addvertex');
-var AddEdgeMethod = require('./functions/graph/addedge');
+var GremlinMethod = require('../functions/method');
+var IdxGremlinFunction = require('../functions/graph/idx');
+var AddVertexMethod = require('../functions/graph/addvertex');
+var AddEdgeMethod = require('../functions/graph/addedge');
 
 var Pipeline = require('./pipeline');
 
