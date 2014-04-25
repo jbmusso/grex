@@ -5,8 +5,8 @@ var Q = require("q");
 var _ = require("lodash");
 
 var GremlinScript = require('./gremlinscript');
-var Graph = require("./gremlin/objects/graph");
-var classes = require("./classes");
+var Graph = require("./objects/graph");
+var classes = require("./classes/classes");
 
 var ResultFormatter = require("./resultformatter");
 

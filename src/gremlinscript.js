@@ -1,9 +1,9 @@
 var _ = require("lodash");
 
-var Graph = require('./gremlin/objects/graph');
-var Pipeline = require('./gremlin/objects/pipeline');
-var Argument = require('./gremlin/arguments/argument');
-var GremlinFunction = require('./gremlin/functions/function');
+var Graph = require('./objects/graph');
+var Pipeline = require('./objects/pipeline');
+var Argument = require('./arguments/argument');
+var GremlinFunction = require('./functions/function');
 
 module.exports = (function() {
   function GremlinScript(client) {
