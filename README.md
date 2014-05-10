@@ -1,11 +1,13 @@
 Grex
 ====
 
-[Gremlin](https://github.com/tinkerpop/gremlin/wiki) inspired [Rexster Graph Server](https://github.com/tinkerpop/rexster/wiki) client for NodeJS and the browser.
+[Gremlin](https://github.com/tinkerpop/gremlin/wiki) inspired [Rexster Graph Server](https://github.com/tinkerpop/rexster/wiki) client for Node.js and the browser.
 
-Grex is a Gremlin generating library written in JavaScript which helps you build, send over HTTP and execute arbitrary strings of Gremlin against any Blueprint compliant Graph database.
+Grex is a Gremlin generating library written in JavaScript which helps you build, send over HTTP and execute arbitrary strings of Gremlin (Groovy flavored) against any Blueprint compliant Graph database.
 
 If you're interested in an Object-to-Graph mapper library, you may also want to have a look at [Mogwai.js](https://github.com/gulthor/mogwai).
+
+Feel free to [open issues](https://github.com/gulthor/grex/issues) if you have trouble using the library. I'll happily provide support.
 
 ## Installation
 
@@ -56,19 +58,25 @@ grex.connect(settings, function(err, client) {
 
 Two good resources to understand the Gremlin API are [GremlinDocs](http://gremlindocs.com/) and [SQL2Gremlin](http://sql2gremlin.com).
 
-Grex uses the [Q](http://documentup.com/kriskowal/q/) module to return a Promise when calling the asynchronous `exec()` method.
+Grex uses the [Q](http://documentup.com/kriskowal/q/) module to return a Promise when calling the asynchronous `exec()` or `query()` methods.
 
 ### Basic usage
 
 #### Building a Gremlin script
 
-The main object you'll be working with is an instance of GremlinScript class.
+The main object you'll be working with is an instance of `GremlinScript` class.
 
 ```javascript
-var grex = require('grex');
-
-var gremlin = grex.gremlin(); // Instantiate a new GremlinScript script class.
+var gremlin = client.gremlin(); // Create a new GremlinScript instance.
 gremlin.g.V('name', 'marko').out(); // Appends strings
+// gremlin.script == "g.V('name','marko').out"
+```
+
+Alternatively and/or for one-liner scripts, you can create a new `GremlinScript` instance and directly pass a Gremlin statement to the `client.gremlin()` method:
+
+```javascript
+var g = client.g;
+var gremlin = client.gremlin(g.V('name', 'marko').out());
 // gremlin.script == "g.V('name','marko').out"
 ```
 
@@ -91,23 +99,31 @@ gremlin.exec(function(err, response) {
 });
 ```
 
-You can also chain `.exec()` in the Pipeline. This is especially useful if you wish to execute single line scripts:
+You can also chain `.exec()` directly in the Pipeline you're working with. This is especially useful if you wish to execute single line scripts:
 
 ```javascript
-grex.gremlin().g.V('name', 'marko').out().exec(function(err, response) {
+client.gremlin().g.V('name', 'marko').out().exec(function(err, response) {
+  // ...
+});
+```
+
+Note that because it shouldn't be the responsibility of a `Pipeline` instance to send a GremlinScript to Rexster for execution, the above example will most likely be deprecated before v1.0.0 in favor of the following syntax:
+
+```javascript
+client.gremlin(g.V('name', 'marko').out()).exec(function(err, response) {
   // ...
 });
 ```
 
 ### Transactions
 
-Because grex sends one big string of Gremlin in a single HTTP request, the library supports full transaction.
+Because Grex sends one big string of Gremlin in a single HTTP request, the library supports full transaction. See [Rexster Wiki on extensions and transactions](https://github.com/tinkerpop/rexster/wiki/Extension-Points#extensions-and-transactions).
 
 ```javascript
 var gremlin = client.gremlin();
-var v1 = g.addVertex.addVertex({k1:'v1', 'k2':'v2', k3:'v3', id: 100}, 'vA');
-var v2 = g.addVertex.addVertex({k1:'v1', 'k2':'v2', k3:'v3', id: 200}, 'vB');
-g.addVertex.addEdge(v1, v2, 'pal' , { weight: '0.75f' });
+var v1 = gremlin.g.addVertex({ k1:'v1', 'k2':'v2', k3:'v3', id: 100 }, 'vA');
+var v2 = gremlin.g.addVertex({ k1:'v1', 'k2':'v2', k3:'v3', id: 200 }, 'vB');
+gremlin.g.addEdge(v1, v2, 'pal', { weight: '0.75f' });
 
 gremlin.exec(function(err, response) {
   // Handle error or response
@@ -125,6 +141,7 @@ g.addEdge(vA, vB, 'pal', [weight: 0.75]);
 
 Because JavaScript lacks reflection, you're required to supply an optional string identifier as the last parameter. This identifier will be used in the generated Gremlin string.
 
+Please note that this API will most likely change before v1.0.
 
 
 ### API differences between Gremlin Groovy and Grex JavaScript
@@ -227,10 +244,8 @@ g.V.retain([g.v(1), g.v(2), g.v(3)])
 
 ```javascript
 // JavaScript
-g.V().retain([gremlin.g.v(1), gremlin.g.v(2), gremlin.g.v(3)])
+g.V().retain([g.v(1), g.v(2), g.v(3)])
 ```
-
-Note: it is currently required to use `gremlin.g.` instead of `g.`. This may hopefully change in the future though a bit of refactoring is needed. Suggestions welcomed!
 
 #### Closures
 
@@ -357,7 +372,7 @@ Appends an arbitrary string to the `gremlin.script` preceded by a `\n` character
 
 * bound arguments (for better performance)
 * closure as JavaScript functions
-* simplified API (remove gremlin.g and gremlin._, remove Java .class, etc.)
+* simplified API (remove ~~gremlin.g~~ and gremlin._, remove ~~Java .class~~, etc.)
 * Rexpro
 * performance checks and improvements
 
