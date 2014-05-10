@@ -27,6 +27,15 @@ module.exports = (function(){
     this.ClassTypes = classes;
   }
 
+  Object.defineProperty(RexsterClient.prototype, 'g', {
+    get: function() {
+      var gremlin = new GremlinScript(this);
+      var graph = new Graph(gremlin);
+
+      return graph;
+    }
+  });
+
   /**
    * Establish a connection with Rexster server.
    * While this method currently has an asynchronous behavior, it actually

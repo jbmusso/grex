@@ -7,10 +7,12 @@ var T = grex.T;
 var Contains = grex.Contains;
 
 var client;
+var g;
 
 before(function(done) {
   grex.connect(function(err, rexsterClient) {
     client = rexsterClient;
+    g = client.g;
     done();
   });
 });
@@ -21,7 +23,6 @@ describe('Graph methods', function() {
   describe('.addVertex()', function() {
     describe('when called with "{..}" arguments signature and no _id property', function() {
       before(function() {
-        var g = client.gremlin().g;
         vertex = g.addVertex({ foo: "bar" });
       });
 
@@ -44,7 +45,6 @@ describe('Graph methods', function() {
 
     describe('when called with "{..}" arguments signature and an _id property', function() {
       before(function() {
-        var g = client.gremlin().g;
         vertex = g.addVertex({ foo: 'bar', _id: 1 });
       });
 
@@ -70,7 +70,6 @@ describe('Graph methods', function() {
   describe('.addEdge()', function() {
     describe('when called with "_outV, _inV, label, {..}" arguments signature', function() {
       before(function() {
-        var g = client.gremlin().g;
         edge = g.addEdge(20, 30, "knows", { since: 'now' });
       });
 
