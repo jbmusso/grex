@@ -9,9 +9,8 @@ var AddEdgeMethod = require('../functions/graph/addedge');
 var Pipeline = require('./pipeline');
 
 module.exports = (function() {
-  function Graph(parentGremlin) {
-    this.parentGremlin = parentGremlin;
-    this.gremlin = this.parentGremlin.subScript();
+  function Graph(gremlin) {
+    this.gremlin = gremlin;
     this.identifier = 'g';
   }
 
@@ -157,7 +156,7 @@ module.exports = (function() {
     var vertex = method.run(this.gremlin, identifier);
 
     this.gremlin.line(method.toGroovy());
-    this.parentGremlin.append(this.gremlin.script);
+    this.gremlin.append(this.gremlin.script);
 
     return vertex;
   };
@@ -183,7 +182,7 @@ module.exports = (function() {
     var edge = method.run(this.gremlin, identifier);
 
     this.gremlin.line(method.toGroovy());
-    this.parentGremlin.append(this.gremlin.script);
+    this.gremlin.append(this.gremlin.script);
 
     return edge;
   };

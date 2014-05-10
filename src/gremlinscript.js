@@ -22,15 +22,6 @@ module.exports = (function() {
   }
 
   /**
-   * Instantiate and return a new GremlinScript instance
-   *
-   * @return {GremlinScript}
-   */
-  GremlinScript.prototype.subScript = function() {
-    return new GremlinScript(this.client);
-  };
-
-  /**
    * Send the script to the server for execution, returning raw results.
    *
    * @param {Function}

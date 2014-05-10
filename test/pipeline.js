@@ -309,7 +309,7 @@ describe('Gremlin steps', function() {
     describe('retain', function () {
       it('should handle an array of pipelines', function() {
         var gremlin = client.gremlin();
-        var query = gremlin.g.V().retain([gremlin.g.v(1), gremlin.g.v(2), gremlin.g.v(3)]);
+        var query = gremlin.g.V().retain([client.gremlin().g.v(1), client.gremlin().g.v(2), client.gremlin().g.v(3)]);
 
         query.gremlin.script.should.equal("g.V().retain([g.v(1),g.v(2),g.v(3)])");
       });
