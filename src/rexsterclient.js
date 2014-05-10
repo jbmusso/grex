@@ -136,8 +136,13 @@ module.exports = (function(){
    *
    * @return {GremlinScript}
    */
-  RexsterClient.prototype.gremlin = function() {
+  RexsterClient.prototype.gremlin = function(statement) {
     var gremlin = new GremlinScript(this);
+
+    if (statement) {
+      gremlin.append(statement.gremlin.script);
+      statement.gremlin.script = '';
+    }
 
     return gremlin;
   };

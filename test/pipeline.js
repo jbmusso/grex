@@ -5,10 +5,11 @@ var Vertex = grex.Vertex;
 var Edge = grex.Edge;
 
 var client;
-
+var g;
 before(function(done) {
   grex.connect(function(err, rexsterClient) {
     client = rexsterClient;
+    g = client.g;
     done();
   });
 });
@@ -17,15 +18,15 @@ describe('Gremlin steps', function() {
   describe('Transform-based steps', function() {
     describe('both', function() {
       it('should be chainable', function() {
-        var query = client.gremlin().g.v(1).both();
-        query.gremlin.script.should.equal('g.v(1).both()');
+        var gremlin = client.gremlin(g.v(1).both());
+        gremlin.script.should.equal('g.v(1).both()');
       });
     });
 
     describe('bothE', function() {
       it('should be chainable', function() {
-        var query = client.gremlin().g.v(1).bothE();
-        query.gremlin.script.should.equal('g.v(1).bothE()');
+        var gremlin = client.gremlin(g.v(1).bothE());
+        gremlin.script.should.equal('g.v(1).bothE()');
       });
     });
 
@@ -309,7 +310,7 @@ describe('Gremlin steps', function() {
     describe('retain', function () {
       it('should handle an array of pipelines', function() {
         var gremlin = client.gremlin();
-        var query = gremlin.g.V().retain([client.gremlin().g.v(1), client.gremlin().g.v(2), client.gremlin().g.v(3)]);
+        var query = gremlin.g.V().retain([g.v(1), g.v(2), g.v(3)]);
 
         query.gremlin.script.should.equal("g.V().retain([g.v(1),g.v(2),g.v(3)])");
       });

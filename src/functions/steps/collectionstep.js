@@ -15,14 +15,11 @@ module.exports = (function() {
     var str = '';
     var argumentList = [];
     var args = this.arguments;
+    var firstArgument = args[0];
 
-    if (_.isArray(args[0])) {
-      // Passing in an array of Pipeline with Gremlin script as arguments
-      _.each(args[0], function(pipeline) {
-        argumentList.push(pipeline.gremlin.script);
-      });
-
-      str = "." + this.name + "([" + argumentList.join(',') + "])";
+    if (_.isArray(firstArgument)) {
+      // Handle .method([g.v(1), g.v(2)]) signature
+      str = "." + this.name + "([" + firstArgument[0].gremlin.script.replace(/(?!^)g/g, ',g') + "])";
     } else {
       str = "." + this.name + "('"+ this.arguments[0] + "')";
     }
