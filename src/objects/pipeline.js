@@ -1,3 +1,6 @@
+var inherits = require('util').inherits;
+
+var GremlinObject = require('./object');
 var GremlinStep = require('../functions/steps/step');
 var CollectionAccessor = require('../functions/collectionaccessor');
 var CollectionStep = require('../functions/steps/collectionstep');
@@ -5,9 +8,11 @@ var PipesStep = require('../functions/steps/pipesstep');
 var SelectStep = require('../functions/steps/select');
 
 module.exports = (function () {
-  function Pipeline(gremlin) {
-    this.gremlin = gremlin;
+  function Pipeline() {
+    GremlinObject.apply(this, arguments);
   }
+
+  inherits(Pipeline, GremlinObject);
 
   /**
    * Send the underlying GremlinScript to the server for execution, returning

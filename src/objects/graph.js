@@ -1,6 +1,8 @@
+var inherits = require('util').inherits;
+
 var _ = require("lodash");
 
-
+var GremlinObject = require('./object');
 var GremlinMethod = require('../functions/method');
 var IdxGremlinFunction = require('../functions/graph/idx');
 var AddVertexMethod = require('../functions/graph/addvertex');
@@ -10,9 +12,10 @@ var Pipeline = require('./pipeline');
 
 module.exports = (function() {
   function Graph(gremlin) {
-    this.gremlin = gremlin;
-    this.identifier = 'g';
+    GremlinObject.call(this, gremlin, 'g');
   }
+
+  inherits(Graph, GremlinObject);
 
   Graph.prototype.E = function() {
     var func = new GremlinMethod('E', arguments);

@@ -1,5 +1,8 @@
+var inherits = require('util').inherits;
+
 var _ = require('lodash');
 
+var GremlinObject = require('./object');
 var GetPropertiesMethod = require('../functions/element/getproperties');
 var SetPropertiesMethod = require('../functions/element/setproperties');
 var AddPropertiesMethod = require('../functions/element/addproperties');
@@ -10,16 +13,12 @@ var AddPropertyMethod = require('../functions/element/addproperty');
  * Abstract Element class
  */
 module.exports = (function() {
-  function Element(gremlin, identifier) {
+  function Element() {
+    GremlinObject.apply(this, arguments);
     this._id = null;
-    this.identifier = identifier;
-
-    Object.defineProperty(this, "gremlin", {
-      value: gremlin,
-      enumerable: false,
-      writable: false
-    });
   }
+
+  inherits(Element, GremlinObject);
 
   // Keep track of a temporary identifier for each element
   Object.defineProperty(Element.prototype, "identifier", {
