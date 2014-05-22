@@ -29,21 +29,21 @@ module.exports = (function() {
 
   Element.prototype.getProperties = function() {
     var method = new GetPropertiesMethod();
-    this.gremlin.line(this.identifier + method.toGroovy());
+    this.methods.push(method.toGroovy());
 
     return method.run(this);
   };
 
   Element.prototype.setProperty = function(key, value) {
     var method = new SetPropertyMethod({ key: key, value: value });
-    this.gremlin.line(this.identifier + method.toGroovy());
+    this.methods.push(method.toGroovy());
 
     return method.run(this);
   };
 
   Element.prototype.setProperties = function(properties) {
     var method = new SetPropertiesMethod(properties);
-    this.gremlin.line(this.identifier + method.toGroovy());
+    this.methods.push(method.toGroovy());
 
     return method.run(this);
   };
@@ -59,7 +59,7 @@ module.exports = (function() {
    */
   Element.prototype.addProperty = function(key, value) {
     var method = new AddPropertyMethod({ key: key, value: value });
-    this.gremlin.line(this.identifier + method.toGroovy());
+    this.methods.push(method.toGroovy());
 
     return method.run(this);
   };
@@ -74,14 +74,16 @@ module.exports = (function() {
    */
   Element.prototype.addProperties = function(properties) {
     var method = new AddPropertiesMethod(properties);
-    this.gremlin.line(this.identifier + method.toGroovy());
+    this.methods.push(method.toGroovy());
 
     return method.run(this);
   };
 
   Element.prototype.remove = function() {
-    var line = this.identifier +'.remove()';
-    this.gremlin.line(line);
+    // var line = this.identifier +'.remove()';
+    // this.gremlin.line(line);
+    console.log("===========================");
+    this.methods.push('remove()');
   };
 
   return Element;

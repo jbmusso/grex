@@ -140,8 +140,8 @@ module.exports = (function(){
     var gremlin = new GremlinScript(this);
 
     if (statement) {
-      gremlin.append(statement.gremlin.script);
-      statement.gremlin.script = '';
+      gremlin.append(statement.toGroovy());
+      // statement.gremlin.script = '';
     }
 
     return gremlin;
@@ -158,7 +158,7 @@ module.exports = (function(){
 
     function Appender() {
       _.each(arguments, function(statement) {
-        gremlinScript.line(statement.toGroovy());
+        gremlinScript.line(statement);
       });
 
       return Appender;

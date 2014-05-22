@@ -71,7 +71,7 @@ module.exports = (function() {
    * @param {String} line
    */
   GremlinScript.prototype.line = function(line) {
-    this.script += '\n'+ line;
+    this.script += '\n'+ line.toGroovy();
   };
 
   return GremlinScript;

@@ -21,7 +21,7 @@ module.exports = (function() {
   };
 
   SetPropertiesMethod.prototype.toGroovy = function() {
-    return '.setProperties('+ this.stringifyArgument(this.arguments) +')';
+    return 'setProperties('+ this.stringifyArgument(this.arguments) +')';
   };
 
   return SetPropertiesMethod;

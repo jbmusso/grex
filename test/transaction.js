@@ -1,10 +1,12 @@
 var grex = require('../index.js');
 
 var client;
+var g;
 
 before(function(done){
   grex.connect(function(err, rexsterClient) {
     client = rexsterClient;
+    g = client.g;
     done();
   });
 });
@@ -13,11 +15,11 @@ before(function(done){
 var alice, bob;
 var james, waldo;
 
-describe('Transaction commit', function() {
+describe.only('Transaction commit', function() {
   describe('when adding elements to the graph in a transaction', function() {
     it('should add a vertex in a transaction', function(done) {
       var gremlin = client.gremlin();
-      gremlin.g.addVertex({ name: "Alice" });
+      gremlin.line(g.addVertex({ name: "Alice" }));
 
       gremlin.exec(function(err, result) {
         result.should.have.property('success', true);

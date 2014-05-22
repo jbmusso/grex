@@ -10,7 +10,7 @@ module.exports = (function() {
   inherits(GremlinMethod, GremlinFunction);
 
   GremlinMethod.prototype.toGroovy = function() {
-    return '.' + this.name + this.groovifyArguments();
+    return this.name + this.groovifyArguments();
   };
 
   return GremlinMethod;

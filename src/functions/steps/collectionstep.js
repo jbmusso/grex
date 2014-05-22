@@ -15,13 +15,14 @@ module.exports = (function() {
     var str = '';
     var argumentList = [];
     var args = this.arguments;
-    var firstArgument = args[0];
+    var firstArg = args[0];
 
-    if (_.isArray(firstArgument)) {
+    if (_.isArray(firstArg)) {
       // Handle .method([g.v(1), g.v(2)]) signature
-      str = "." + this.name + "([" + firstArgument[0].gremlin.script.replace(/(?!^)g/g, ',g') + "])";
+      var pipelines = _.map(firstArg, function(a) { return a.toGroovy(); }).join(',');
+      str = this.name + "([" + pipelines + "])";
     } else {
-      str = "." + this.name + "('"+ this.arguments[0] + "')";
+      str = this.name + "('"+ this.arguments[0] + "')";
     }
 
     return str;

@@ -10,7 +10,7 @@ module.exports = (function() {
   inherits(SelectStep, GremlinStep);
 
   SelectStep.prototype.toGroovy = function() {
-    return '.select' + this.groovifyArguments().replace(/\"/g, '\'');
+    return 'select' + this.groovifyArguments().replace(/\"/g, '\'');
   };
 
   return SelectStep;

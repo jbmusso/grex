@@ -21,11 +21,11 @@ module.exports = (function() {
 
     _.each(args, function(arg) {
       var argObj = new Argument(arg);
-      var partialScript = (arg.gremlin && arg.gremlin.script) || argObj.parse();
+      var partialScript = (arg.toGroovy && arg.toGroovy()) || argObj.parse();
       argumentList.push(partialScript);
     }, this);
 
-    str += '.' + this.name + '('+ argumentList.join(',') +')';
+    str += this.name + '('+ argumentList.join(',') +')';
 
     return str;
   };

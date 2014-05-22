@@ -19,30 +19,38 @@ module.exports = (function() {
 
   Graph.prototype.E = function() {
     var func = new GremlinMethod('E', arguments);
-    this.gremlin.append(this.identifier + func.toGroovy());
 
-    return new Pipeline(this.gremlin);
+    var pipeline = new Pipeline(this.identifier);
+    pipeline.methods.push(func.toGroovy());
+
+    return pipeline;
   };
 
   Graph.prototype.V = function() {
     var func = new GremlinMethod('V', arguments);
-    this.gremlin.append(this.identifier + func.toGroovy());
 
-    return new Pipeline(this.gremlin);
+    var pipeline = new Pipeline(this.identifier);
+    pipeline.methods.push(func.toGroovy());
+
+    return pipeline;
   };
 
   Graph.prototype.e = function() {
     var func = new GremlinMethod('e', arguments);
-    this.gremlin.append(this.identifier + func.toGroovy());
 
-    return new Pipeline(this.gremlin);
+    var pipeline = new Pipeline(this.identifier);
+    pipeline.methods.push(func.toGroovy());
+
+    return pipeline;
   };
 
   Graph.prototype.idx = function() {
     var func = new IdxGremlinFunction(arguments);
-    this.gremlin.append(this.identifier + func.toGroovy());
 
-    return new Pipeline(this.gremlin);
+    var pipeline = new Pipeline(this.identifier);
+    pipeline.methods.push(func.toGroovy());
+
+    return pipeline;
   };
 
   Graph.prototype.v = function() {
@@ -57,88 +65,112 @@ module.exports = (function() {
   // Indexing
   Graph.prototype.createIndex = function() {
     var func = new GremlinMethod('createIndex', arguments);
-    this.gremlin.append(this.identifier + func.toGroovy());
 
-    return new Pipeline(this.gremlin);
+    var pipeline = new Pipeline(this.identifier);
+    pipeline.methods.push(func.toGroovy());
+
+    return pipeline;
   };
 
   Graph.prototype.createKeyIndex = function() {
     var func = new GremlinMethod('createKeyIndex', arguments);
-    this.gremlin.append(this.identifier + func.toGroovy());
 
-    return new Pipeline(this.gremlin);
+    var pipeline = new Pipeline(this.identifier);
+    pipeline.methods.push(func.toGroovy());
+
+    return pipeline;
   };
 
   Graph.prototype.getIndices = function() {
     var func = new GremlinMethod('getIndices', arguments);
-    this.gremlin.append(this.identifier + func.toGroovy());
 
-    return new Pipeline(this.gremlin);
+    var pipeline = new Pipeline(this.identifier);
+    pipeline.methods.push(func.toGroovy());
+
+    return pipeline;
   };
 
   Graph.prototype.getIndexedKeys = function() {
     var func = new GremlinMethod('getIndexedKeys', arguments);
-    this.gremlin.append(this.identifier + func.toGroovy());
 
-    return new Pipeline(this.gremlin);
+    var pipeline = new Pipeline(this.identifier);
+    pipeline.methods.push(func.toGroovy());
+
+    return pipeline;
   };
 
   Graph.prototype.getIndex = function() {
     var func = new GremlinMethod('getIndex', arguments);
-    this.gremlin.append(this.identifier + func.toGroovy());
 
-    return new Pipeline(this.gremlin);
+    var pipeline = new Pipeline(this.identifier);
+    pipeline.methods.push(func.toGroovy());
+
+    return pipeline;
   };
 
   Graph.prototype.dropIndex = function() {
     var func = new GremlinMethod('dropIndex', arguments);
-    this.gremlin.append(this.identifier + func.toGroovy());
 
-    return new Pipeline(this.gremlin);
+    var pipeline = new Pipeline(this.identifier);
+    pipeline.methods.push(func.toGroovy());
+
+    return pipeline;
   };
 
   Graph.prototype.dropKeyIndex = function() {
     var func = new GremlinMethod('dropKeyIndex', arguments);
-    this.gremlin.append(this.identifier + func.toGroovy());
 
-    return new Pipeline(this.gremlin);
+    var pipeline = new Pipeline(this.identifier);
+    pipeline.methods.push(func.toGroovy());
+
+    return pipeline;
   };
 
   // Types
   Graph.prototype.makeKey = function() {
     var func = new GremlinMethod('makeKey', arguments);
-    this.gremlin.append(this.identifier + func.toGroovy());
 
-    return new Pipeline(this.gremlin);
+    var pipeline = new Pipeline(this.identifier);
+    pipeline.methods.push(func.toGroovy());
+
+    return pipeline;
   };
 
   Graph.prototype.clear = function() {
     var func = new GremlinMethod('clear', arguments);
-    this.gremlin.append(this.identifier + func.toGroovy());
 
-    return new Pipeline(this.gremlin);
+    var pipeline = new Pipeline(this.identifier);
+    pipeline.methods.push(func.toGroovy());
+
+    return pipeline;
   };
 
   Graph.prototype.shutdown = function() {
     var func = new GremlinMethod('shutdown', arguments);
-    this.gremlin.append(this.identifier + func.toGroovy());
 
-    return new Pipeline(this.gremlin);
+    var pipeline = new Pipeline(this.identifier);
+    pipeline.methods.push(func.toGroovy());
+
+    return pipeline;
   };
 
   Graph.prototype.getFeatures = function() {
     var func = new GremlinMethod('getFeatures', arguments);
-    this.gremlin.append(this.identifier + func.toGroovy());
 
-    return new Pipeline(this.gremlin);
+    var pipeline = new Pipeline(this.identifier);
+    pipeline.methods.push(func.toGroovy());
+
+    return pipeline;
   };
 
   // Titan specifics
   Graph.prototype.getTypes = function() {
     var func = new GremlinMethod('getTypes', arguments);
-    this.gremlin.append(this.identifier + func.toGroovy());
 
-    return new Pipeline(this.gremlin);
+    var pipeline = new Pipeline(this.identifier);
+    pipeline.methods.push(func.toGroovy());
+
+    return pipeline;
   };
 
 
@@ -160,8 +192,7 @@ module.exports = (function() {
     var method = new AddVertexMethod(properties);
     var vertex = method.run(this.gremlin, identifier);
 
-    this.gremlin.line(method.toGroovy());
-    this.gremlin.append(this.gremlin.script);
+    this.methods.push(method.toGroovy());
 
     return vertex;
   };
@@ -186,8 +217,7 @@ module.exports = (function() {
     var method = new AddEdgeMethod(params);
     var edge = method.run(this.gremlin, identifier);
 
-    this.gremlin.line(method.toGroovy());
-    this.gremlin.append(this.gremlin.script);
+    this.methods.push(method.toGroovy());
 
     return edge;
   };

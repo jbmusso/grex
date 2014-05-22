@@ -12,8 +12,8 @@ module.exports = (function() {
 
   inherits(AddEdgeMethod, GremlinMethod);
 
-  AddEdgeMethod.prototype.run = function(gremlin, identifier) {
-    this.edge = new Edge(gremlin);
+  AddEdgeMethod.prototype.run = function(identifier) {
+    this.edge = new Edge(identifier);
     this.edge.identifier = identifier; // Non-enumerable property
 
     if (this.arguments.properties._id) {

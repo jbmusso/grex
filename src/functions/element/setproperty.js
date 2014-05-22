@@ -22,7 +22,7 @@ module.exports = (function() {
     var key = this.arguments.key;
     var value = this.arguments.value;
 
-    return ".setProperty('" + key + "','" + value + "')";
+    return "setProperty('" + key + "','" + value + "')";
   };
 
   return SetPropertyMethod;

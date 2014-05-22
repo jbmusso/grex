@@ -12,8 +12,8 @@ module.exports = (function() {
 
   inherits(AddVertexMethod, GremlinMethod);
 
-  AddVertexMethod.prototype.run = function(gremlin, identifier) {
-    this.vertex = new Vertex(gremlin);
+  AddVertexMethod.prototype.run = function(identifier) {
+    this.vertex = new Vertex(identifier);
 
     this.vertex.identifier = identifier; // Non-enumerable property
 
