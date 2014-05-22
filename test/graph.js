@@ -87,6 +87,33 @@ describe('Graph methods', function() {
         edge.should.have.property('since', 'now');
       });
     });
+
+    describe('signature: (Vertex, Vertex, String, Object)', function() {
+      var edge;
+
+      before(function() {
+        var v1 = g.addVertex({ name: 'Bob' });
+        var v2 = g.addVertex({ name: 'Alice' });
+        edge = g.addEdge(v1, v2, 'knows', { since: 'now' });
+      });
+
+      it('should return an edge', function() {
+        edge.should.be.an.instanceof(Edge);
+      });
+
+      it('should have a null _id', function() {
+        edge.should.have.property('_id', null);
+      });
+
+      it('should have _outV and _inV properties as Vertex', function() {
+        edge._outV.should.be.an.instanceof(Vertex);
+        edge._inV.should.be.an.instanceof(Vertex);
+      });
+
+      it('should have a _label', function() {
+        edge.should.have.property('_label', 'knows');
+      });
+    });
   });
 
   describe('.createIndex()', function() {
