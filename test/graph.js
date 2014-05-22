@@ -18,10 +18,10 @@ before(function(done) {
 });
 
 describe('Graph methods', function() {
-  var vertex, edge;
-
   describe('.addVertex()', function() {
-    describe('when called with "{..}" arguments signature and no _id property', function() {
+    describe('signature: (Object)', function() {
+      var vertex;
+
       before(function() {
         vertex = g.addVertex({ foo: "bar" });
       });
@@ -37,13 +37,11 @@ describe('Graph methods', function() {
       it('should have properties set', function() {
         vertex.should.have.property('foo', 'bar');
       });
-
-      after(function() {
-        vertex = null;
-      });
     });
 
-    describe('when called with "{..}" arguments signature and an _id property', function() {
+    describe('signature: (Object with _id property)', function() {
+      var vertex;
+
       before(function() {
         vertex = g.addVertex({ foo: 'bar', _id: 1 });
       });
@@ -54,21 +52,19 @@ describe('Graph methods', function() {
 
       it('should have a numerical _id', function() {
         vertex.should.have.property('_id');
-        vertex._id.should.be.a.Number;
+        vertex._id.should.be.a.Number.and.equal(1);
       });
 
       it('should have properties set', function() {
         vertex.should.have.property('foo', 'bar');
       });
-
-      after(function() {
-        vertex = null;
-      });
     });
   });
 
   describe('.addEdge()', function() {
-    describe('when called with "_outV, _inV, label, {..}" arguments signature', function() {
+    describe('signature: (Number, Number, String, Object)', function() {
+      var edge;
+
       before(function() {
         edge = g.addEdge(20, 30, "knows", { since: 'now' });
       });
@@ -89,10 +85,6 @@ describe('Graph methods', function() {
 
       it('should have own specified properties', function() {
         edge.should.have.property('since', 'now');
-      });
-
-      after(function() {
-        edge = null;
       });
     });
   });
