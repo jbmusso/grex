@@ -30,7 +30,7 @@ module.exports = (function(){
   Object.defineProperty(RexsterClient.prototype, 'g', {
     get: function() {
       var gremlin = new GremlinScript(this);
-      var graph = new Graph(gremlin);
+      var graph = new Graph('g');
 
       return graph;
     }
@@ -147,11 +147,21 @@ module.exports = (function(){
     return gremlin;
   };
 
+  /**
+   * Instantiate a new GremlinScript and return a function responsible
+   * for appending bits of Gremlin to this GremlinScript.
+   *
+   * @return {Function}
+   */
   RexsterClient.prototype.grem = function() {
     var gremlinScript = new GremlinScript(this);
 
-    function Appender(statement) {
-      gremlinScript.line(statement.gremlin.script);
+    function Appender() {
+      _.each(arguments, function(statement) {
+        gremlinScript.line(statement.toGroovy());
+      });
+
+      return Appender;
     }
 
     Appender.exec = function(callback) {

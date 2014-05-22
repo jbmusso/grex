@@ -14,7 +14,7 @@ module.exports = (function() {
     // Define a default 'g' getter, returning a Graph
     Object.defineProperty(this, 'g', {
       get: function() {
-        var graph = new Graph(this);
+        var graph = new Graph('g');
 
         return graph;
       }

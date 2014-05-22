@@ -119,8 +119,12 @@ describe('RexsterClient', function() {
     });
 
     it('should append text', function() {
-      gremlin(g.v(1));
-      gremlin.script.should.equal('\ng.v(1)');
+      gremlin(
+        g.v(1),
+        g.v(2)
+      );
+
+      gremlin.script.should.equal('\ng.v(1)\ng.v(2)');
     });
 
     it('should have an exec function', function() { /*jshint -W030 */

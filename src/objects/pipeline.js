@@ -8,8 +8,8 @@ var PipesStep = require('../functions/steps/pipesstep');
 var SelectStep = require('../functions/steps/select');
 
 module.exports = (function () {
-  function Pipeline() {
-    GremlinObject.apply(this, arguments);
+  function Pipeline(identifier) {
+    GremlinObject.call(this, identifier);
   }
 
   inherits(Pipeline, GremlinObject);

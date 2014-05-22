@@ -11,8 +11,8 @@ var AddEdgeMethod = require('../functions/graph/addedge');
 var Pipeline = require('./pipeline');
 
 module.exports = (function() {
-  function Graph(gremlin) {
-    GremlinObject.call(this, gremlin, 'g');
+  function Graph() {
+    GremlinObject.apply(this, arguments);
   }
 
   inherits(Graph, GremlinObject);
@@ -47,9 +47,11 @@ module.exports = (function() {
 
   Graph.prototype.v = function() {
     var func = new GremlinMethod('v', arguments);
-    this.gremlin.append(this.identifier + func.toGroovy());
 
-    return new Pipeline(this.gremlin);
+    var pipeline = new Pipeline(this.identifier);
+    pipeline.methods.push(func.toGroovy());
+
+    return pipeline;
   };
 
   // Indexing
