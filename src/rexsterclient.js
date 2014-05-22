@@ -147,6 +147,26 @@ module.exports = (function(){
     return gremlin;
   };
 
+  RexsterClient.prototype.grem = function() {
+    var gremlinScript = new GremlinScript(this);
+
+    function Appender(statement) {
+      gremlinScript.line(statement.gremlin.script);
+    }
+
+    Appender.exec = function(callback) {
+      return gremlinScript.exec(callback);
+    };
+
+    Object.defineProperty(Appender, 'script', {
+      get: function() {
+        return gremlinScript.script;
+      }
+    });
+
+    return Appender;
+  };
+
   RexsterClient.prototype.transformResults = function(results) {
     return this.resultFormatter.formatResults(results);
   };

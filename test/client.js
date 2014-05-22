@@ -100,4 +100,39 @@ describe('RexsterClient', function() {
       });
     });
   });
+
+  describe('grem()', function() {
+    var client;
+    var gremlin;
+    var g;
+
+    before(function(done) {
+      grex.connect(function(err, client) {
+        gremlin = client.grem();
+        g = client.g;
+        done();
+      });
+    });
+
+    it('should return an appender', function() { /*jshint -W030 */
+      gremlin.should.be.a.Function;
+    });
+
+    it('should append text', function() {
+      gremlin(g.v(1));
+      gremlin.script.should.equal('\ng.v(1)');
+    });
+
+    it('should have an exec function', function() { /*jshint -W030 */
+      gremlin.exec.should.be.a.Function;
+    });
+
+    it('should be executable', function(done) {
+      gremlin.exec(function(err, response) {
+        should.not.exist(err);
+        response.results.length.should.equal(1);
+        done();
+      });
+    });
+  });
 });
