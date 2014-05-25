@@ -20,8 +20,8 @@ module.exports = (function() {
 
   inherits(Element, GremlinObject);
 
-  // Keep track of a temporary identifier for each element
-  Object.defineProperty(Element.prototype, "identifier", {
+  // Keep track of a temporary object for each element
+  Object.defineProperty(Element.prototype, "object", {
     value: null,
     enumerable: false,
     writable: true
@@ -80,9 +80,7 @@ module.exports = (function() {
   };
 
   Element.prototype.remove = function() {
-    // var line = this.identifier +'.remove()';
-    // this.gremlin.line(line);
-    console.log("===========================");
+    var line = this.object +'.remove()';
     this.methods.push('remove()');
   };
 
