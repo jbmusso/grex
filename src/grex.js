@@ -91,7 +91,7 @@ module.exports = (function(){
 
     }.bind(this));
 
-    req.on('error', function() {
+    req.on('error', function(e) {
       return deferred.reject(e);
     });
 
