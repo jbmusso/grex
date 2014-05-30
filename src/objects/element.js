@@ -8,6 +8,7 @@ var SetPropertiesMethod = require('../functions/element/setproperties');
 var AddPropertiesMethod = require('../functions/element/addproperties');
 var SetPropertyMethod = require('../functions/element/setproperty');
 var AddPropertyMethod = require('../functions/element/addproperty');
+var GremlinMethod = require('../functions/method');
 
 /**
  * Abstract Element class
@@ -80,8 +81,10 @@ module.exports = (function() {
   };
 
   Element.prototype.remove = function() {
-    var line = this.object +'.remove()';
-    this.methods.push('remove()');
+    var method = new GremlinMethod('remove', [])
+    this.methods.push(method.toGroovy());
+
+    return this;
   };
 
   return Element;

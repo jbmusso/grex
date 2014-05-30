@@ -69,12 +69,12 @@ describe('Graph elements', function() {
     });
   });
 
-  describe.skip('.remove()', function() {
+  describe('.remove()', function() {
     it('should remove element', function() {
       var gremlin = new Gremlin(client);
       var v = new Vertex('v');
 
-      v.remove();
+      gremlin.line(v.remove());
       gremlin.script.should.equal('\nv.remove()');
     });
   });
