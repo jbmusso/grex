@@ -23,7 +23,7 @@ module.exports = (function() {
   AddVertexMethod.prototype.toGroovy = function() {
     var id = this.vertex._id ? this.vertex._id +',' : '';
 
-    var str = 'addVertex('+ id + this.stringifyArgument(this.arguments) +')';
+    var str = '.addVertex('+ id + this.stringifyArgument(this.arguments) +')';
 
     return str;
   };

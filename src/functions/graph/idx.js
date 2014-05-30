@@ -10,7 +10,7 @@ module.exports = (function() {
   inherits(IdxGremlinFunction, GremlinMethod);
 
   IdxGremlinFunction.prototype.toGroovy = function() {
-    var str = "idx('" + this.arguments[0] + "')";
+    var str = ".idx('" + this.arguments[0] + "')";
     var properties = this.arguments[1];
 
     if (properties) {

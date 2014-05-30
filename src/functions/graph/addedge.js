@@ -34,7 +34,7 @@ module.exports = (function() {
 
   AddEdgeMethod.prototype.toGroovy = function() {
     var id = this.edge._id ? this.edge._id + ',' : '';
-    var str = 'addEdge('+ id + this.edge._outV.identifier +','+ this.edge._inV.identifier +',"'+ this.edge._label +'",'+ this.stringifyArgument(this.arguments.properties) +')';
+    var str = '.addEdge('+ id + this.edge._outV.identifier +','+ this.edge._inV.identifier +',"'+ this.edge._label +'",'+ this.stringifyArgument(this.arguments.properties) +')';
 
     return str;
   };

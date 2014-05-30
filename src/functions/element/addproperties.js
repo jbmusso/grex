@@ -21,7 +21,7 @@ module.exports = (function() {
   };
 
   AddPropertiesMethod.prototype.toGroovy = function() {
-    return 'addProperties('+ this.stringifyArgument(this.arguments) +')';
+    return '.addProperties('+ this.stringifyArgument(this.arguments) +')';
   };
 
   return AddPropertiesMethod;

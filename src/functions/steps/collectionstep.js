@@ -12,7 +12,7 @@ module.exports = (function() {
   inherits(CollectionStep, GremlinStep);
 
   CollectionStep.prototype.toGroovy = function() {
-    var str = '';
+    var str = '.'+ this.name;
     var argumentList = [];
     var args = this.arguments;
     var firstArg = args[0];
@@ -20,9 +20,9 @@ module.exports = (function() {
     if (_.isArray(firstArg)) {
       // Handle .method([g.v(1), g.v(2)]) signature
       var pipelines = _.map(firstArg, function(a) { return a.toGroovy(); }).join(',');
-      str = this.name + "([" + pipelines + "])";
+      str += "([" + pipelines + "])";
     } else {
-      str = this.name + "('"+ this.arguments[0] + "')";
+      str += "('"+ this.arguments[0] + "')";
     }
 
     return str;

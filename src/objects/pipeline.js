@@ -654,7 +654,7 @@ module.exports = (function () {
   };
 
   Pipeline.prototype.key = function() {
-    this.methods.push(arguments[0]);
+    this.methods.push('.'+ arguments[0]);
 
     return this;
   };

@@ -6,7 +6,7 @@ module.exports = (function() {
   }
 
   GremlinObject.prototype.toGroovy = function() {
-    return this.object + '.' + this.methods.join('.');
+    return this.object + this.methods.join('');
   };
 
   return GremlinObject;

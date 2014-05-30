@@ -25,7 +25,7 @@ module.exports = (function() {
       argumentList.push(partialScript);
     }, this);
 
-    str += this.name + '('+ argumentList.join(',') +')';
+    str += '.'+ this.name + '('+ argumentList.join(',') +')';
 
     return str;
   };
