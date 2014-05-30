@@ -6,10 +6,13 @@ var Edge = grex.Edge;
 
 var client;
 var g;
+var _;
+
 before(function(done) {
   grex.connect(function(err, rexsterClient) {
     client = rexsterClient;
     g = client.g;
+    _ = client._;
     done();
   });
 });
@@ -289,17 +292,17 @@ describe('Gremlin steps', function() {
       });
     });
 
-    describe.skip('and', function () {
+    describe('and', function () {
       it('should chain .and() with two conditions', function() {
-        var gremlin = client.gremlin(g.V().and(gremlin._().both("knows"), gremlin._().both("created")));
+        var gremlin = client.gremlin(g.V().and(_().both("knows"), _().both("created")));
 
         gremlin.script.should.equal("g.V().and(_().both('knows'),_().both('created'))");
       });
     });
 
-    describe.skip('or', function () {
+    describe('or', function () {
       it('should chain .or() with two conditions', function() {
-        var gremlin = client.gremlin(g.v(1).outE().or(gremlin._().has('id', T.eq, 9), gremlin._().has('weight', T.lt, '0.6f')));
+        var gremlin = client.gremlin(g.v(1).outE().or(_().has('id', T.eq, 9), _().has('weight', T.lt, '0.6f')));
 
         gremlin.script.should.equal("g.v(1).outE().or(_().has('id',T.eq,9),_().has('weight',T.lt,0.6f))");
       });
@@ -330,16 +333,16 @@ describe('Gremlin steps', function() {
   });
 
   describe('Branch-based steps', function() {
-    describe.skip('copySplit', function () {
+    describe('copySplit', function () {
       it("should chain .copySplit()", function() {
-        var gremlin = gremlin(g.v(1).out('knows').copySplit(gremlin._().out('created').property('name'), gremlin._().property('age')).fairMerge());
+        var gremlin = client.gremlin(g.v(1).out('knows').copySplit(_().out('created').property('name'), _().property('age')).fairMerge());
         gremlin.script.should.equal("g.v(1).out('knows').copySplit(_().out('created').property('name'),_().property('age')).fairMerge()");
       });
     });
 
-    describe.skip('exhaustMerge', function () {
+    describe('exhaustMerge', function () {
       it('should chain .exhaustMerge()', function () {
-        var gremlin = gremlin.g.v(1).out('knows').copySplit(gremlin._().out('created').key('name'), gremlin._().key('age')).exhaustMerge();
+        var gremlin = client.gremlin(g.v(1).out('knows').copySplit(_().out('created').key('name'), _().key('age')).exhaustMerge());
 
         gremlin.script.should.equal("g.v(1).out('knows').copySplit(_().out('created').name,_().age).exhaustMerge()");
       });
