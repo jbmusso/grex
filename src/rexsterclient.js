@@ -176,6 +176,10 @@ module.exports = (function(){
       return gremlinScript.exec(callback);
     };
 
+    Appender.fetch = function(callback) {
+      return gremlinScript.fetch(callback);
+    };
+
     Object.defineProperty(Appender, 'script', {
       get: function() {
         return gremlinScript.script;

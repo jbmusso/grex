@@ -138,5 +138,13 @@ describe('RexsterClient', function() {
         done();
       });
     });
+
+    it('should be fetchable', function(done) {
+      gremlin.fetch(function(err, results) {
+        should.not.exist(err);
+        results.length.should.equal(1);
+        done();
+      });
+    });
   });
 });
