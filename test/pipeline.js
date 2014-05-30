@@ -275,14 +275,14 @@ describe('Gremlin steps', function() {
   });
 
   describe('Filter-based steps', function() {
-    describe.skip('[i]', function () {
+    describe('[i]', function () {
       it('should chain .index(i) as [i]', function() {
         var gremlin = client.gremlin(g.V().index(0).property('name'));
         gremlin.script.should.equal("g.V()[0].property('name')");
       });
     });
 
-    describe.skip('[i...i]', function () {
+    describe('[i...i]', function () {
       it('should chain .range() as [i..j]', function() {
         var gremlin = client.gremlin(g.V().range('0..<2').property('name'));
         gremlin.script.should.equal("g.V()[0..<2].property('name')");
