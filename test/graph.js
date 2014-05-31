@@ -118,27 +118,27 @@ describe('Graph methods', function() {
 
   describe('.createIndex()', function() {
     it('should handle string, Element.class arguments', function () {
-      var gremlin = client.gremlin(g.createIndex("my-index", Vertex));
-      gremlin.script.should.equal("g.createIndex('my-index',Vertex.class)");
+      var query = gremlin(g.createIndex("my-index", Vertex));
+      query.script.should.equal("g.createIndex('my-index',Vertex.class)");
     });
   });
 
   describe('.idx()', function() {
     it("should handle `name, {key: value}` arguments", function() {
-      var gremlin = client.gremlin(g.idx("my-index", {'name':'marko'}));
-      gremlin.script.should.equal("g.idx('my-index')[[name:'marko']]");
+      var query = gremlin(g.idx("my-index", {'name':'marko'}));
+      query.script.should.equal("g.idx('my-index')[[name:'marko']]");
     });
 
     it("should support g.idx().put()", function() {
-      var gremlin = client.gremlin(g.idx("my-index").put("name", "marko", g.v(1)));
-      gremlin.script.should.equal("g.idx('my-index').put('name','marko',g.v(1))");
+      var query = gremlin(g.idx("my-index").put("name", "marko", g.v(1)));
+      query.script.should.equal("g.idx('my-index').put('name','marko',g.v(1))");
     });
   });
 
   describe('.dropIndex()', function() {
     it("should handle `string` argument", function() {
-      var gremlin = client.gremlin(g.dropIndex("my-index"));
-      gremlin.script.should.equal("g.dropIndex('my-index')");
+      var query = gremlin(g.dropIndex("my-index"));
+      query.script.should.equal("g.dropIndex('my-index')");
     });
   });
 });

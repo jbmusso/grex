@@ -20,21 +20,21 @@ var james, waldo;
 describe('Transaction commit', function() {
   describe('when adding elements to the graph in a transaction', function() {
     it('should add a vertex in a transaction', function(done) {
-      var script = gremlin(g.addVertex({ name: "Alice" }));
+      var query = gremlin(g.addVertex({ name: "Alice" }));
 
-      script.exec(function(err, result) {
+      query.exec(function(err, result) {
         result.should.have.property('success', true);
         done();
       });
     });
 
     it('should add two vertices and an edge in a transaction', function(done) {
-      var script = gremlin();
-      bob = script.line(g.addVertex({ name: 'Bob' }), 'bob');
-      waldo = script.line(g.addVertex({ name: 'Ryan' }), 'waldo');
-      script(g.addEdge(bob, waldo, 'likes', { since: 'now' }));
+      var query = gremlin();
+      bob = query.line(g.addVertex({ name: 'Bob' }), 'bob');
+      waldo = query.line(g.addVertex({ name: 'Ryan' }), 'waldo');
+      query(g.addEdge(bob, waldo, 'likes', { since: 'now' }));
 
-      script.exec(function(err, result) {
+      query.exec(function(err, result) {
         result.should.have.property('success', true);
         done();
       });

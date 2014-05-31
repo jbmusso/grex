@@ -81,15 +81,15 @@ describe('Graph elements', function() {
 
   describe('.keys()', function() {
     it("should chain .keys()", function() {
-      var gremlin = client.gremlin(g.v(1).keys());
-      gremlin.script.should.equal("g.v(1).keys()");
+      var query = gremlin(g.v(1).keys());
+      query.script.should.equal("g.v(1).keys()");
     });
   });
 
   describe('.values', function() {
     it("should chain .values()", function() {
-      var gremlin = client.gremlin(g.v(1).values());
-      gremlin.script.should.equal("g.v(1).values()");
+      var query = client.gremlin(g.v(1).values());
+      query.script.should.equal("g.v(1).values()");
     });
   });
 });

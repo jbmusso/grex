@@ -63,10 +63,11 @@ describe('RexsterClient', function() {
     var client;
     var gremlin;
     var g;
+    var query;
 
     before(function(done) {
       grex.connect(function(err, client) {
-        gremlin = client.gremlin();
+        gremlin = client.gremlin;
         g = client.g;
         done();
       });
@@ -77,20 +78,20 @@ describe('RexsterClient', function() {
     });
 
     it('should append text', function() {
-      gremlin(
+      query = gremlin(
         g.v(1),
         g.v(2)
       );
 
-      gremlin.script.should.equal('\ng.v(1)\ng.v(2)');
+      query.script.should.equal('g.v(1)\ng.v(2)');
     });
 
     it('should have an exec function', function() { /*jshint -W030 */
-      gremlin.exec.should.be.a.Function;
+      query.exec.should.be.a.Function;
     });
 
     it('should be executable', function(done) {
-      gremlin.exec(function(err, response) {
+      query.exec(function(err, response) {
         should.not.exist(err);
         response.results.length.should.equal(1);
         done();
@@ -98,7 +99,7 @@ describe('RexsterClient', function() {
     });
 
     it('should be fetchable', function(done) {
-      gremlin.fetch(function(err, results) {
+      query.fetch(function(err, results) {
         should.not.exist(err);
         results.length.should.equal(1);
         done();
