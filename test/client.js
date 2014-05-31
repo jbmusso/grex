@@ -61,54 +61,12 @@ describe('RexsterClient', function() {
 
   describe('gremlin()', function() {
     var client;
-
-    before(function() {
-      client = new RexsterClient();
-    });
-
-    describe('with no parameters', function() {
-      var gremlin;
-
-      before(function() {
-        gremlin = client.gremlin();
-      });
-
-      it('should return an instance of GremlinScript', function() {
-        gremlin.should.be.an.instanceof(GremlinScript);
-      });
-
-      it('should be an empty script', function() {
-        gremlin.script.should.equal('');
-        gremlin.params.should.eql({});
-      });
-    });
-
-    describe('with a Gremlin object wrapper as a parameter', function() {
-      var gremlin;
-      var g = grex.g;
-
-      before(function() {
-        gremlin = client.gremlin(g.v(1));
-      });
-
-      it('should return an instance of GremlinScript', function() {
-        gremlin.should.be.an.instanceof(GremlinScript);
-      });
-
-      it('should have a non empty script', function() {
-        gremlin.script.should.equal('g.v(1)');
-      });
-    });
-  });
-
-  describe('grem()', function() {
-    var client;
     var gremlin;
     var g;
 
     before(function(done) {
       grex.connect(function(err, client) {
-        gremlin = client.grem();
+        gremlin = client.gremlin();
         g = client.g;
         done();
       });
