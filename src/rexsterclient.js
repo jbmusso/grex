@@ -139,13 +139,18 @@ module.exports = (function(){
     return results;
   };
 
+  Object.defineProperty(RexsterClient.prototype, 'gremlin', {
+    get: function() {
+      return this.getAppender.bind(this)
+    }
+  })
   /**
    * Instantiate a new GremlinScript and return a function responsible
    * for appending bits of Gremlin to this GremlinScript.
    *
    * @return {Function}
    */
-  RexsterClient.prototype.gremlin = function() {
+  RexsterClient.prototype.getAppender = function() {
     var gremlinScript = new GremlinScript(this);
 
     gremlinScript.appendMany([].slice.call(arguments));

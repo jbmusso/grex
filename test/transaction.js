@@ -2,10 +2,12 @@ var grex = require('../index.js');
 
 var client;
 var g;
+var gremlin;
 
 before(function(done){
   grex.connect(function(err, rexsterClient) {
     client = rexsterClient;
+    gremlin = client.gremlin;
     g = client.g;
     done();
   });
@@ -18,23 +20,21 @@ var james, waldo;
 describe('Transaction commit', function() {
   describe('when adding elements to the graph in a transaction', function() {
     it('should add a vertex in a transaction', function(done) {
-      var gremlin = client.gremlin();
-      gremlin(g.addVertex({ name: "Alice" }));
+      var script = gremlin(g.addVertex({ name: "Alice" }));
 
-      gremlin.exec(function(err, result) {
+      script.exec(function(err, result) {
         result.should.have.property('success', true);
         done();
       });
     });
 
     it('should add two vertices and an edge in a transaction', function(done) {
-      var gremlin = client.gremlin();
+      var script = gremlin();
+      bob = script.line(g.addVertex({ name: 'Bob' }), 'bob');
+      waldo = script.line(g.addVertex({ name: 'Ryan' }), 'waldo');
+      script(g.addEdge(bob, waldo, 'likes', { since: 'now' }));
 
-      bob = gremlin.line(g.addVertex({ name: 'Bob' }), 'bob');
-      waldo = gremlin.line(g.addVertex({ name: 'Ryan' }), 'waldo');
-      gremlin(g.addEdge(bob, waldo, 'likes', { since: 'now' }));
-
-      gremlin.exec(function(err, result) {
+      script.exec(function(err, result) {
         result.should.have.property('success', true);
         done();
       });
