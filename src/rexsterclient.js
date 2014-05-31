@@ -6,6 +6,7 @@ var _ = require("lodash");
 
 var GremlinScript = require('./gremlinscript');
 var Graph = require("./objects/graph");
+var Pipeline = require('./objects/pipeline');
 var classes = require("./classes/classes");
 
 var ResultFormatter = require("./resultformatter");
@@ -29,10 +30,17 @@ module.exports = (function(){
 
   Object.defineProperty(RexsterClient.prototype, 'g', {
     get: function() {
-      var gremlin = new GremlinScript(this);
-      var graph = new Graph(gremlin);
+      var graph = new Graph('g');
 
       return graph;
+    }
+  });
+
+  Object.defineProperty(RexsterClient.prototype, '_', {
+    get: function() {
+      return function(arguments) {
+        return new Pipeline('_()');
+      };
     }
   });
 
@@ -132,31 +140,35 @@ module.exports = (function(){
   };
 
   /**
-   * Instantiate and return a new GremlinScript instance
+   * Instantiate a new GremlinScript and return a function responsible
+   * for appending bits of Gremlin to this GremlinScript.
    *
-   * @return {GremlinScript}
+   * @return {Function}
    */
-  RexsterClient.prototype.gremlin = function(statement) {
-    var gremlin = new GremlinScript(this);
-
-    if (statement) {
-      gremlin.append(statement.gremlin.script);
-      statement.gremlin.script = '';
-    }
-
-    return gremlin;
-  };
-
-  RexsterClient.prototype.grem = function() {
+  RexsterClient.prototype.gremlin = function() {
     var gremlinScript = new GremlinScript(this);
 
-    function Appender(statement) {
-      gremlinScript.line(statement.gremlin.script);
+    gremlinScript.appendMany([].slice.call(arguments));
+
+    function Appender() {
+      _.each(arguments, function(statement) {
+        gremlinScript.line(statement);
+      });
+
+      return gremlinScript;
     }
 
     Appender.exec = function(callback) {
       return gremlinScript.exec(callback);
     };
+
+    Appender.fetch = function(callback) {
+      return gremlinScript.fetch(callback);
+    };
+
+    Appender.line = function() {
+      return gremlinScript.line.apply(gremlinScript, arguments);
+    }
 
     Object.defineProperty(Appender, 'script', {
       get: function() {

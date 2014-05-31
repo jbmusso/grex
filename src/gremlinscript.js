@@ -14,7 +14,7 @@ module.exports = (function() {
     // Define a default 'g' getter, returning a Graph
     Object.defineProperty(this, 'g', {
       get: function() {
-        var graph = new Graph(this);
+        var graph = new Graph('g');
 
         return graph;
       }
@@ -70,8 +70,27 @@ module.exports = (function() {
    * @public
    * @param {String} line
    */
-  GremlinScript.prototype.line = function(line) {
-    this.script += '\n'+ line;
+  GremlinScript.prototype.line = function(line, identifier) {
+    var prefix = '';
+
+    if (identifier) {
+      line.identifier = identifier;
+      prefix = identifier + '=';
+    }
+
+    this.script += '\n'+ prefix + line.toGroovy();
+
+    return line;
+  };
+
+  /**
+   * Append many statements to the script, each as new lines.
+   *
+   * @public
+   */
+  GremlinScript.prototype.appendMany = function(statements) {
+    var toAppend = _.map(statements, function(s) { return s.toGroovy(); });
+    this.script = toAppend.join('\n');
   };
 
   return GremlinScript;

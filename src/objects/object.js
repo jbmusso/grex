@@ -1,14 +1,13 @@
 module.exports = (function() {
-  function GremlinObject(gremlin, identifier) {
-    Object.defineProperty(this, "gremlin", {
-      value: gremlin,
-      enumerable: false,
-      writable: false
-    });
-
-    this.identifier = identifier;
-
+  function GremlinObject(object) {
+    this.object = object;
+    this.methods = [];
+    this.identifier = '';
   }
+
+  GremlinObject.prototype.toGroovy = function() {
+    return this.object + this.methods.join('');
+  };
 
   return GremlinObject;
 })();

@@ -8,6 +8,7 @@ var SetPropertiesMethod = require('../functions/element/setproperties');
 var AddPropertiesMethod = require('../functions/element/addproperties');
 var SetPropertyMethod = require('../functions/element/setproperty');
 var AddPropertyMethod = require('../functions/element/addproperty');
+var GremlinMethod = require('../functions/method');
 
 /**
  * Abstract Element class
@@ -20,8 +21,8 @@ module.exports = (function() {
 
   inherits(Element, GremlinObject);
 
-  // Keep track of a temporary identifier for each element
-  Object.defineProperty(Element.prototype, "identifier", {
+  // Keep track of a temporary object for each element
+  Object.defineProperty(Element.prototype, "object", {
     value: null,
     enumerable: false,
     writable: true
@@ -29,21 +30,21 @@ module.exports = (function() {
 
   Element.prototype.getProperties = function() {
     var method = new GetPropertiesMethod();
-    this.gremlin.line(this.identifier + method.toGroovy());
+    this.methods.push(method.toGroovy());
 
     return method.run(this);
   };
 
   Element.prototype.setProperty = function(key, value) {
     var method = new SetPropertyMethod({ key: key, value: value });
-    this.gremlin.line(this.identifier + method.toGroovy());
+    this.methods.push(method.toGroovy());
 
     return method.run(this);
   };
 
   Element.prototype.setProperties = function(properties) {
     var method = new SetPropertiesMethod(properties);
-    this.gremlin.line(this.identifier + method.toGroovy());
+    this.methods.push(method.toGroovy());
 
     return method.run(this);
   };
@@ -59,7 +60,7 @@ module.exports = (function() {
    */
   Element.prototype.addProperty = function(key, value) {
     var method = new AddPropertyMethod({ key: key, value: value });
-    this.gremlin.line(this.identifier + method.toGroovy());
+    this.methods.push(method.toGroovy());
 
     return method.run(this);
   };
@@ -74,14 +75,16 @@ module.exports = (function() {
    */
   Element.prototype.addProperties = function(properties) {
     var method = new AddPropertiesMethod(properties);
-    this.gremlin.line(this.identifier + method.toGroovy());
+    this.methods.push(method.toGroovy());
 
     return method.run(this);
   };
 
   Element.prototype.remove = function() {
-    var line = this.identifier +'.remove()';
-    this.gremlin.line(line);
+    var method = new GremlinMethod('remove', [])
+    this.methods.push(method.toGroovy());
+
+    return this;
   };
 
   return Element;

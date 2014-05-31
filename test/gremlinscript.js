@@ -12,8 +12,10 @@ describe('GremlinScript', function() {
   describe('line()', function() {
     it('should append a new line', function() {
       var gremlin = new GremlinScript();
-      gremlin.line('foo');
-      gremlin.script.should.equal('\nfoo');
+      var g = gremlin.g;
+
+      gremlin.line(g.v(1));
+      gremlin.script.should.equal('\ng.v(1)');
     });
   });
 });

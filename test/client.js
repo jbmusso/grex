@@ -61,54 +61,12 @@ describe('RexsterClient', function() {
 
   describe('gremlin()', function() {
     var client;
-
-    before(function() {
-      client = new RexsterClient();
-    });
-
-    describe('with no parameters', function() {
-      var gremlin;
-
-      before(function() {
-        gremlin = client.gremlin();
-      });
-
-      it('should return an instance of GremlinScript', function() {
-        gremlin.should.be.an.instanceof(GremlinScript);
-      });
-
-      it('should be an empty script', function() {
-        gremlin.script.should.equal('');
-        gremlin.params.should.eql({});
-      });
-    });
-
-    describe('with a Gremlin object wrapper as a parameter', function() {
-      var gremlin;
-      var g = grex.g;
-
-      before(function() {
-        gremlin = client.gremlin(g.v(1));
-      });
-
-      it('should return an instance of GremlinScript', function() {
-        gremlin.should.be.an.instanceof(GremlinScript);
-      });
-
-      it('should have a non empty script', function() {
-        gremlin.script.should.equal('g.v(1)');
-      });
-    });
-  });
-
-  describe('grem()', function() {
-    var client;
     var gremlin;
     var g;
 
     before(function(done) {
       grex.connect(function(err, client) {
-        gremlin = client.grem();
+        gremlin = client.gremlin();
         g = client.g;
         done();
       });
@@ -119,8 +77,12 @@ describe('RexsterClient', function() {
     });
 
     it('should append text', function() {
-      gremlin(g.v(1));
-      gremlin.script.should.equal('\ng.v(1)');
+      gremlin(
+        g.v(1),
+        g.v(2)
+      );
+
+      gremlin.script.should.equal('\ng.v(1)\ng.v(2)');
     });
 
     it('should have an exec function', function() { /*jshint -W030 */
@@ -131,6 +93,14 @@ describe('RexsterClient', function() {
       gremlin.exec(function(err, response) {
         should.not.exist(err);
         response.results.length.should.equal(1);
+        done();
+      });
+    });
+
+    it('should be fetchable', function(done) {
+      gremlin.fetch(function(err, results) {
+        should.not.exist(err);
+        results.length.should.equal(1);
         done();
       });
     });
