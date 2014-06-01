@@ -47,6 +47,19 @@ describe('client', function() {
       query.script.should.equal('\ng.v(1)');
     });
 
+    it('should support statements passed in as string with bound parameters', function(done) {
+      var query = gremlin();
+
+      query('g.v(%s)', 1);
+      query.script.should.equal('\ng.v(p0)');
+
+      query.exec(function(err, response) {
+        should.not.exist(err);
+        response.results.length.should.equal(1);
+        done();
+      })
+    });
+
     it('should have an exec function', function() { /*jshint -W030 */
       var query = gremlin();
       query.exec.should.be.a.Function;

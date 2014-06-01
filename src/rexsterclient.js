@@ -80,14 +80,18 @@ module.exports = (function(){
 
     var qs = {
       script: gremlin.script.replace(/\$/g, "\\$"),
-      params: gremlin.params,
       'rexster.showTypes': true
     };
+
+    // Build custom bound parameters string
+    var paramString = '&'+ _.map(gremlin.params, function(value, key) {
+      return 'params.'+ key +'='+ value;
+    }).join('&');
 
     var options = {
       hostname: this.options.host,
       port: this.options.port,
-      path: '/graphs/' + this.options.graph + '/tp/gremlin?' + querystring.stringify(qs),
+      path: '/graphs/' + this.options.graph + '/tp/gremlin?' + querystring.stringify(qs) + paramString,
       headers: {
         'Content-type': 'application/json'
       }

@@ -1,5 +1,6 @@
 'use strict';
 var _ = require("lodash");
+var util = require('util');
 
 var Graph = require('./objects/graph');
 var Pipeline = require('./objects/pipeline');
@@ -11,6 +12,7 @@ module.exports = (function() {
     this.script = '';
     this.params = {};
     this.client = client;
+    this.paramCount = 0;
 
     // Define a default 'g' getter, returning a Graph
     Object.defineProperty(this, 'g', {
@@ -86,6 +88,19 @@ module.exports = (function() {
     return statement;
   };
 
+  GremlinScript.prototype.addBoundParams = function(boundParams) {
+    var currentParamNames = [];
+    var identifier;
+
+    _.each(boundParams, function(boundParam) {
+      identifier = 'p'+ this.paramCount++
+      this.params[identifier] = boundParam;
+      currentParamNames.push(identifier)
+    }, this)
+
+    return currentParamNames;
+  };
+
   /**
    * @private
    */
@@ -93,7 +108,15 @@ module.exports = (function() {
     var self = this;
 
     function appendToScript(statement) {
-      self.line(statement);
+      if (arguments.length > 1) {
+        // Assume query('g(%s)', 1) signature
+        var currentParams = [statement, self.addBoundParams(_.rest(arguments))];
+
+        self.line(util.format.apply(util.format, currentParams));
+      } else {
+        // Assume query(g.v(1)) signature
+        self.line(statement);
+      }
 
       return self;
     }
@@ -109,6 +132,12 @@ module.exports = (function() {
     Object.defineProperty(appendToScript, 'script', {
       get: function() {
         return self.script;
+      }
+    });
+
+    Object.defineProperty(appendToScript, 'params', {
+      get: function() {
+        return self.params;
       }
     });
 
