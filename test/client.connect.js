@@ -1,9 +1,7 @@
 var should = require('should');
 
 var grex = require('../');
-var _    = require("lodash");
 var RexsterClient = require('../src/rexsterclient.js');
-var GremlinScript = require('../src/gremlinscript.js');
 
 
 var defaultOptions = {
@@ -12,9 +10,8 @@ var defaultOptions = {
   'graph': 'tinkergraph'
 };
 
-
-describe('RexsterClient', function() {
-  describe('connect()', function() {
+describe('client', function() {
+  describe('.connect()', function() {
     describe('when passing no parameters', function() {
       it('should use default options', function(done) {
         grex.connect(function(err, client) {
@@ -54,54 +51,6 @@ describe('RexsterClient', function() {
       it('should use the right options', function(done) {
         var client = new RexsterClient(options);
         client.options.graph.should.equal(options.graph);
-        done();
-      });
-    });
-  });
-
-  describe('gremlin()', function() {
-    var client;
-    var gremlin;
-    var g;
-    var query;
-
-    before(function(done) {
-      grex.connect(function(err, client) {
-        gremlin = client.gremlin;
-        g = client.g;
-        done();
-      });
-    });
-
-    it('should return an appender', function() { /*jshint -W030 */
-      gremlin.should.be.a.Function;
-    });
-
-    it('should append text', function() {
-      query = gremlin(
-        g.v(1),
-        g.v(2)
-      );
-
-      query.script.should.equal('g.v(1)\ng.v(2)');
-    });
-
-    it('should have an exec function', function() { /*jshint -W030 */
-      query.exec.should.be.a.Function;
-    });
-
-    it('should be executable', function(done) {
-      query.exec(function(err, response) {
-        should.not.exist(err);
-        response.results.length.should.equal(1);
-        done();
-      });
-    });
-
-    it('should be fetchable', function(done) {
-      query.fetch(function(err, results) {
-        should.not.exist(err);
-        results.length.should.equal(1);
         done();
       });
     });
