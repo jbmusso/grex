@@ -99,7 +99,7 @@ module.exports = (function() {
   GremlinScript.prototype.getAppender = function() {
     var self = this;
 
-    function gremlinAppender() {
+    function appendToScript() {
       _.each(arguments, function(statement) {
         self.line(statement);
       });
@@ -108,27 +108,19 @@ module.exports = (function() {
     }
 
     /**
-     * Proxy some GremlinScript methods/getters
+     * Proxy some GremlinScript methods/getters to the appender
      */
-    gremlinAppender.exec = function(callback) {
-      return self.exec(callback);
-    };
+    appendToScript.exec = GremlinScript.prototype.exec.bind(this);
+    appendToScript.fetch = GremlinScript.prototype.fetch.bind(this);
+    appendToScript.line = GremlinScript.prototype.line.bind(this);
 
-    gremlinAppender.fetch = function(callback) {
-      return self.fetch(callback);
-    };
-
-    gremlinAppender.line = function() {
-      return self.line.apply(self, arguments);
-    }
-
-    Object.defineProperty(gremlinAppender, 'script', {
+    Object.defineProperty(appendToScript, 'script', {
       get: function() {
         return self.script;
       }
     });
 
-    return gremlinAppender;
+    return appendToScript;
   };
 
   return GremlinScript;
