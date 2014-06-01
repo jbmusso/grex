@@ -7,12 +7,14 @@ var T = grex.T;
 var Contains = grex.Contains;
 
 var client;
+var gremlin;
 var g;
 
 before(function(done) {
   grex.connect(function(err, rexsterClient) {
     client = rexsterClient;
     g = client.g;
+    gremlin = client.gremlin;
     done();
   });
 });

@@ -2,6 +2,7 @@ var client = require('../index.js');
 var Vertex = require("../src/objects/vertex");
 var Gremlin = require('../src/gremlinscript');
 var g = client.g;
+var gremlin = client.gremlin;
 
 describe('Graph elements', function() {
   describe('.setProperty()', function() {
