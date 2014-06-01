@@ -31,13 +31,13 @@ describe('client', function() {
     });
 
     it('should append many statements', function() {
-      var query = gremlin(
-        g.v(1),
-        g.v(2),
-        g.v(3)
-      );
+      var query = gremlin();
 
-      query.script.should.equal('g.v(1)\ng.v(2)\ng.v(3)');
+      query(g.v(1));
+      query(g.v(2));
+      query(g.v(3));
+
+      query.script.should.equal('\ng.v(1)\ng.v(2)\ng.v(3)');
     });
 
     it('should have an exec function', function() { /*jshint -W030 */

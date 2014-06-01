@@ -85,25 +85,13 @@ module.exports = (function() {
   };
 
   /**
-   * Append many statements to the script, each as new lines.
-   *
-   * @public
-   */
-  GremlinScript.prototype.appendMany = function(statements) {
-    var toAppend = _.map(statements, function(s) { return s.toGroovy(); });
-    this.script = toAppend.join('\n');
-  };
-
-  /**
    * @private
    */
   GremlinScript.prototype.getAppender = function() {
     var self = this;
 
-    function appendToScript() {
-      _.each(arguments, function(statement) {
-        self.line(statement);
-      });
+    function appendToScript(statement) {
+      self.line(statement);
 
       return self;
     }

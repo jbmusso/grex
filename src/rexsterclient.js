@@ -151,10 +151,12 @@ module.exports = (function(){
    *
    * @return {Function}
    */
-  RexsterClient.prototype.createGremlinScript = function() {
+  RexsterClient.prototype.createGremlinScript = function(statement) {
     var gremlinScript = new GremlinScript(this);
 
-    gremlinScript.appendMany([].slice.call(arguments));
+    if (statement) {
+      gremlinScript.append(statement.toGroovy());
+    }
 
     return gremlinScript.getAppender()
   };

@@ -87,15 +87,15 @@ var query = gremlin(g.V('name', 'marko').out());
 
 #### Building a multiline Gremlin script
 
-Initializing a GremlinScript with multiple statements is done by simpling providing several arguments when calling `gremlin()`:
+Creating a GremlinScript with multiple statements is done by calling query() multiple times:
 
 ```javascript
 // JavaScript
-var query = gremlin(
-  g.addVertex({ name: "Alice" }),
-  g.addVertex({ name: "Bob" }),
-  g.addVertex({ name: "Carol" }),
-  g.addVertex({ name: "Dave" }),
+var query = gremlin();
+query(g.addVertex({ name: "Alice" }));
+query(g.addVertex({ name: "Bob" }));
+query(g.addVertex({ name: "Carol" }));
+query(g.addVertex({ name: "Dave" }));
 )
 ```
 
