@@ -1,3 +1,4 @@
+'use strict';
 module.exports = (function() {
   function JavaClass(name) {
     this.name = name;

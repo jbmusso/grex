@@ -1,3 +1,4 @@
+'use strict';
 var http = require('http');
 var querystring = require('querystring');
 
@@ -38,7 +39,7 @@ module.exports = (function(){
 
   Object.defineProperty(RexsterClient.prototype, '_', {
     get: function() {
-      return function(arguments) {
+      return function() {
         return new Pipeline('_()');
       };
     }

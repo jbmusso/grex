@@ -1,3 +1,4 @@
+'use strict';
 module.exports = (function() {
   function GremlinObject(object) {
     this.object = object;

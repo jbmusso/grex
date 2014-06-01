@@ -1,3 +1,4 @@
+'use strict';
 var inherits = require('util').inherits;
 
 var _ = require('lodash');

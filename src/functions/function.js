@@ -1,3 +1,4 @@
+'use strict';
 var _ = require('lodash');
 
 var Argument = require('../arguments/argument');
@@ -24,7 +25,7 @@ module.exports = (function() {
     var args = [];
 
     // Append arguments between parentheses, if any
-    groovy = '(' + _.map(this.parenthesizedArguments, function(argument) {
+    var groovy = '(' + _.map(this.parenthesizedArguments, function(argument) {
       return argument.toGroovy();
     }).join(',') + ')';
 
@@ -37,6 +38,7 @@ module.exports = (function() {
   };
 
   GremlinFunction.prototype.buildArguments = function() {
+    var built;
     _.each(this.arguments, function(argument) {
       if (this.isClosure(argument)) {
         built = new ClosureArgument(argument, this);
