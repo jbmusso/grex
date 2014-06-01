@@ -113,6 +113,7 @@ module.exports = (function() {
     appendToScript.exec = GremlinScript.prototype.exec.bind(this);
     appendToScript.fetch = GremlinScript.prototype.fetch.bind(this);
     appendToScript.line = GremlinScript.prototype.line.bind(this);
+    appendToScript.append = GremlinScript.prototype.append.bind(this);
 
     Object.defineProperty(appendToScript, 'script', {
       get: function() {
