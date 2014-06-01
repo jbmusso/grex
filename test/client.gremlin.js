@@ -40,6 +40,13 @@ describe('client', function() {
       query.script.should.equal('\ng.v(1)\ng.v(2)\ng.v(3)');
     });
 
+    it('should support statements passed in as string', function() {
+      var query = gremlin();
+
+      query('g.v(1)');
+      query.script.should.equal('\ng.v(1)');
+    });
+
     it('should have an exec function', function() { /*jshint -W030 */
       var query = gremlin();
       query.exec.should.be.a.Function;

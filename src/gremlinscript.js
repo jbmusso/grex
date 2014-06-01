@@ -79,7 +79,9 @@ module.exports = (function() {
       prefix = identifier + '=';
     }
 
-    this.script += '\n'+ prefix + statement.toGroovy();
+    var groovyCode = statement.toGroovy ? statement.toGroovy() : statement;
+
+    this.script += '\n'+ prefix + groovyCode;
 
     return statement;
   };
