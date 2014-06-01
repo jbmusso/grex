@@ -155,33 +155,34 @@ module.exports = (function(){
 
     gremlinScript.appendMany([].slice.call(arguments));
 
-    function Appender() {
+    function gremlinAppender() {
       _.each(arguments, function(statement) {
         gremlinScript.line(statement);
       });
-
-      return gremlinScript;
     }
 
-    Appender.exec = function(callback) {
+    /**
+     * Proxy some GremlinScript methods/getters
+     */
+    gremlinAppender.exec = function(callback) {
       return gremlinScript.exec(callback);
     };
 
-    Appender.fetch = function(callback) {
+    gremlinAppender.fetch = function(callback) {
       return gremlinScript.fetch(callback);
     };
 
-    Appender.line = function() {
+    gremlinAppender.line = function() {
       return gremlinScript.line.apply(gremlinScript, arguments);
     }
 
-    Object.defineProperty(Appender, 'script', {
+    Object.defineProperty(gremlinAppender, 'script', {
       get: function() {
         return gremlinScript.script;
       }
     });
 
-    return Appender;
+    return gremlinAppender;
   };
 
   RexsterClient.prototype.transformResults = function(results) {
