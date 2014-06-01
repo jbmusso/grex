@@ -12,7 +12,7 @@ describe('Graph elements', function() {
 
       gremlin.line(v.setProperty('name', 'bob'));
       v.should.have.property('name', 'bob');
-      gremlin.script.should.equal("\nv.setProperty('name','bob')");
+      gremlin.script.should.equal("v.setProperty('name','bob')\n");
     });
   });
 
@@ -23,7 +23,7 @@ describe('Graph elements', function() {
 
       gremlin.line(v.addProperty('name', 'alice'));
       v.should.have.property('name', 'alice');
-      gremlin.script.should.equal("\nv.addProperty('name','alice')");
+      gremlin.script.should.equal("v.addProperty('name','alice')\n");
     });
   });
 
@@ -38,7 +38,7 @@ describe('Graph elements', function() {
       v.should.have.property('foo', 'bar');
       v.should.have.property('baz', 'duh');
 
-      gremlin.script.should.equal('\nv.setProperties(["foo":"bar","baz":"duh"])');
+      gremlin.script.should.equal('v.setProperties(["foo":"bar","baz":"duh"])\n');
     });
   });
 
@@ -53,7 +53,7 @@ describe('Graph elements', function() {
       v.should.have.property('foo', 'bar');
       v.should.have.property('baz', 'duh');
 
-      gremlin.script.should.equal('\nv.addProperties(["foo":"bar","baz":"duh"])');
+      gremlin.script.should.equal('v.addProperties(["foo":"bar","baz":"duh"])\n');
     });
   });
 
@@ -76,7 +76,7 @@ describe('Graph elements', function() {
       var v = new Vertex('v');
 
       gremlin.line(v.remove());
-      gremlin.script.should.equal('\nv.remove()');
+      gremlin.script.should.equal('v.remove()\n');
     });
   });
 

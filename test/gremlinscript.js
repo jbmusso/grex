@@ -15,7 +15,7 @@ describe('GremlinScript', function() {
       var g = gremlin.g;
 
       gremlin.line(g.v(1));
-      gremlin.script.should.equal('\ng.v(1)');
+      gremlin.script.should.equal('g.v(1)\n');
     });
   });
 });

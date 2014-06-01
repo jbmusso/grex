@@ -37,21 +37,21 @@ describe('client', function() {
       query(g.v(2));
       query(g.v(3));
 
-      query.script.should.equal('\ng.v(1)\ng.v(2)\ng.v(3)');
+      query.script.should.equal('g.v(1)\ng.v(2)\ng.v(3)\n');
     });
 
     it('should support statements passed in as string', function() {
       var query = gremlin();
 
       query('g.v(1)');
-      query.script.should.equal('\ng.v(1)');
+      query.script.should.equal('g.v(1)\n');
     });
 
     it('should support statements passed in as string with bound parameters', function(done) {
       var query = gremlin();
 
       query('g.v(%s)', 1);
-      query.script.should.equal('\ng.v(p0)');
+      query.script.should.equal('g.v(p0)\n');
 
       query.exec(function(err, response) {
         should.not.exist(err);

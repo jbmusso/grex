@@ -83,7 +83,7 @@ module.exports = (function() {
 
     var groovyCode = statement.toGroovy ? statement.toGroovy() : statement;
 
-    this.script += '\n'+ prefix + groovyCode;
+    this.script += prefix + groovyCode + '\n';
 
     return statement;
   };
