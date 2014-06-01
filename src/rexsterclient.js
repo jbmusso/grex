@@ -141,7 +141,7 @@ module.exports = (function(){
 
   Object.defineProperty(RexsterClient.prototype, 'gremlin', {
     get: function() {
-      return this.getAppender.bind(this)
+      return this.createGremlinScript.bind(this)
     }
   })
   /**
@@ -150,39 +150,12 @@ module.exports = (function(){
    *
    * @return {Function}
    */
-  RexsterClient.prototype.getAppender = function() {
+  RexsterClient.prototype.createGremlinScript = function() {
     var gremlinScript = new GremlinScript(this);
 
     gremlinScript.appendMany([].slice.call(arguments));
 
-    function gremlinAppender() {
-      _.each(arguments, function(statement) {
-        gremlinScript.line(statement);
-      });
-    }
-
-    /**
-     * Proxy some GremlinScript methods/getters
-     */
-    gremlinAppender.exec = function(callback) {
-      return gremlinScript.exec(callback);
-    };
-
-    gremlinAppender.fetch = function(callback) {
-      return gremlinScript.fetch(callback);
-    };
-
-    gremlinAppender.line = function() {
-      return gremlinScript.line.apply(gremlinScript, arguments);
-    }
-
-    Object.defineProperty(gremlinAppender, 'script', {
-      get: function() {
-        return gremlinScript.script;
-      }
-    });
-
-    return gremlinAppender;
+    return gremlinScript.getAppender()
   };
 
   RexsterClient.prototype.transformResults = function(results) {

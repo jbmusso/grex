@@ -93,5 +93,43 @@ module.exports = (function() {
     this.script = toAppend.join('\n');
   };
 
+  /**
+   * @private
+   */
+  GremlinScript.prototype.getAppender = function() {
+    var self = this;
+
+    function gremlinAppender() {
+      _.each(arguments, function(statement) {
+        self.line(statement);
+      });
+
+      return self;
+    }
+
+    /**
+     * Proxy some GremlinScript methods/getters
+     */
+    gremlinAppender.exec = function(callback) {
+      return self.exec(callback);
+    };
+
+    gremlinAppender.fetch = function(callback) {
+      return self.fetch(callback);
+    };
+
+    gremlinAppender.line = function() {
+      return self.line.apply(self, arguments);
+    }
+
+    Object.defineProperty(gremlinAppender, 'script', {
+      get: function() {
+        return self.script;
+      }
+    });
+
+    return gremlinAppender;
+  };
+
   return GremlinScript;
 })();
