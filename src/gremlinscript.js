@@ -70,17 +70,17 @@ module.exports = (function() {
    * @public
    * @param {String} line
    */
-  GremlinScript.prototype.line = function(line, identifier) {
+  GremlinScript.prototype.line = function(statement, identifier) {
     var prefix = '';
 
     if (identifier) {
-      line.identifier = identifier;
+      statement.identifier = identifier;
       prefix = identifier + '=';
     }
 
-    this.script += '\n'+ prefix + line.toGroovy();
+    this.script += '\n'+ prefix + statement.toGroovy();
 
-    return line;
+    return statement;
   };
 
   /**
