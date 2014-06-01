@@ -1,6 +1,6 @@
 var should = require('should');
 
-var grex = require('../index.js');
+var grex = require('../');
 var _    = require("lodash");
 var RexsterClient = require('../src/rexsterclient.js');
 var GremlinScript = require('../src/gremlinscript.js');

@@ -1,4 +1,4 @@
-var client = require('../index.js');
+var client = require('../');
 var Vertex = require("../src/objects/vertex");
 var Gremlin = require('../src/gremlinscript');
 var g = client.g;

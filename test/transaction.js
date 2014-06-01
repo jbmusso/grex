@@ -1,4 +1,4 @@
-var grex = require('../index.js');
+var grex = require('../');
 
 var client;
 var g;

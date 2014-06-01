@@ -1,6 +1,6 @@
 var should = require('should');
 
-var grex = require('../index.js');
+var grex = require('../');
 
 describe('Classes', function() {
   describe('Java classes', function() {
