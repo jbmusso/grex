@@ -33,7 +33,7 @@ describe('Transaction commit', function() {
       waldo = query.line(g.addVertex({ name: 'Waldo' }), 'waldo');
       query(g.addEdge(bob, waldo, 'likes', { since: 'now' }));
 
-      query.script.split('\n').length.should.equal(4)
+      query.script.split('\n').length.should.equal(4);
       query.exec(function(err, result) {
         result.should.have.property('success', true);
         done();
