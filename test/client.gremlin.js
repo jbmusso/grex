@@ -27,7 +27,7 @@ describe('client', function() {
     it('should append one statement', function() {
       var query = gremlin(g.v(1));
 
-      query.script.should.equal('g.v(1)');
+      query.script.should.equal('g.v(1)\n');
     });
 
     it('should append many statements', function() {
@@ -51,6 +51,17 @@ describe('client', function() {
       var query = gremlin();
 
       query('g.v(%s)', 1);
+      query.script.should.equal('g.v(p0)\n');
+
+      query.exec(function(err, response) {
+        should.not.exist(err);
+        response.results.length.should.equal(1);
+        done();
+      })
+    });
+
+    it('should string formatting when creating query function object', function(done) {
+      var query = gremlin('g.v(%s)', 1);
       query.script.should.equal('g.v(p0)\n');
 
       query.exec(function(err, response) {

@@ -149,20 +149,20 @@ module.exports = (function(){
       return this.createGremlinScript.bind(this)
     }
   })
+
   /**
    * Instantiate a new GremlinScript and return a function responsible
    * for appending bits of Gremlin to this GremlinScript.
    *
-   * @return {Function}
+   * @return {Function} appender
    */
   RexsterClient.prototype.createGremlinScript = function(statement) {
     var gremlinScript = new GremlinScript(this);
+    var appender = gremlinScript.getAppender();
 
-    if (statement) {
-      gremlinScript.append(statement.toGroovy());
-    }
+    appender.apply(appender, arguments);
 
-    return gremlinScript.getAppender()
+    return appender;
   };
 
   RexsterClient.prototype.transformResults = function(results) {

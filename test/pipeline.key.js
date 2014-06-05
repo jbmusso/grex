@@ -7,7 +7,7 @@ describe('pipeline', function() {
   describe('key', function () {
     it('should be chainable', function () {
       var query = gremlin(g.v(1).key('name'));
-      query.script.should.equal('g.v(1).name');
+      query.script.should.equal('g.v(1).name\n');
     });
   });
 });

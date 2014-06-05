@@ -113,7 +113,7 @@ module.exports = (function() {
         var currentParams = [statement, self.addBoundParams(_.rest(arguments))];
 
         self.line(util.format.apply(util.format, currentParams));
-      } else {
+      } else if (statement) {
         // Assume query(g.v(1)) signature
         self.line(statement);
       }
