@@ -1,3 +1,4 @@
+/*jslint node: true */
 'use strict';
 var _ = require("lodash");
 var util = require('util');
@@ -93,10 +94,10 @@ module.exports = (function() {
     var identifier;
 
     _.each(boundParams, function(boundParam) {
-      identifier = 'p'+ this.paramCount++
+      identifier = 'p'+ this.paramCount++;
       this.params[identifier] = boundParam;
-      currentParamNames.push(identifier)
-    }, this)
+      currentParamNames.push(identifier);
+    }, this);
 
     return currentParamNames;
   };

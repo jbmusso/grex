@@ -1,3 +1,4 @@
+/*jslint node: true */
 'use strict';
 var inherits = require('util').inherits;
 
@@ -82,7 +83,7 @@ module.exports = (function() {
   };
 
   Element.prototype.remove = function() {
-    var method = new GremlinMethod('remove', [])
+    var method = new GremlinMethod('remove', []);
     this.methods.push(method.toGroovy());
 
     return this;

@@ -1,3 +1,4 @@
+/*jslint node: true */
 'use strict';
 var http = require('http');
 var querystring = require('querystring');
@@ -146,9 +147,9 @@ module.exports = (function(){
 
   Object.defineProperty(RexsterClient.prototype, 'gremlin', {
     get: function() {
-      return this.createGremlinScript.bind(this)
+      return this.createGremlinScript.bind(this);
     }
-  })
+  });
 
   /**
    * Instantiate a new GremlinScript and return a function responsible

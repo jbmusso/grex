@@ -1,3 +1,4 @@
+/*jslint node: true */
 'use strict';
 var Vertex = require('../objects/vertex');
 var Edge = require('../objects/edge');
