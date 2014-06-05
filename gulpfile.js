@@ -6,6 +6,7 @@ var mocha = require('gulp-mocha');
 var uglify = require('gulp-uglify');
 var size = require('gulp-size');
 var rename = require('gulp-rename');
+var bump = require('gulp-bump');
 
 gulp.task('scripts', function() {
   gulp.src('index.js')
@@ -44,8 +45,23 @@ gulp.task('watch', function() {
   gulp.watch('test/**/*', ['test']).on('change', onChange);
 });
 
+// Bump tasks
+gulp.task('bump-patch', function() {
+  gulp.src('./package.json').pipe(bump({ type: 'patch' })).pipe(gulp.dest('./'));
+});
+
+gulp.task('bump-minor', function() {
+  gulp.src('./package.json').pipe(bump({ type: 'minor' })).pipe(gulp.dest('./'));
+});
+
+gulp.task('bump-major', function() {
+  gulp.src('./package.json').pipe(bump({ type: 'major' })).pipe(gulp.dest('./'));
+});
+
+// Main tasks
 gulp.task('default', ['dev']);
 
 gulp.task('dev', ['test', 'watch']);
 
 gulp.task('build', ['test', 'scripts']);
+
