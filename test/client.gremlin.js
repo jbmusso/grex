@@ -57,7 +57,7 @@ describe('client', function() {
         should.not.exist(err);
         response.results.length.should.equal(1);
         done();
-      })
+      });
     });
 
     it('should string formatting when creating query function object', function(done) {
@@ -68,7 +68,7 @@ describe('client', function() {
         should.not.exist(err);
         response.results.length.should.equal(1);
         done();
-      })
+      });
     });
 
     it('should have an exec function', function() { /*jshint -W030 */
