@@ -74,13 +74,8 @@ module.exports = (function() {
    * @public
    * @param {String} line
    */
-  GremlinScript.prototype.line = function(statement, identifier) {
+  GremlinScript.prototype.line = function(statement) {
     var prefix = '';
-
-    if (identifier) {
-      statement.identifier = identifier;
-      prefix = identifier + '=';
-    }
 
     var groovyCode = statement.toGroovy ? statement.toGroovy() : statement;
 
@@ -102,25 +97,40 @@ module.exports = (function() {
     return currentParamNames;
   };
 
+  GremlinScript.prototype.handleString = function(statement) {
+    var currentParams = [statement, this.addBoundParams(_.rest(arguments))];
+
+    this.line(util.format.apply(util.format, currentParams));
+  };
+
+  GremlinScript.prototype.handleHelper = function(statement) {
+    this.line(statement);
+  };
+
+  GremlinScript.prototype.var = function(statement, identifier) {
+    statement.identifier = identifier;
+    var prefix = identifier + '=';
+
+    var groovyCode = statement.toGroovy ? statement.toGroovy() : statement;
+
+    this.script += prefix + groovyCode + '\n';
+
+    return statement;
+  };
+
   /**
    * @private
    */
   GremlinScript.prototype.getAppender = function() {
-    var self = this;
-
-    function appendToScript(statement) {
-      if (arguments.length > 1) {
-        // Assume query('g(%s)', 1) signature
-        var currentParams = [statement, self.addBoundParams(_.rest(arguments))];
-
-        self.line(util.format.apply(util.format, currentParams));
-      } else if (statement) {
-        // Assume query(g.v(1)) signature
-        self.line(statement);
+    var appendToScript = (function(statement) {
+      if (arguments.length > 1) { // Assume query('g(%s)', 1) signature
+        this.handleString.apply(this, arguments);
+      } else if (statement) { // Assume query(g.v(1)) signature
+        this.handleHelper(statement);
       }
 
-      return self;
-    }
+      return this;
+    }).bind(this);
 
     /**
      * Proxy some GremlinScript methods/getters to the appender
@@ -129,17 +139,18 @@ module.exports = (function() {
     appendToScript.fetch = GremlinScript.prototype.fetch.bind(this);
     appendToScript.line = GremlinScript.prototype.line.bind(this);
     appendToScript.append = GremlinScript.prototype.append.bind(this);
+    appendToScript.var = GremlinScript.prototype.var.bind(this);
 
     Object.defineProperty(appendToScript, 'script', {
       get: function() {
-        return self.script;
-      }
+        return this.script;
+      }.bind(this)
     });
 
     Object.defineProperty(appendToScript, 'params', {
       get: function() {
-        return self.params;
-      }
+        return this.params;
+      }.bind(this)
     });
 
     return appendToScript;

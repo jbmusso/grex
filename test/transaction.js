@@ -29,8 +29,8 @@ describe('Transaction commit', function() {
 
     it('should add two vertices and an edge in a transaction', function(done) {
       var query = gremlin();
-      bob = query.line(g.addVertex({ name: 'Bob' }), 'bob');
-      waldo = query.line(g.addVertex({ name: 'Waldo' }), 'waldo');
+      bob = query.var(g.addVertex({ name: 'Bob' }), 'bob');
+      waldo = query.var(g.addVertex({ name: 'Waldo' }), 'waldo');
       query(g.addEdge(bob, waldo, 'likes', { since: 'now' }));
 
       query.script.split('\n').length.should.equal(4);
