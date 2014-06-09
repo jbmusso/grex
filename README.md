@@ -112,29 +112,40 @@ Note that spaces are actually ommitted in the generated string. This documentati
 
 The following is especially useful with transactions, for example when simultaneously creating vertices and edges.
 
-Grex `query` function object returned by `client.gremlin()` has a special `.line(statement, identifier)` method which helps you identify a statement and store it in a variable.
+Grex `query` function object returned by `client.gremlin()` has a special `.var(statement[, identifier])` method which helps you identify a statement and store it in a variable.
 
 ```javascript
 // JavaScript
 var query = gremlin();
-// Notice the second argument passed to query.line() in the next 2 lines
-var bob = query.line(g.addVertex({ name: 'Bob' }), 'bob');
-var alice = query.line(g.addVertex({ name: 'Alice' }), 'alice');
-// Simply use query() for lines that don't need identifiers. Notice how we use unquoted *bob* and *alice* variable names declared on the previous 2 lines:
+var bob = query.var(g.addVertex({ name: 'Bob' }));
+var alice = query.var(g.addVertex({ name: 'Alice' }));
 query(g.addEdge(bob, alice, 'likes', { since: 'now' }));
 ```
 
 The above code will generate this Groovy script:
 ```groovy
 // Groovy
-bob = g.addVertex(["name": "Bob"])
-waldo = g.addVertex(["name": "Alice"])
-g.addEdge(bob, alice, "likes", ["since":"now"])
+i0 = g.addVertex(["name": "Bob"])
+i1 = g.addVertex(["name": "Alice"])
+g.addEdge(i0, i1, "likes", ["since":"now"])
 ```
+
+The Rexster Gremlin extension will execute the provided script in a transaction (see [Rexster Wiki on extensions and transactions](https://github.com/tinkerpop/rexster/wiki/Extension-Points#extensions-and-transactions)).
 
 This API is required because JavaScript unfortunately lacks reflection on variable names.
 
-The Rexster Gremlin extension will execute the provided script in a transaction (see [Rexster Wiki on extensions and transactions](https://github.com/tinkerpop/rexster/wiki/Extension-Points#extensions-and-transactions)).
+Although identifiers are automatically assigned within the context of a script, you can add a second optional parameters to `query.var()` and pass an arbitrary string to use as the identifier:
+
+```javascript
+// JavaScript
+var query = gremlin();
+var bob = query.var(g.addVertex({ name: 'Bob' }), 'v1');
+```
+Will generate:
+```groovy
+// Groovy
+v1 = g.addVertex(["name": "Bob"])
+```
 
 ### Building a Gremlin script with string formatting and bound parameters
 
@@ -410,7 +421,7 @@ This may change once ES6 Proxies are out.
     ```javascript
     g.v(1).outE().has("weight", "T.gte", "0.5f").property("weight")
     ```
-* Certain methods cannot (yet) be easily implemented. Such as `aggregate`, `store`, `table`, `tree` and `fill`. These methods require a local object to populate with data, which cannot be easily done in this environment. You may however use `gremlin.append()` or `gremlin.line()` to bypass this limitation.
+* Certain methods cannot (yet) be easily implemented. Such as `aggregate`, `store`, `table`, `tree` and `fill`. These methods require a local object to populate with data, which cannot be easily done in this environment. You may however directly pass an arbitrary string to `query()` to bypass this limitation.
 * Tokens/Classes: You will notice that in the examples tokens are passed as string (i.e. 'T.gt'). However, Grex also exposes some objects for convenience that you can use in place of string representations in your queries. To access the objects, reference them like so:
 
   ```javascript
@@ -483,15 +494,6 @@ Callback signature: `err, response`
 Sends the generated `gremlin.script` to the server for execution. This method either takes a callback, or returns a promise.
 
 Callback signature: `err, results, response`
-
-#### Gremlin.append(String)
-
-Appends an arbitrary string to the `gremlin.script`. This method is used internally but can be useful on some occasions. Use with caution.
-
-#### Gremlin.line(String)
-
-Appends an arbitrary string to the `gremlin.script` preceded by a `\n` character. This method is used internally but can be useful on some occasions. Use with caution.
-
 
 ## Todo
 
