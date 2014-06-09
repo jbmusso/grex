@@ -79,6 +79,13 @@ module.exports = (function() {
     this.script += line + '\n';
   };
 
+  /**
+   * Add bound parameters to the script. This currently only works when
+   * using the formatted string. It does not work with gRex helpers/wrappers.
+   *
+   * @private
+   * @param {Array} boundParams
+   */
   GremlinScript.prototype.addBoundParams = function(boundParams) {
     var currentParamNames = [];
     var identifier;
@@ -92,32 +99,57 @@ module.exports = (function() {
     return currentParamNames;
   };
 
+  /**
+   * Handle a string statement using Node util.format() function.
+   *
+   * @private
+   * @param {String} statement
+   */
   GremlinScript.prototype.handleString = function(statement) {
     var currentParams = [statement, this.addBoundParams(_.rest(arguments))];
 
     this.line(util.format.apply(util.format, currentParams));
   };
 
-  GremlinScript.prototype.handleHelper = function(statement) {
-    this.line(statement.toGroovy());
+  /**
+   * Handle a helper statement wrapped in one of gRex Wrapper classes
+   *
+   * @private
+   * @param {ObjectWrapper} wrapper
+   * @return {ObjectWrapper}
+   */
+  GremlinScript.prototype.handleHelper = function(wrapper) {
+    this.line(wrapper.toGroovy());
 
-    return statement;
-  };
-
-  GremlinScript.prototype.var = function(statement, identifier) {
-    identifier = identifier || 'i'+ this.identifierCount++;
-    statement.identifier = identifier;
-    var prefix = identifier + '=';
-
-    var groovyCode = statement.toGroovy ? statement.toGroovy() : statement;
-
-    this.script += prefix + groovyCode + '\n';
-
-    return statement;
+    return wrapper;
   };
 
   /**
+   * Identify a statement within the script with the provided optional
+   * identifier. Will assign an automatica identifier instead.
+   *
+   * @public
+   * @param {ObjectWrapper} wrapper
+   * @param {String} identifier - an optional identifier
+   */
+  GremlinScript.prototype.var = function(wrapper, identifier) {
+    identifier = identifier || 'i'+ this.identifierCount++;
+    wrapper.identifier = identifier;
+    var prefix = identifier + '=';
+
+    var groovyCode = wrapper.toGroovy ? wrapper.toGroovy() : wrapper;
+
+    this.script += prefix + groovyCode + '\n';
+
+    return wrapper;
+  };
+
+  /**
+   * Returns a function responsible for handling statements and ultimately
+   * appending bits of Gremlin-Groovy to this GremlinScript.
+   *
    * @private
+   * @return {Function}
    */
   GremlinScript.prototype.getAppender = function() {
     var appendToScript = (function(statement) {
