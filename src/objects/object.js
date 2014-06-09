@@ -1,14 +1,14 @@
 /*jslint node: true */
 'use strict';
 module.exports = (function() {
-  function GremlinObject(object) {
-    this.object = object;
+  function GremlinObject(objectName) {
+    this.objectName = objectName;
     this.methods = [];
     this.identifier = '';
   }
 
   GremlinObject.prototype.toGroovy = function() {
-    return this.object + this.methods.join('');
+    return this.objectName + this.methods.join('');
   };
 
   return GremlinObject;

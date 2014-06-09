@@ -24,7 +24,7 @@ module.exports = (function() {
   Graph.prototype.E = function() {
     var func = new GremlinMethod('E', arguments);
 
-    var pipeline = new Pipeline(this.object);
+    var pipeline = new Pipeline(this.objectName);
     pipeline.methods.push(func.toGroovy());
 
     return pipeline;
@@ -33,7 +33,7 @@ module.exports = (function() {
   Graph.prototype.V = function() {
     var func = new GremlinMethod('V', arguments);
 
-    var pipeline = new Pipeline(this.object);
+    var pipeline = new Pipeline(this.objectName);
     pipeline.methods.push(func.toGroovy());
 
     return pipeline;
@@ -42,7 +42,7 @@ module.exports = (function() {
   Graph.prototype.e = function() {
     var func = new GremlinMethod('e', arguments);
 
-    var pipeline = new Pipeline(this.object);
+    var pipeline = new Pipeline(this.objectName);
     pipeline.methods.push(func.toGroovy());
 
     return pipeline;
@@ -51,7 +51,7 @@ module.exports = (function() {
   Graph.prototype.idx = function() {
     var func = new IdxGremlinFunction(arguments);
 
-    var pipeline = new Pipeline(this.object);
+    var pipeline = new Pipeline(this.objectName);
     pipeline.methods.push(func.toGroovy());
 
     return pipeline;
@@ -60,7 +60,7 @@ module.exports = (function() {
   Graph.prototype.v = function() {
     var func = new GremlinMethod('v', arguments);
 
-    var pipeline = new Pipeline(this.object);
+    var pipeline = new Pipeline(this.objectName);
     pipeline.methods.push(func.toGroovy());
 
     return pipeline;
@@ -70,7 +70,7 @@ module.exports = (function() {
   Graph.prototype.createIndex = function() {
     var func = new GremlinMethod('createIndex', arguments);
 
-    var pipeline = new Pipeline(this.object);
+    var pipeline = new Pipeline(this.objectName);
     pipeline.methods.push(func.toGroovy());
 
     return pipeline;
@@ -79,7 +79,7 @@ module.exports = (function() {
   Graph.prototype.createKeyIndex = function() {
     var func = new GremlinMethod('createKeyIndex', arguments);
 
-    var pipeline = new Pipeline(this.object);
+    var pipeline = new Pipeline(this.objectName);
     pipeline.methods.push(func.toGroovy());
 
     return pipeline;
@@ -88,7 +88,7 @@ module.exports = (function() {
   Graph.prototype.getIndices = function() {
     var func = new GremlinMethod('getIndices', arguments);
 
-    var pipeline = new Pipeline(this.object);
+    var pipeline = new Pipeline(this.objectName);
     pipeline.methods.push(func.toGroovy());
 
     return pipeline;
@@ -97,7 +97,7 @@ module.exports = (function() {
   Graph.prototype.getIndexedKeys = function() {
     var func = new GremlinMethod('getIndexedKeys', arguments);
 
-    var pipeline = new Pipeline(this.object);
+    var pipeline = new Pipeline(this.objectName);
     pipeline.methods.push(func.toGroovy());
 
     return pipeline;
@@ -106,7 +106,7 @@ module.exports = (function() {
   Graph.prototype.getIndex = function() {
     var func = new GremlinMethod('getIndex', arguments);
 
-    var pipeline = new Pipeline(this.object);
+    var pipeline = new Pipeline(this.objectName);
     pipeline.methods.push(func.toGroovy());
 
     return pipeline;
@@ -115,7 +115,7 @@ module.exports = (function() {
   Graph.prototype.dropIndex = function() {
     var func = new GremlinMethod('dropIndex', arguments);
 
-    var pipeline = new Pipeline(this.object);
+    var pipeline = new Pipeline(this.objectName);
     pipeline.methods.push(func.toGroovy());
 
     return pipeline;
@@ -124,7 +124,7 @@ module.exports = (function() {
   Graph.prototype.dropKeyIndex = function() {
     var func = new GremlinMethod('dropKeyIndex', arguments);
 
-    var pipeline = new Pipeline(this.object);
+    var pipeline = new Pipeline(this.objectName);
     pipeline.methods.push(func.toGroovy());
 
     return pipeline;
@@ -134,7 +134,7 @@ module.exports = (function() {
   Graph.prototype.makeKey = function() {
     var func = new GremlinMethod('makeKey', arguments);
 
-    var pipeline = new Pipeline(this.object);
+    var pipeline = new Pipeline(this.objectName);
     pipeline.methods.push(func.toGroovy());
 
     return pipeline;
@@ -143,7 +143,7 @@ module.exports = (function() {
   Graph.prototype.clear = function() {
     var func = new GremlinMethod('clear', arguments);
 
-    var pipeline = new Pipeline(this.object);
+    var pipeline = new Pipeline(this.objectName);
     pipeline.methods.push(func.toGroovy());
 
     return pipeline;
@@ -152,7 +152,7 @@ module.exports = (function() {
   Graph.prototype.shutdown = function() {
     var func = new GremlinMethod('shutdown', arguments);
 
-    var pipeline = new Pipeline(this.object);
+    var pipeline = new Pipeline(this.objectName);
     pipeline.methods.push(func.toGroovy());
 
     return pipeline;
@@ -161,7 +161,7 @@ module.exports = (function() {
   Graph.prototype.getFeatures = function() {
     var func = new GremlinMethod('getFeatures', arguments);
 
-    var pipeline = new Pipeline(this.object);
+    var pipeline = new Pipeline(this.objectName);
     pipeline.methods.push(func.toGroovy());
 
     return pipeline;
@@ -171,7 +171,7 @@ module.exports = (function() {
   Graph.prototype.getTypes = function() {
     var func = new GremlinMethod('getTypes', arguments);
 
-    var pipeline = new Pipeline(this.object);
+    var pipeline = new Pipeline(this.objectName);
     pipeline.methods.push(func.toGroovy());
 
     return pipeline;
