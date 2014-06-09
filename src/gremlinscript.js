@@ -14,6 +14,7 @@ module.exports = (function() {
     this.params = {};
     this.client = client;
     this.paramCount = 0;
+    this.identifierCount = 0;
 
     // Define a default 'g' getter, returning a GraphWrapper
     Object.defineProperty(this, 'g', {
@@ -104,6 +105,7 @@ module.exports = (function() {
   };
 
   GremlinScript.prototype.var = function(statement, identifier) {
+    identifier = identifier || 'i'+ this.identifierCount++;
     statement.identifier = identifier;
     var prefix = identifier + '=';
 
