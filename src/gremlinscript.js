@@ -74,14 +74,8 @@ module.exports = (function() {
    * @public
    * @param {String} line
    */
-  GremlinScript.prototype.line = function(statement) {
-    var prefix = '';
-
-    var groovyCode = statement.toGroovy ? statement.toGroovy() : statement;
-
-    this.script += prefix + groovyCode + '\n';
-
-    return statement;
+  GremlinScript.prototype.line = function(line) {
+    this.script += line + '\n';
   };
 
   GremlinScript.prototype.addBoundParams = function(boundParams) {
@@ -104,7 +98,9 @@ module.exports = (function() {
   };
 
   GremlinScript.prototype.handleHelper = function(statement) {
-    this.line(statement);
+    this.line(statement.toGroovy());
+
+    return statement;
   };
 
   GremlinScript.prototype.var = function(statement, identifier) {
@@ -123,8 +119,12 @@ module.exports = (function() {
    */
   GremlinScript.prototype.getAppender = function() {
     var appendToScript = (function(statement) {
-      if (arguments.length > 1) { // Assume query('g(%s)', 1) signature
-        this.handleString.apply(this, arguments);
+      if (_.isString(statement)) { // Assume query('g(%s)', 1) signature
+        if (arguments.length > 1) {
+          this.handleString.apply(this, arguments);
+        } else {
+          this.line(statement);
+        }
       } else if (statement) { // Assume query(g.v(1)) signature
         this.handleHelper(statement);
       }

@@ -8,7 +8,7 @@ describe('element', function() {
       var gremlin = new Gremlin(client);
       var v = new Vertex('v');
 
-      gremlin.line(v.remove());
+      gremlin.handleHelper(v.remove());
       gremlin.script.should.equal('v.remove()\n');
     });
   });

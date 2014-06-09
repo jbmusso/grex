@@ -7,7 +7,7 @@ describe('element', function() {
     it('should set properties', function() {
       var gremlin = new Gremlin(client);
       var v = new Vertex('v');
-      gremlin.line(v.setProperties({
+      gremlin.handleHelper(v.setProperties({
         'foo': 'bar',
         'baz': 'duh'
       }));

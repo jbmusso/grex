@@ -8,7 +8,7 @@ describe('element', function() {
       var gremlin = new Gremlin(client);
       var v = new Vertex('v');
 
-      gremlin.line(v.addProperty('name', 'alice'));
+      gremlin.handleHelper(v.addProperty('name', 'alice'));
       v.should.have.property('name', 'alice');
       gremlin.script.should.equal("v.addProperty('name','alice')\n");
     });
