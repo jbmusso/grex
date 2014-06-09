@@ -16,11 +16,7 @@ module.exports = (function() {
   GetPropertiesMethod.prototype.run = function(element) {
     var o = {};
 
-    _.each(element, function(property, propertyName) {
-      o[propertyName] = element[propertyName];
-    });
-
-    return o;
+    return element.properties;
   };
 
   return GetPropertiesMethod;

@@ -17,11 +17,11 @@ describe('graph', function() {
       });
 
       it('should have a null _id', function() {
-        vertex.should.have.property('_id', null);
+        vertex.asObject().should.have.property('_id', null);
       });
 
       it('should have properties set', function() {
-        vertex.should.have.property('foo', 'bar');
+        vertex.asObject().should.have.property('foo', 'bar');
       });
     });
 
@@ -37,12 +37,12 @@ describe('graph', function() {
       });
 
       it('should have a numerical _id', function() {
-        vertex.should.have.property('_id');
-        vertex._id.should.be.a.Number.and.equal(1);
+        vertex.asObject().should.have.property('_id');
+        vertex.asObject()._id.should.be.a.Number.and.equal(1);
       });
 
       it('should have properties set', function() {
-        vertex.should.have.property('foo', 'bar');
+        vertex.asObject().should.have.property('foo', 'bar');
       });
     });
   });

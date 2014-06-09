@@ -1,13 +1,13 @@
 /*jslint node: true */
 'use strict';
-var Vertex = require('../objects/vertex');
-var Edge = require('../objects/edge');
+var VertexWrapper = require('../objects/vertex');
+var EdgeWrapper = require('../objects/edge');
 
 var JavaClass = require('./javaclass');
 
 var classes = {
-  Vertex: Vertex,
-  Edge: Edge,
+  Vertex: VertexWrapper,
+  Edge: EdgeWrapper,
   Geoshape: new JavaClass('Geoshape'),
   'String': new JavaClass('String'),
   Integer: new JavaClass('Integer'),

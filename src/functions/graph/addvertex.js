@@ -16,7 +16,7 @@ module.exports = (function() {
 
   AddVertexMethod.prototype.run = function() {
     _.each(this.arguments, function(value, key) {
-      this.vertex[key] = value;
+      this.vertex.properties[key] = value;
     }, this);
 
     return this.vertex;

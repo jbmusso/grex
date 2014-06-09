@@ -2,7 +2,7 @@
 'use strict';
 var inherits = require('util').inherits;
 
-var GremlinObject = require('./object');
+var ObjectWrapper = require('./objectwrapper');
 var GremlinStep = require('../functions/steps/step');
 var CollectionAccessor = require('../functions/collectionaccessor');
 var CollectionStep = require('../functions/steps/collectionstep');
@@ -10,11 +10,11 @@ var PipesStep = require('../functions/steps/pipesstep');
 var SelectStep = require('../functions/steps/select');
 
 module.exports = (function () {
-  function Pipeline(object) {
-    GremlinObject.call(this, object);
+  function PipelineWrapper(object) {
+    ObjectWrapper.call(this, object);
   }
 
-  inherits(Pipeline, GremlinObject);
+  inherits(PipelineWrapper, ObjectWrapper);
 
   /**
    * Send the underlying GremlinScript to the server for execution, returning
@@ -26,8 +26,8 @@ module.exports = (function () {
    *
    * @param {Function} callback
    */
-  Pipeline.prototype.exec =
-  Pipeline.prototype.execute = function(callback) {
+  PipelineWrapper.prototype.exec =
+  PipelineWrapper.prototype.execute = function(callback) {
     return this.gremlin.exec(callback);
   };
 
@@ -41,159 +41,159 @@ module.exports = (function () {
    *
    * @param {Function} callback
    */
-  Pipeline.prototype.fetch = function(callback) {
+  PipelineWrapper.prototype.fetch = function(callback) {
     return this.gremlin.fetch(callback);
   };
 
 
-  Pipeline.prototype.both = function() {
+  PipelineWrapper.prototype.both = function() {
     var step = new GremlinStep('both', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.bothE = function() {
+  PipelineWrapper.prototype.bothE = function() {
     var step = new GremlinStep('bothE', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.bothV = function() {
+  PipelineWrapper.prototype.bothV = function() {
     var step = new GremlinStep('bothV', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.cap = function() {
+  PipelineWrapper.prototype.cap = function() {
     var step = new GremlinStep('cap', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.gather = function() {
+  PipelineWrapper.prototype.gather = function() {
     var step = new GremlinStep('gather', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.id = function() {
+  PipelineWrapper.prototype.id = function() {
     var step = new GremlinStep('id', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.in = function() {
+  PipelineWrapper.prototype.in = function() {
     var step = new GremlinStep('in', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.inE = function() {
+  PipelineWrapper.prototype.inE = function() {
     var step = new GremlinStep('inE', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.inV = function() {
+  PipelineWrapper.prototype.inV = function() {
     var step = new GremlinStep('inV', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.property = function() {
+  PipelineWrapper.prototype.property = function() {
     var step = new GremlinStep('property', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.label = function() {
+  PipelineWrapper.prototype.label = function() {
     var step = new GremlinStep('label', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.map = function() {
+  PipelineWrapper.prototype.map = function() {
     var step = new GremlinStep('map', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.memoize = function() {
+  PipelineWrapper.prototype.memoize = function() {
     var step = new GremlinStep('memoize', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.order = function() {
+  PipelineWrapper.prototype.order = function() {
     var step = new GremlinStep('order', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.out = function() {
+  PipelineWrapper.prototype.out = function() {
     var step = new GremlinStep('out', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.outE = function() {
+  PipelineWrapper.prototype.outE = function() {
     var step = new GremlinStep('outE', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.outV = function() {
+  PipelineWrapper.prototype.outV = function() {
     var step = new GremlinStep('outV', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.path = function() {
+  PipelineWrapper.prototype.path = function() {
     var step = new GremlinStep('path', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.scatter = function() {
+  PipelineWrapper.prototype.scatter = function() {
     var step = new GremlinStep('scatter', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.select = function() {
+  PipelineWrapper.prototype.select = function() {
     var step = new SelectStep(arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.transform = function() {
+  PipelineWrapper.prototype.transform = function() {
     var step = new GremlinStep('transform', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.orderMap = function() {
+  PipelineWrapper.prototype.orderMap = function() {
     var step = new GremlinStep('orderMap', arguments);
     this.methods.push(step.toGroovy());
 
@@ -202,7 +202,7 @@ module.exports = (function () {
 
   /*** Filter ***/
   // index(i)
-  Pipeline.prototype.index = function() {
+  PipelineWrapper.prototype.index = function() {
     var step = new CollectionAccessor(arguments);
     this.methods.push(step.toGroovy());
 
@@ -210,91 +210,91 @@ module.exports = (function () {
   };
 
   // range('[i..j]')
-  Pipeline.prototype.range = function() {
+  PipelineWrapper.prototype.range = function() {
     var step = new CollectionAccessor(arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.and = function() {
+  PipelineWrapper.prototype.and = function() {
     var step = new PipesStep('and', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.back = function() {
+  PipelineWrapper.prototype.back = function() {
     var step = new GremlinStep('back', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.dedup = function() {
+  PipelineWrapper.prototype.dedup = function() {
     var step = new GremlinStep('dedup', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.except = function() {
+  PipelineWrapper.prototype.except = function() {
     var step = new CollectionStep('except', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.filter = function() {
+  PipelineWrapper.prototype.filter = function() {
     var step = new GremlinStep('filter', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.has = function() {
+  PipelineWrapper.prototype.has = function() {
     var step = new GremlinStep('has', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.hasNot = function() {
+  PipelineWrapper.prototype.hasNot = function() {
     var step = new GremlinStep('hasNot', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.interval = function() {
+  PipelineWrapper.prototype.interval = function() {
     var step = new GremlinStep('interval', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.or = function() {
+  PipelineWrapper.prototype.or = function() {
     var step = new PipesStep('or', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.random = function() {
+  PipelineWrapper.prototype.random = function() {
     var step = new GremlinStep('random', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.retain = function() {
+  PipelineWrapper.prototype.retain = function() {
     var step = new CollectionStep('retain', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.simplePath = function() {
+  PipelineWrapper.prototype.simplePath = function() {
     var step = new GremlinStep('simplePath', arguments);
     this.methods.push(step.toGroovy());
 
@@ -302,18 +302,18 @@ module.exports = (function () {
   };
 
   /*** Side Effect ***/
-  Pipeline.prototype.aggregate = function() {
+  PipelineWrapper.prototype.aggregate = function() {
     throw new Error('Not implemented.');
   };
 
-  Pipeline.prototype.as = function() {
+  PipelineWrapper.prototype.as = function() {
     var step = new GremlinStep('as', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.groupBy = function() {
+  PipelineWrapper.prototype.groupBy = function() {
     var step = new GremlinStep('groupBy', arguments);
     this.methods.push(step.toGroovy());
 
@@ -321,75 +321,75 @@ module.exports = (function () {
   };
 
   // Not FullyImplemented ??
-  Pipeline.prototype.groupCount = function() {
+  PipelineWrapper.prototype.groupCount = function() {
     var step = new GremlinStep('groupCount', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.optional = function() {
+  PipelineWrapper.prototype.optional = function() {
     var step = new GremlinStep('optional', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.sideEffect = function() {
+  PipelineWrapper.prototype.sideEffect = function() {
     var step = new GremlinStep('sideEffect', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.linkBoth = function() {
+  PipelineWrapper.prototype.linkBoth = function() {
     var step = new GremlinStep('linkBoth', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.linkIn = function() {
+  PipelineWrapper.prototype.linkIn = function() {
     var step = new GremlinStep('linkIn', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.linkOut = function() {
+  PipelineWrapper.prototype.linkOut = function() {
     var step = new GremlinStep('linkOut', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.store = function() {
+  PipelineWrapper.prototype.store = function() {
     throw new Error('Not implemented');
   };
 
-  Pipeline.prototype.table = function() {
+  PipelineWrapper.prototype.table = function() {
     throw new Error('Not implemented');
   };
 
-  Pipeline.prototype.tree = function() {
+  PipelineWrapper.prototype.tree = function() {
     throw new Error('Not implemented');
   };
 
   /*** Branch ***/
-  Pipeline.prototype.copySplit = function() {
+  PipelineWrapper.prototype.copySplit = function() {
     var step = new PipesStep('copySplit', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
-  Pipeline.prototype.exhaustMerge = function() {
+  PipelineWrapper.prototype.exhaustMerge = function() {
     var step = new GremlinStep('exhaustMerge', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.fairMerge = function() {
+  PipelineWrapper.prototype.fairMerge = function() {
     var step = new GremlinStep('fairMerge', arguments);
     this.methods.push(step.toGroovy());
 
@@ -397,14 +397,14 @@ module.exports = (function () {
   };
 
   // g.v(1).out().ifThenElse('{it.name=='josh'}','{it.age}','{it.name}')
-  Pipeline.prototype.ifThenElse = function() {
+  PipelineWrapper.prototype.ifThenElse = function() {
     var step = new GremlinStep('ifThenElse', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.loop = function() {
+  PipelineWrapper.prototype.loop = function() {
     var step = new GremlinStep('loop', arguments);
     this.methods.push(step.toGroovy());
 
@@ -412,81 +412,81 @@ module.exports = (function () {
   };
 
   /*** Methods ***/
-  Pipeline.prototype.fill = function() {
+  PipelineWrapper.prototype.fill = function() {
     throw new Error('Not implemented');
   };
 
-  Pipeline.prototype.count = function() {
+  PipelineWrapper.prototype.count = function() {
     var step = new GremlinStep('count', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.iterate = function() {
+  PipelineWrapper.prototype.iterate = function() {
     var step = new GremlinStep('iterate', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.next = function() {
+  PipelineWrapper.prototype.next = function() {
     var step = new GremlinStep('next', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.toList = function() {
+  PipelineWrapper.prototype.toList = function() {
     var step = new GremlinStep('toList', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.keys = function() {
+  PipelineWrapper.prototype.keys = function() {
     var step = new GremlinStep('keys', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.remove = function() {
+  PipelineWrapper.prototype.remove = function() {
     var step = new GremlinStep('remove', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.values = function() {
+  PipelineWrapper.prototype.values = function() {
     var step = new GremlinStep('values', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.put = function() {
+  PipelineWrapper.prototype.put = function() {
     var step = new PipesStep('put', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.getPropertyKeys = function() {
+  PipelineWrapper.prototype.getPropertyKeys = function() {
     var step = new GremlinStep('getPropertyKeys', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.setProperty = function() {
+  PipelineWrapper.prototype.setProperty = function() {
     var step = new GremlinStep('setProperty', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.getProperty = function() {
+  PipelineWrapper.prototype.getProperty = function() {
     var step = new GremlinStep('getProperty', arguments);
     this.methods.push(step.toGroovy());
 
@@ -494,56 +494,56 @@ module.exports = (function () {
   };
 
   // Titan specifics
-  Pipeline.prototype.name = function() {
+  PipelineWrapper.prototype.name = function() {
     var step = new GremlinStep('name', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.dataType = function() {
+  PipelineWrapper.prototype.dataType = function() {
     var step = new GremlinStep('dataType', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.indexed = function() {
+  PipelineWrapper.prototype.indexed = function() {
     var step = new GremlinStep('indexed', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.unique = function() {
+  PipelineWrapper.prototype.unique = function() {
     var step = new GremlinStep('unique', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.makePropertyKey = function() {
+  PipelineWrapper.prototype.makePropertyKey = function() {
     var step = new GremlinStep('makePropertyKey', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.group = function() {
+  PipelineWrapper.prototype.group = function() {
     var step = new GremlinStep('group', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.makeEdgeLabel = function() {
+  PipelineWrapper.prototype.makeEdgeLabel = function() {
     var step = new GremlinStep('makeEdgeLabel', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.query = function() {
+  PipelineWrapper.prototype.query = function() {
     var step = new GremlinStep('query', arguments);
     this.methods.push(step.toGroovy());
 
@@ -551,7 +551,7 @@ module.exports = (function () {
   };
 
   // Titan v0.4.0+
-  Pipeline.prototype.single = function() {
+  PipelineWrapper.prototype.single = function() {
     var step = new GremlinStep('single', arguments);
     this.methods.push(step.toGroovy());
 
@@ -559,7 +559,7 @@ module.exports = (function () {
   };
 
   // Titan v0.4.0+
-  Pipeline.prototype.list = function() {
+  PipelineWrapper.prototype.list = function() {
     var step = new GremlinStep('list', arguments);
     this.methods.push(step.toGroovy());
 
@@ -567,7 +567,7 @@ module.exports = (function () {
   };
 
   // Titan v0.4.0+: replaces unique(Direction.IN)
-  Pipeline.prototype.oneToMany = function() {
+  PipelineWrapper.prototype.oneToMany = function() {
     var step = new GremlinStep('oneToMany', arguments);
     this.methods.push(step.toGroovy());
 
@@ -575,7 +575,7 @@ module.exports = (function () {
   };
 
   // Titan v0.4.0+: replaces unique(Direction.OUT)
-  Pipeline.prototype.manyToOne = function() {
+  PipelineWrapper.prototype.manyToOne = function() {
     var step = new GremlinStep('manyToOne', arguments);
     this.methods.push(step.toGroovy());
 
@@ -583,7 +583,7 @@ module.exports = (function () {
   };
 
   // Titan v0.4.0+: replaces unique(Direction.IN) and unique(Direction.OUT)
-  Pipeline.prototype.oneToOne = function() {
+  PipelineWrapper.prototype.oneToOne = function() {
     var step = new GremlinStep('oneToOne', arguments);
     this.methods.push(step.toGroovy());
 
@@ -591,7 +591,7 @@ module.exports = (function () {
   };
 
   // Titan v0.4.0+
-  Pipeline.prototype.makeKey = function() {
+  PipelineWrapper.prototype.makeKey = function() {
     var step = new GremlinStep('makeKey', arguments);
     this.methods.push(step.toGroovy());
 
@@ -599,68 +599,68 @@ module.exports = (function () {
   };
 
   // Titan v0.4.0+
-  Pipeline.prototype.makeLabel = function() {
+  PipelineWrapper.prototype.makeLabel = function() {
     var step = new GremlinStep('makeLabel', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.make = function() {
+  PipelineWrapper.prototype.make = function() {
     var step = new GremlinStep('make', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.sortKey = function() {
+  PipelineWrapper.prototype.sortKey = function() {
     var step = new GremlinStep('sortKey', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.signature = function() {
+  PipelineWrapper.prototype.signature = function() {
     var step = new GremlinStep('signature', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.unidirected = function() {
+  PipelineWrapper.prototype.unidirected = function() {
     var step = new GremlinStep('unidirected', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.createKeyIndex = function() {
+  PipelineWrapper.prototype.createKeyIndex = function() {
     var step = new GremlinStep('createKeyIndex', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.getIndexes = function() {
+  PipelineWrapper.prototype.getIndexes = function() {
     var step = new GremlinStep('getIndexes', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.hasIndex = function() {
+  PipelineWrapper.prototype.hasIndex = function() {
     var step = new GremlinStep('hasIndex', arguments);
     this.methods.push(step.toGroovy());
 
     return this;
   };
 
-  Pipeline.prototype.key = function() {
+  PipelineWrapper.prototype.key = function() {
     this.methods.push('.'+ arguments[0]);
 
     return this;
   };
 
-  return Pipeline;
+  return PipelineWrapper;
 
 })();

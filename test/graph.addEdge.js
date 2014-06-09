@@ -17,7 +17,7 @@ describe('graph', function() {
     });
 
     it('should have a null _id', function() {
-      edge.should.have.property('_id', null);
+      edge.asObject().should.have.property('_id', null);
     });
 
     it('should have set _outV, _inV and _label properties', function() {
@@ -45,7 +45,7 @@ describe('graph', function() {
     });
 
     it('should have a null _id', function() {
-      edge.should.have.property('_id', null);
+      edge.asObject().should.have.property('_id', null);
     });
 
     it('should have _outV and _inV properties as Vertex', function() {

@@ -2,27 +2,26 @@
 'use strict';
 var inherits = require("inherits");
 
-var Element = require("./element");
+var ElementWrapper = require("./element");
 
 module.exports = (function (){
-  function Edge() {
-    this._type = "edge";
-
-    Element.apply(this, arguments);
+  function EdgeWrapper() {
+    ElementWrapper.apply(this, arguments);
+    this.properties._type = "edge";
   }
 
-  inherits(Edge, Element);
+  inherits(EdgeWrapper, ElementWrapper);
 
-  Edge.toGroovy = function() {
+  EdgeWrapper.toGroovy = function() {
     return 'Edge.class';
   };
 
-  Object.defineProperty(Edge, 'class', {
+  Object.defineProperty(EdgeWrapper, 'class', {
     get: function() {
       return this.toGroovy();
     }
   });
 
-  return Edge;
+  return EdgeWrapper;
 
 })();

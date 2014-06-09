@@ -15,7 +15,7 @@ module.exports = (function() {
     var key = this.arguments.key;
     var value = this.arguments.value;
 
-    element[key] = value;
+    element.properties[key] = value;
 
     return element;
   };

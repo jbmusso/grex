@@ -3,8 +3,8 @@
 var _ = require("lodash");
 var util = require('util');
 
-var Graph = require('./objects/graph');
-var Pipeline = require('./objects/pipeline');
+var GraphWrapper = require('./objects/graph');
+var PipelineWrapper = require('./objects/pipeline');
 var Argument = require('./arguments/argument');
 var GremlinFunction = require('./functions/function');
 
@@ -15,10 +15,10 @@ module.exports = (function() {
     this.client = client;
     this.paramCount = 0;
 
-    // Define a default 'g' getter, returning a Graph
+    // Define a default 'g' getter, returning a GraphWrapper
     Object.defineProperty(this, 'g', {
       get: function() {
-        var graph = new Graph('g');
+        var graph = new GraphWrapper('g');
 
         return graph;
       }
@@ -45,17 +45,17 @@ module.exports = (function() {
   };
 
   /**
-   * Return a Pipeline object with its own internal GremlinScript object to append
+   * Return a PipelineWrapper object with its own internal GremlinScript object to append
    * string to.
    *
-   * @return {Pipeline}
+   * @return {PipelineWrapper}
    */
   GremlinScript.prototype._ = function() {
     var gremlin = new GremlinScript(this.client);
     var func = new GremlinFunction('_', arguments);
     gremlin.append(func.toGroovy());
 
-    return new Pipeline(gremlin);
+    return new PipelineWrapper(gremlin);
   };
 
   /**

@@ -2,27 +2,27 @@
 'use strict';
 var inherits = require("inherits");
 
-var Element = require("./element");
+var ElementWrapper = require("./element");
 
 module.exports = (function () {
-  function Vertex() {
-    this._type = "vertex";
+  function VertexWrapper() {
+    ElementWrapper.apply(this, arguments);
 
-    Element.apply(this, arguments);
+    this.properties._type = "vertex";
   }
 
-  inherits(Vertex, Element);
+  inherits(VertexWrapper, ElementWrapper);
 
-  Vertex.toGroovy = function() {
+  VertexWrapper.toGroovy = function() {
     return 'Vertex.class';
   };
 
-  Object.defineProperty(Vertex, 'class', {
+  Object.defineProperty(VertexWrapper, 'class', {
     get: function() {
       return this.toGroovy();
     }
   });
 
-  return Vertex;
+  return VertexWrapper;
 
 })();

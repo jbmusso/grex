@@ -7,8 +7,8 @@ var Q = require("q");
 var _ = require("lodash");
 
 var GremlinScript = require('./gremlinscript');
-var Graph = require("./objects/graph");
-var Pipeline = require('./objects/pipeline');
+var GraphWrapper = require("./objects/graph");
+var PipelineWrapper = require('./objects/pipeline');
 var classes = require("./classes/classes");
 
 var ResultFormatter = require("./resultformatter");
@@ -32,7 +32,7 @@ module.exports = (function(){
 
   Object.defineProperty(RexsterClient.prototype, 'g', {
     get: function() {
-      var graph = new Graph('g');
+      var graph = new GraphWrapper('g');
 
       return graph;
     }
@@ -41,7 +41,7 @@ module.exports = (function(){
   Object.defineProperty(RexsterClient.prototype, '_', {
     get: function() {
       return function() {
-        return new Pipeline('_()');
+        return new PipelineWrapper('_()');
       };
     }
   });

@@ -4,7 +4,7 @@ var inherits = require('util').inherits;
 
 var _ = require('lodash');
 
-var GremlinObject = require('./object');
+var ObjectWrapper = require('./objectwrapper');
 var GetPropertiesMethod = require('../functions/element/getproperties');
 var SetPropertiesMethod = require('../functions/element/setproperties');
 var AddPropertiesMethod = require('../functions/element/addproperties');
@@ -13,38 +13,31 @@ var AddPropertyMethod = require('../functions/element/addproperty');
 var GremlinMethod = require('../functions/method');
 
 /**
- * Abstract Element class
+ * Abstract ElementWrapper class
  */
 module.exports = (function() {
-  function Element() {
-    GremlinObject.apply(this, arguments);
-    this._id = null;
+  function ElementWrapper() {
+    ObjectWrapper.apply(this, arguments);
+    this.properties._id = null;
   }
 
-  inherits(Element, GremlinObject);
+  inherits(ElementWrapper, ObjectWrapper);
 
-  // Keep track of a temporary object for each element
-  Object.defineProperty(Element.prototype, "object", {
-    value: null,
-    enumerable: false,
-    writable: true
-  });
-
-  Element.prototype.getProperties = function() {
+  ElementWrapper.prototype.getProperties = function() {
     var method = new GetPropertiesMethod();
     this.methods.push(method.toGroovy());
 
     return method.run(this);
   };
 
-  Element.prototype.setProperty = function(key, value) {
+  ElementWrapper.prototype.setProperty = function(key, value) {
     var method = new SetPropertyMethod({ key: key, value: value });
     this.methods.push(method.toGroovy());
 
     return method.run(this);
   };
 
-  Element.prototype.setProperties = function(properties) {
+  ElementWrapper.prototype.setProperties = function(properties) {
     var method = new SetPropertiesMethod(properties);
     this.methods.push(method.toGroovy());
 
@@ -60,7 +53,7 @@ module.exports = (function() {
    * @param {String} key
    * @param {Object} value
    */
-  Element.prototype.addProperty = function(key, value) {
+  ElementWrapper.prototype.addProperty = function(key, value) {
     var method = new AddPropertyMethod({ key: key, value: value });
     this.methods.push(method.toGroovy());
 
@@ -75,20 +68,20 @@ module.exports = (function() {
    *
    * @param {Object} properties
    */
-  Element.prototype.addProperties = function(properties) {
+  ElementWrapper.prototype.addProperties = function(properties) {
     var method = new AddPropertiesMethod(properties);
     this.methods.push(method.toGroovy());
 
     return method.run(this);
   };
 
-  Element.prototype.remove = function() {
+  ElementWrapper.prototype.remove = function() {
     var method = new GremlinMethod('remove', []);
     this.methods.push(method.toGroovy());
 
     return this;
   };
 
-  return Element;
+  return ElementWrapper;
 
 })();

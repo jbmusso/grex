@@ -9,7 +9,7 @@ describe('element', function() {
       var v = new Vertex('v');
 
       gremlin.handleHelper(v.setProperty('name', 'bob'));
-      v.should.have.property('name', 'bob');
+      v.asObject().should.have.property('name', 'bob');
       gremlin.script.should.equal("v.setProperty('name','bob')\n");
     });
   });
