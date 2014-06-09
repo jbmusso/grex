@@ -7,7 +7,7 @@ Grex is a Gremlin (Groovy-flavored) generating library written in JavaScript whi
 
 If you're interested in an Object-to-Graph mapper library, you may also want to have a look at [Mogwai.js](https://github.com/gulthor/mogwai) built on top of Grex.
 
-If you need help understanding the Gremlin API, you'll find [GremlinDocs](http://gremlindocs.com/), [SQL2Gremlin](http://sql2gremlin.com) and upcoming [Tinkerpop 3 documentation](www.tinkerpop.com/docs/tinkerpop3/3.0.0-SNAPSHOT/#_gremlin_i_o) to be useful resources.
+If you need help understanding the Gremlin API, you'll find [GremlinDocs](http://gremlindocs.com/), [SQL2Gremlin](http://sql2gremlin.com) and upcoming [Tinkerpop 3 documentation](http://www.tinkerpop.com/docs/tinkerpop3/3.0.0-SNAPSHOT/) to be useful resources.
 
 Feel free to [open issues](https://github.com/gulthor/grex/issues) if you have trouble using the library. I'll happily provide support. You can also reach me as Gulthor on IRC Freenode on #mogwai or #tinkerpop.
 
@@ -86,7 +86,7 @@ gremlin(g.V('name', 'marko').out()).exec(function(err, result) {...});
 
 ### Building a multiline Gremlin script
 
-Creating a GremlinScript with multiple statements is done by calling `query()` multiple times:
+Creating a `GremlinScript with multiple statements is done by calling `query()` multiple times:
 
 ```javascript
 // JavaScript
@@ -472,12 +472,12 @@ Calling `var query = client.gremlin()` actually executes the function returned b
 A getter property. Returns a `new Graph()` wrapper instance.
 
 Graph methods return convenient wrapper objects, which is either:
-* a new [`Pipeline`](https://github.com/gulthor/grex/blob/master/src/pipeline.js) instance (ie. by calling `g.v()`, `g.V()`, `g.E()`, etc.)
-* a new [`Vertex`](https://github.com/gulthor/grex/blob/master/src/objects/vertex.js) via `g.addVertex()` or new [`Edge`](https://github.com/gulthor/grex/blob/master/src/objects/edge.js) instance via `g.addEdge()`. Note that both classes inherits from [`Element`](https://github.com/gulthor/grex/blob/master/src/objects/element.js). All currently inherit [`GremlinObject`](https://github.com/gulthor/grex/blob/master/src/objects/object.js).
+* a new [`PipelineWrapper`](https://github.com/gulthor/grex/blob/master/src/objects/pipeline.js) instance (ie. by calling `g.v()`, `g.V()`, `g.E()`, etc.)
+* a new [`VertexWrapper`](https://github.com/gulthor/grex/blob/master/src/objects/vertex.js) via `g.addVertex()` or new [`EdgeWrapper`](https://github.com/gulthor/grex/blob/master/src/objects/edge.js) instance via `g.addEdge()`. Note that both classes inherits from [`ElementWrapper`](https://github.com/gulthor/grex/blob/master/src/objects/element.js). They all inherits from [`ObjectWrapper`](https://github.com/gulthor/grex/blob/master/src/objects/objectwrapper.js).
 
 #### RexsterClient._
 
-A getter property returning a `new Pipeline()` wrapper instance.
+A getter property returning a `new PipelineWrapper()` instance.
 
 ### GremlinScript
 
@@ -502,7 +502,6 @@ Callback signature: `err, results, response`
 * simplified API (~~remove gremlin.g and gremlin._, remove Java .class~~, etc.)
 * Rexpro?
 * performance checks and improvements
-* remove GremlinObject
 
 
 ## Author
