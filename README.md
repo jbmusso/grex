@@ -78,7 +78,7 @@ var query = gremlin(g.V('name', 'marko').out());
 // query.script === "g.V('name','marko').out"
 ```
 
-You can also skip the `var` and directly chain `.exec()`:
+You can also skip `var query =` and directly chain `.exec()`:
 
 ```javascript
 gremlin(g.V('name', 'marko').out()).exec(function(err, result) {...});
@@ -86,7 +86,7 @@ gremlin(g.V('name', 'marko').out()).exec(function(err, result) {...});
 
 ### Building a multiline Gremlin script
 
-Creating a `GremlinScript with multiple statements is done by calling `query()` multiple times:
+Creating a `GremlinScript` with multiple statements is done by calling `query()` multiple times:
 
 ```javascript
 // JavaScript
@@ -169,7 +169,7 @@ You can naturally pass multiple parameters:
 ```javascript
 var query = gremlin();
 query("g.addVertex('name', %s, 'age', %s)", "Bob", 26);
-// query.script === "g.addVertex('name',p0,'age',p1)"
+// query.script === "g.addVertex('name', p0, 'age', p1)"
 // query.params.p0 === 'Bob'
 // query.params.p1 === '26'
 ```
@@ -200,7 +200,7 @@ var query = gremlin();
 query('g.addVertex("name", %s)', 'Alice');
 query(g.addVertex('name', 'Bob'))
 // query.script === "g.addVertex('name', p0)\ng.addVertex('name','bob')\n"
-// query.params.p0 === 'alice'
+// query.params.p0 === 'Alice'
 ```
 
 ### Executing a Gremlin script
@@ -224,6 +224,14 @@ Executing a one line script is trivial:
 
 ```javascript
 gremlin(g.V('name', 'marko').out()).exec(function(err, response) {
+  // ...
+});
+```
+
+It is even shorter with Promises.
+
+```javascript
+gremlin(g.V('name', 'marko').out()).done(function(response) {
   // ...
 });
 ```
