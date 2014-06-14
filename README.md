@@ -19,11 +19,11 @@ You may also wish to use Grex in the browser, essentially when prototyping appli
 
 ## Quick start
 
-Grex does 3 things: connect to a database, generate a Gremlin (Groovy flavored string) and send the string for execution (retrieving the results if any).
+Grex does 3 things: connect to a graph, generate a Gremlin (Groovy flavored string) and send the string for execution (retrieving the results if any).
 
 ```javascript
 var settings = {
-  'database': 'myGraphDB',
+  'graph': 'myGraphDB',
   'host': 'localhost',
   'port': 8182
 };
@@ -90,9 +90,9 @@ Multiple vertices and edges can be added in a transaction over one single http c
 
 ```javascript
 var gremlin = client.gremlin();
-var v1 = g.addVertex.addVertex({k1:'v1', 'k2':'v2', k3:'v3', id: 100}, 'vA');
-var v2 = g.addVertex.addVertex({k1:'v1', 'k2':'v2', k3:'v3', id: 200}, 'vB');
-g.addVertex.addEdge(v1, v2, 'pal' , { weight: '0.75f' });
+var v1 = g.addVertex({k1:'v1', 'k2':'v2', k3:'v3', id: 100}, 'vA');
+var v2 = g.addVertex({k1:'v1', 'k2':'v2', k3:'v3', id: 200}, 'vB');
+g.addEdge(v1, v2, 'pal' , { weight: '0.75f' });
 
 gremlin.exec(function(err, response) {
   // Handle error or response
