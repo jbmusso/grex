@@ -23,16 +23,20 @@ It currently doesn't work in the browser anymore, though it shouldn't be too har
 
 ## Quick start
 
+<<<<<<< HEAD
 Grex does three things:
 * establish a connection to Rexster
 * generate a Gremlin-Groovy flavored string
 * send the string with any bound parameters for execution, retrieving the results (if any).
+=======
+Grex does 3 things: connect to a graph, generate a Gremlin (Groovy flavored string) and send the string for execution (retrieving the results if any).
+>>>>>>> Fixed minor mistakes in README
 
 ```javascript
 var grex = require('grex');
 
 var settings = {
-  'database': 'myGraphDB',
+  'graph': 'myGraphDB',
   'host': 'localhost',
   'port': 8182
 };
@@ -223,12 +227,19 @@ query.exec(function(err, response) {
 Executing a one line script is trivial:
 
 ```javascript
+<<<<<<< HEAD
 gremlin(g.V('name', 'marko').out()).exec(function(err, response) {
   // ...
 });
 ```
 
 It is even shorter with Promises.
+=======
+var gremlin = client.gremlin();
+var v1 = g.addVertex({k1:'v1', 'k2':'v2', k3:'v3', id: 100}, 'vA');
+var v2 = g.addVertex({k1:'v1', 'k2':'v2', k3:'v3', id: 200}, 'vB');
+g.addEdge(v1, v2, 'pal' , { weight: '0.75f' });
+>>>>>>> Fixed minor mistakes in README
 
 ```javascript
 gremlin(g.V('name', 'marko').out()).done(function(response) {
@@ -526,4 +537,8 @@ https://github.com/gulthor/grex/graphs/contributors
 
 ##License
 
+<<<<<<< HEAD
 MIT (c) 2013-2014 Jean-Baptiste Musso, Entrendipity Pty Ltd.
+=======
+MIT (c) 2013-2014 Entrendipity Pty Ltd, Jean-Baptiste Musso.
+>>>>>>> Fixed minor mistakes in README
