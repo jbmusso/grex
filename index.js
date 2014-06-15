@@ -1,3 +1,3 @@
-var Grex = require('./src/grex.js');
+var RexsterClient = require('./src/rexsterclient.js');
 
-module.exports = new Grex();
+module.exports = new RexsterClient();

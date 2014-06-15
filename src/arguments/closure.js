@@ -1,3 +1,5 @@
+/*jslint node: true */
+'use strict';
 var inherits = require('inherits');
 var Argument = require('./argument');
 
@@ -8,12 +10,8 @@ module.exports = (function() {
 
   inherits(ClosureArgument, Argument);
 
-  ClosureArgument.prototype.toString = function() {
-    return this.raw;
-  };
-
-  ClosureArgument.prototype.updateList = function(argumentList) {
-    argumentList.appendedArguments.push(this.toString());
+  ClosureArgument.prototype.toGroovy = function() {
+    return this.value;
   };
 
   return ClosureArgument;

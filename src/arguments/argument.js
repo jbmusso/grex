@@ -1,21 +1,19 @@
+/*jslint node: true */
+'use strict';
 var _ = require('lodash');
 
 module.exports = (function () {
-  function Argument(raw, options) {
-    this.raw = raw;
-    this.options = options;
+  function Argument(value, func) {
+    this.value = value;
+    this.func = func;
   }
 
-  Argument.prototype.toString = function() {
+  Argument.prototype.toGroovy = function() {
     return this.parse();
   };
 
-  Argument.prototype.updateList = function(argumentList) {
-    argumentList.parenthesizedArguments.push(this.parse());
-  };
-
   Argument.prototype.parse = function() {
-    var argument = this.raw;
+    var argument = this.value;
 
     if (argument === null) {
       return 'null';
@@ -31,7 +29,7 @@ module.exports = (function () {
     }
 
     // Cater for ids that are not numbers but pass parseFloat test
-    if (this.isRegexId() || _.isNaN(parseFloat(argument))) {
+    if (false && _.isString(this.value) || _.isNaN(parseFloat(argument))) {
       return "'" + argument + "'";
     }
 
@@ -42,14 +40,10 @@ module.exports = (function () {
     return argument;
   };
 
-  Argument.prototype.isRegexId = function() {
-    return !!this.options.idRegex && _.isString(this.raw) && this.options.idRegex.test(this.raw);
-  };
-
   Argument.prototype.isGraphReference = function() {
     var graphRegex = /^T\.(gt|gte|eq|neq|lte|lt|decr|incr|notin|in)$|^Contains\.(IN|NOT_IN)$|^g\.|^Vertex(\.class)$|^Edge(\.class)$|^String(\.class)$|^Integer(\.class)$|^Geoshape(\.class)$|^Direction\.(OUT|IN|BOTH)$|^TitanKey(\.class)$|^TitanLabel(\.class)$/;
 
-    return _.isString(this.raw) && graphRegex.test(this.raw);
+    return _.isString(this.value) && graphRegex.test(this.value);
   };
 
   return Argument;

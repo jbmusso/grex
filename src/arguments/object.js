@@ -1,3 +1,5 @@
+/*jslint node: true */
+'use strict';
 var inherits = require('inherits');
 var Argument = require('./argument');
 
@@ -8,12 +10,8 @@ module.exports = (function() {
 
   inherits(ObjectArgument, Argument);
 
-  ObjectArgument.prototype.toString = function() {
-    return JSON.stringify(this.raw).replace('{', '[').replace('}', ']');
-  };
-
-  ObjectArgument.prototype.updateList = function(argumentList) {
-    argumentList.parenthesizedArguments.push(this.toString());
+  ObjectArgument.prototype.toGroovy = function() {
+    return JSON.stringify(this.value).replace('{', '[').replace('}', ']');
   };
 
   return ObjectArgument;

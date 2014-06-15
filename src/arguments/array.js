@@ -1,3 +1,5 @@
+/*jslint node: true */
+'use strict';
 var inherits = require('inherits');
 var Argument = require('./argument');
 
@@ -8,8 +10,8 @@ module.exports = (function () {
 
   inherits(ArrayArgument, Argument);
 
-  ArrayArgument.prototype.updateList = function(argumentList) {
-    argumentList.parenthesizedArguments.push("[" + this.parse() + "]");
+  ArrayArgument.prototype.toGroovy = function() {
+    return "[" + this.parse() + "]";
   };
 
   return ArrayArgument;
