@@ -32,7 +32,7 @@ Grex does three things:
 var grex = require('grex');
 
 var settings = {
-  'database': 'myGraphDB',
+  'graph': 'myGraphDB',
   'host': 'localhost',
   'port': 8182
 };
@@ -454,7 +454,7 @@ Options specify the location and name of the database.
 * `graph` (default: tinkergraph): Graph database name
 * `fetched` (default: return `response.results`): An optional, custom function to override the default behavior of `query.fetch()`
 
-```
+```javascript
 Grex.connect({
   host: 'localhost',
   graph: 'tinkergraph',
