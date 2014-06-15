@@ -24,6 +24,7 @@ It currently doesn't work in the browser anymore, though it shouldn't be too har
 ## Quick start
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 Grex does three things:
 * establish a connection to Rexster
 * generate a Gremlin-Groovy flavored string
@@ -31,6 +32,9 @@ Grex does three things:
 =======
 Grex does 3 things: connect to a graph, generate a Gremlin (Groovy flavored string) and send the string for execution (retrieving the results if any).
 >>>>>>> Fixed minor mistakes in README
+=======
+Grex does 3 things: connect to a graph, generate a Gremlin (Groovy flavored string) and send the string for execution (retrieving the results if any).
+>>>>>>> 440a97b4b2268693bbf4aad596a320558def70b2
 
 ```javascript
 var grex = require('grex');
@@ -239,7 +243,10 @@ var gremlin = client.gremlin();
 var v1 = g.addVertex({k1:'v1', 'k2':'v2', k3:'v3', id: 100}, 'vA');
 var v2 = g.addVertex({k1:'v1', 'k2':'v2', k3:'v3', id: 200}, 'vB');
 g.addEdge(v1, v2, 'pal' , { weight: '0.75f' });
+<<<<<<< HEAD
 >>>>>>> Fixed minor mistakes in README
+=======
+>>>>>>> 440a97b4b2268693bbf4aad596a320558def70b2
 
 ```javascript
 gremlin(g.V('name', 'marko').out()).done(function(response) {
@@ -538,7 +545,11 @@ https://github.com/gulthor/grex/graphs/contributors
 ##License
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 MIT (c) 2013-2014 Jean-Baptiste Musso, Entrendipity Pty Ltd.
 =======
 MIT (c) 2013-2014 Entrendipity Pty Ltd, Jean-Baptiste Musso.
 >>>>>>> Fixed minor mistakes in README
+=======
+MIT (c) 2013-2014 Entrendipity Pty Ltd, Jean-Baptiste Musso.
+>>>>>>> 440a97b4b2268693bbf4aad596a320558def70b2
