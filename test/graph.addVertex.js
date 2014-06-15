@@ -5,6 +5,48 @@ var Vertex = require("../src/objects/vertex");
 
 describe('graph', function() {
   describe('.addVertex()', function() {
+    describe('signature: no parameter', function() {
+      before(function() {
+        vertex = g.addVertex();
+      });
+
+      it('should return a vertex', function() {
+        vertex.should.be.an.instanceof(Vertex);
+      });
+
+      it('should not have any property', function() {
+        /*jshint -W030 */
+        (vertex.asObject()._id === null).should.be.true;
+        vertex.asObject()._type.should.equal('vertex');
+      });
+
+      it('should generate Groovy script', function() {
+        var query = gremlin(vertex);
+        query.script.should.equal('g.addVertex()\n');
+      });
+    });
+
+    describe('signature: empty object {} parameter', function() {
+      before(function() {
+        vertex = g.addVertex({});
+      });
+
+      it('should return a vertex', function() {
+        vertex.should.be.an.instanceof(Vertex);
+      });
+
+      it('should not have any property', function() {
+        /*jshint -W030 */
+        (vertex.asObject()._id === null).should.be.true;
+        vertex.asObject()._type.should.equal('vertex');
+      });
+
+      it('should generate Groovy script', function() {
+        var query = gremlin(vertex);
+        query.script.should.equal('g.addVertex()\n');
+      });
+    });
+
     describe('signature: (Object)', function() {
       var vertex;
 
@@ -22,6 +64,11 @@ describe('graph', function() {
 
       it('should have properties set', function() {
         vertex.asObject().should.have.property('foo', 'bar');
+      });
+
+      it('should generate Groovy script', function() {
+        var query = gremlin(vertex);
+        query.script.should.equal('g.addVertex(["foo":"bar"])\n');
       });
     });
 
@@ -43,6 +90,11 @@ describe('graph', function() {
 
       it('should have properties set', function() {
         vertex.asObject().should.have.property('foo', 'bar');
+      });
+
+      it('should generate Groovy script', function() {
+        var query = gremlin(vertex);
+        query.script.should.equal('g.addVertex(1,["foo":"bar"])\n');
       });
     });
   });

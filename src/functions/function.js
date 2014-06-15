@@ -70,7 +70,7 @@ module.exports = (function() {
   };
 
   GremlinFunction.prototype.isClass = function(argument) {
-    return !!argument.class;
+    return argument && !!argument.class;
   };
 
   GremlinFunction.prototype.stringifyArgument = function(argument) {

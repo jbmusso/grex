@@ -4,7 +4,7 @@ var inherits = require('util').inherits;
 
 var _ = require('lodash');
 
-var GremlinMethod = require('../function');
+var GremlinMethod = require('../method');
 
 module.exports = (function() {
   function AddEdgeMethod(edge, properties) {
@@ -15,7 +15,7 @@ module.exports = (function() {
   inherits(AddEdgeMethod, GremlinMethod);
 
   AddEdgeMethod.prototype.run = function(object) {
-    if (this.arguments.properties._id) {
+    if (this.arguments.properties && this.arguments.properties._id) {
       this.edge._id = this.arguments.properties._id;
     }
 
@@ -34,11 +34,16 @@ module.exports = (function() {
     return this.edge;
   };
 
-  AddEdgeMethod.prototype.toGroovy = function() {
+  AddEdgeMethod.prototype.groovifyArguments = function() {
     var id = this.edge._id ? this.edge._id + ',' : '';
-    var str = '.addEdge('+ id + this.edge._outV.identifier +','+ this.edge._inV.identifier +',"'+ this.edge._label +'",'+ this.stringifyArgument(this.arguments.properties) +')';
 
-    return str;
+    var properties = this.arguments.properties;
+    var propArgument = !_.isEmpty(properties) ? ','+ this.stringifyArgument(this.arguments.properties) : '';
+
+    var _outV = this.edge._outV.identifier || this.arguments.v1;
+    var _inV = this.edge._inV.identifier || this.arguments.v2;
+
+    return '('+ id + _outV +','+ _inV +',"'+ this.edge._label +'"'+ propArgument + ')';
   };
 
   return AddEdgeMethod;

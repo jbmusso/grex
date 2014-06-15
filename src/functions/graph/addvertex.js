@@ -4,7 +4,7 @@ var inherits = require('util').inherits;
 
 var _ = require('lodash');
 
-var GremlinMethod = require('../function');
+var GremlinMethod = require('../method');
 
 module.exports = (function() {
   function AddVertexMethod(vertex, properties) {
@@ -22,12 +22,20 @@ module.exports = (function() {
     return this.vertex;
   };
 
-  AddVertexMethod.prototype.toGroovy = function() {
+  AddVertexMethod.prototype.groovifyArguments = function() {
+    var args = [];
     var id = this.vertex._id ? this.vertex._id +',' : '';
 
-    var str = '.addVertex('+ id + this.stringifyArgument(this.arguments) +')';
+    if (this.arguments && this.arguments._id) {
+      args.push(this.arguments._id);
+      delete this.arguments._id;
+    }
 
-    return str;
+    if (!_.isEmpty(this.arguments)) {
+      args.push(this.stringifyArgument(this.arguments));
+    }
+
+    return '('+ args.join(',') + ')';
   };
 
   return AddVertexMethod;
