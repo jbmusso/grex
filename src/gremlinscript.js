@@ -92,6 +92,13 @@ module.exports = (function() {
     return wrapper;
   };
 
+  /**
+   * According to its type (ie. String or ObjectWrapper), handle and add a
+   * statement to the current script.
+   *
+   * @private
+   * @param {String|ObjectWrapper} statement
+   */
   GremlinScript.prototype.appendStatement = function(statement) {
     if (arguments.length > 1) {
       // Assume query('g(%s)', 1) signature
