@@ -128,14 +128,14 @@ module.exports = (function() {
 
     Object.defineProperty(GremlinAppender, 'script', {
       get: function() {
-        return this.script;
-      }.bind(this)
+        return self.script;
+      }
     });
 
     Object.defineProperty(GremlinAppender, 'params', {
       get: function() {
-        return this.params;
-      }.bind(this)
+        return self.params;
+      }
     });
 
     return GremlinAppender;
