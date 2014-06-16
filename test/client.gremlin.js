@@ -3,18 +3,14 @@ var _    = require("lodash");
 
 var grex = require('../');
 var client = grex.createClient();
-var GremlinScript = require('../src/gremlinscript.js');
-
+var gremlin = grex.gremlin;
 var g = grex.g;
 
 
 describe('client', function() {
   describe('.gremlin()', function() {
-    var gremlin;
-
     before(function(done) {
       client.connect(function(err, client) {
-        gremlin = client.gremlin;
         done();
       });
     });
@@ -52,8 +48,7 @@ describe('client', function() {
       query('g.v(%s)', 1);
       query.script.should.equal('g.v(p0)\n');
 
-      query.exec(function(err, response) {
-        should.not.exist(err);
+      client.exec(query, function(err, response) {
         response.results.length.should.equal(1);
         done();
       });
@@ -63,25 +58,15 @@ describe('client', function() {
       var query = gremlin('g.v(%s)', 1);
       query.script.should.equal('g.v(p0)\n');
 
-      query.exec(function(err, response) {
+      client.exec(query, function(err, response) {
         should.not.exist(err);
         response.results.length.should.equal(1);
         done();
       });
     });
 
-    it('should have an exec function', function() { /*jshint -W030 */
-      var query = gremlin();
-      query.exec.should.be.a.Function;
-    });
-
-    it('should have an fetch function', function() { /*jshint -W030 */
-      var query = gremlin();
-      query.fetch.should.be.a.Function;
-    });
-
     it('should be executable', function(done) {
-      gremlin(g.v(1)).exec(function(err, response) {
+      client.exec(gremlin(g.v(1)), function(err, response) {
         should.not.exist(err);
         response.results.length.should.equal(1);
         done();
@@ -89,7 +74,7 @@ describe('client', function() {
     });
 
     it('should be fetchable', function(done) {
-      gremlin(g.v(1)).fetch(function(err, results) {
+      client.fetch(gremlin(g.v(1)), function(err, results) {
         should.not.exist(err);
         results.length.should.equal(1);
         done();

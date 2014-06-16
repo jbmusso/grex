@@ -32,26 +32,17 @@ Grex does three things:
 var grex = require('grex');
 var client = grex.createClient();
 var g = grex.g;
+var gremlin = grex.gremlin;
 
-var settings = {
-  'graph': 'myGraphDB',
-  'host': 'localhost',
-  'port': 8182
-};
-
-// 1. connect() takes two optional parameters: a settings Object and a Node style callback
-client.connect(settings, function(err, client) {
-  if (err) {
-    console.error(err);
-  }
-
-  var gremlin = client.gremlin;
+// 1. Connect to default tinkergraph on localhost:8182
+client.connect(function(err, client) {
+  if (err) { console.error(err); }
 
   // 2. Initialize a Gremlin object to work with
   var query = gremlin(g.v(1)); // query.script === 'g.v(1)'
 
   // 3. Send script for execution, and return a raw response object with a 'results' Array property.
-  query.exec(function(err, response) {
+  client.exec(query, function(err, response) {
     // ...
   })
 });
@@ -59,7 +50,7 @@ client.connect(settings, function(err, client) {
 
 ## Documentation
 
-A distinct `GremlinScript` object is created internally every time you call `client.gremlin()`. Each `GremlinScript` instance is independant from the others and [will be executed in a transaction](https://github.com/tinkerpop/rexster/wiki/Extension-Points#extensions-and-transactions).
+A distinct `GremlinScript` object is created internally every time you call `grex.gremlin()`. Each `GremlinScript` instance is independant from the others and [will be executed in a transaction](https://github.com/tinkerpop/rexster/wiki/Extension-Points#extensions-and-transactions).
 
 It is recommended that you add the following shortcuts on top of your JavaScript files:
 
@@ -68,19 +59,13 @@ var g = grex.g; // Graph getter
 var _ = grex._; // Pipeline getter. Beware of conflicts and make sure you don't override libraries such as Underscore.js or Lodash.js
 ```
 
-The main object you'll be working with is a function which is responsible for appending strings to an internal instance of `GremlinScript` class. This function is returned by the `client.gremlin` getter.
+The main object you'll be working with is a function which is responsible for appending strings to an internal instance of `GremlinScript` class. This function is returned by the `grex.gremlin` getter.
 
 ### Building a Gremlin script
 
 ```javascript
 var query = gremlin(g.V('name', 'marko').out());
 // query.script === "g.V('name','marko').out"
-```
-
-You can also skip `var query =` and directly chain `.exec()`:
-
-```javascript
-gremlin(g.V('name', 'marko').out()).exec(function(err, result) {...});
 ```
 
 ### Building a multiline Gremlin script
@@ -111,7 +96,7 @@ Note that spaces are actually ommitted in the generated string. This documentati
 
 The following is especially useful with transactions, for example when simultaneously creating vertices and edges.
 
-Grex `query` function object returned by `client.gremlin()` has a special `.var(statement[, identifier])` method which helps you identify a statement and store it in a variable.
+Grex `query` function object returned by `grex.gremlin()` has a special `.var(statement[, identifier])` method which helps you identify a statement and store it in a variable.
 
 ```javascript
 // JavaScript
@@ -181,10 +166,8 @@ For example, the following is currently unsafe if you don't trust your data sour
 
 ```javascript
 // JavaScript
-var name = req.body.name;
-var query = gremlin();
-query(g.V('name', name));
-query.exec(function(err, result) {
+var query = gremlin(g.V('name', req.body.name));
+client.exec(query, function(err, result) {
   //...
 });
 ```
@@ -206,12 +189,12 @@ query(g.addVertex('name', 'Bob'))
 
 #### Executing
 
-A Gremlin script will be immediadly sent to Rexster for execution when you chain the `.exec()` command.
+A Gremlin script will be sent to Rexster for execution when you call the `client.exec()` method.
 
 The previous example can thus be executed the following way:
 
 ```javascript
-query.exec(function(err, response) {
+client.exec(query, function(err, response) {
   if(err) {
     console.error(err);
   }
@@ -222,35 +205,34 @@ query.exec(function(err, response) {
 Executing a one line script is trivial:
 
 ```javascript
-gremlin(g.V('name', 'marko').out()).exec(function(err, response) {
-  // ...
-});
+client.exec(gremlin(g.v(1)), function (e, response) { console.log(response) });
+
 ```
 
-It is even shorter with Promises.
+Promise style:
 
 ```javascript
-gremlin(g.V('name', 'marko').out()).done(function(response) {
-  // ...
-});
+client.exec(gremlin(g.v(1))).done(function (response) { console.log(response) });
 ```
 
 #### Fetching
 
 Grex establishes a slight difference between executing and fetching.
 
-While `.exec()` returns a raw Rexster response object, `.fetch()` directly returns the `results` part of the response object, allowing you to directly manipulate objects in your scripts without having to call `response.results`.
+While `client.exec()` returns a raw Rexster response object, `client.fetch()` directly returns the `results` part of the response object, allowing you to directly manipulate objects in your scripts without having to call `response.results`.
 
 ```javascript
-query.fetch(function(err, results) {
+var query = g.V('type', 'user');
+client.fetch(query, function(err, results) {
   if(err) {
     console.error(err);
   }
   console.log(results);
+  var user = new UserModel(results[0]);
 });
 ```
 
-When creating your client with grex.createClient(), it is also possible to define a function in `options.fetched` to change the behavior of `query.fetch()`. This is useful if you wish to automatically instantiate returned graph Elements with custom classes of your own. The default handlers only returns the `results` part of the `response`.
+When creating your client with `grex.createClient(options)`, it is also possible to define your own custom function in `options.fetched` in order to change the behavior of `client.fetch()`. This is useful if you wish to automatically instantiate returned graph Elements with custom classes of your own. The default handlers in gRex only returns the `results` part of the `response`, making `client.fetch()` a very close cousin of `client.exec()`.
 
 ## API differences between Gremlin Groovy and Grex JavaScript
 
@@ -444,14 +426,64 @@ This may change once ES6 Proxies are out.
 
 ### Grex
 
-#### Grex.connect(Object)
+It is recommended, though not mandatory, that you use the proxied getters/wrappers.
 
-Options specify the location and name of the database.
+#### grex.gremlin
 
-* `host` (default: localhost): Location of Rexster server
+A getter returning a function.
+
+Doing `grex.gremlin` will instantiate a new `GremlinScript` instance and return a function responsible for appending bits of Gremlin-Groovy scripts to the instance.
+
+A getter which returns a function responsible for creating a new GremlinScript instance.
+
+```javascript
+var grex = require('grex');
+var g = grex.g;
+var gremlin = grex.gremlin;
+
+// Create two distinct GremlinScript instances
+var queryA = gremlin();
+var queryB = gremlin();
+
+queryA(g.addVertex());
+queryB(g.v(40));
+queryA(g.v(1));
+
+// queryA.script === 'g.addVertex()\ng.v(1)\n'
+// queryB.script === 'g.v(40)\n'
+```
+
+Calling `var query = gremlin()` actually executes the function returned by the getter. `gremlin` is ''not'' a function per se; it just returns a function.
+
+
+#### grex.g
+
+A getter returning a `new Graph()` wrapper instance.
+
+Graph methods return convenient wrapper objects, which is either:
+* a new `PipelineWrapper` instance (ie. by calling `g.v()`, `g.V()`, `g.E()`, etc.)
+* a new `VertexWrapper` via `g.addVertex()` or new `EdgeWrapper` instance via `g.addEdge()`. Note that both classes inherits from `ElementWrapper`. They all inherits from `ObjectWrapper`.
+
+
+#### grex._
+
+A getter returning a `new Pipeline()` wrapper instance.
+
+
+### RexsterClient
+
+Grex uses the [Q](http://documentup.com/kriskowal/q/) package to return a Promise when calling the asynchronous `connect()`, `exec()` and `fetch()` methods.
+
+#### RexsterClient.connect(options, callback)
+
+Option object is optional. Returns a promise.
+
+Options specify the location of the database and name of the graph.
+
+* `host` (default: localhost): Location of running Rexster server
 * `port` (default: 8182): Rexster server port
-* `graph` (default: tinkergraph): Graph database name
-* `fetched` (default: return `response.results`): An optional, custom function to override the default behavior of `query.fetch()`
+* `graph` (default: tinkergraph): Graph name
+* `fetched` (default: return `response.results`): An optional, custom function to override the default behavior of `client.fetch()`
 
 ```javascript
 Grex.connect({
@@ -463,42 +495,15 @@ Grex.connect({
 
 This method has an asynchronous API although it does exclusively synchronous stuff. This will however make it compatible when Tinkerpop3 is released (support for Websocket).
 
-### RexsterClient
+#### RexsterClient.exec(gremlinScript, callback)
 
-#### RexsterClient.gremlin
-
-A getter returning a function.
-
-Doing `client.gremlin` will instantiate a new `GremlinScript` instance and return a function responsible for appending bits of Gremlin-Groovy scripts to the instance.
-
-Calling `var query = client.gremlin()` actually executes the function returned by the getter. `client.gremlin` is ''not'' a function.
-
-
-#### RexsterClient.g
-
-A getter property. Returns a `new Graph()` wrapper instance.
-
-Graph methods return convenient wrapper objects, which is either:
-* a new [`PipelineWrapper`](https://github.com/gulthor/grex/blob/master/src/objects/pipeline.js) instance (ie. by calling `g.v()`, `g.V()`, `g.E()`, etc.)
-* a new [`VertexWrapper`](https://github.com/gulthor/grex/blob/master/src/objects/vertex.js) via `g.addVertex()` or new [`EdgeWrapper`](https://github.com/gulthor/grex/blob/master/src/objects/edge.js) instance via `g.addEdge()`. Note that both classes inherits from [`ElementWrapper`](https://github.com/gulthor/grex/blob/master/src/objects/element.js). They all inherits from [`ObjectWrapper`](https://github.com/gulthor/grex/blob/master/src/objects/objectwrapper.js).
-
-#### RexsterClient._
-
-A getter property returning a `new PipelineWrapper()` instance.
-
-### GremlinScript
-
-Grex uses the [Q](http://documentup.com/kriskowal/q/) module to return a Promise when calling the asynchronous `exec()` or `fetch()` methods.
-
-#### Gremlin.exec(callback)
-
-Sends the generated `gremlin.script` to the server for execution. This method either takes a callback, or returns a promise.
+Sends the generated `GremlinScript` to the server for execution. This method either takes a callback, or returns a promise.
 
 Callback signature: `err, response`
 
-#### Gremlin.fetch(callback)
+#### RexsterClient.fetch(gremlinScript, callback)
 
-Sends the generated `gremlin.script` to the server for execution. This method either takes a callback, or returns a promise.
+Sends the generated `GremlinScript` to the server for execution. This method either takes a callback, or returns a promise.
 
 Callback signature: `err, results, response`
 

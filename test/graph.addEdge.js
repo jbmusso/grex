@@ -1,6 +1,5 @@
 var grex = require('../');
-var client = grex.createClient();
-var gremlin = client.gremlin;
+var gremlin = grex.gremlin;
 var g = grex.g;
 
 var Edge = grex.ClassTypes.Edge;

@@ -16,7 +16,6 @@ describe('client', function() {
       it('should use default options', function(done) {
         client.connect(function(err, rexsterClient) {
           should.not.exist(err);
-          // client = rexsterClient;
           client.options.should.eql(defaultOptions);
           done();
         });

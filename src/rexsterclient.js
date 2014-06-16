@@ -6,7 +6,6 @@ var querystring = require('querystring');
 var Q = require("q");
 var _ = require("lodash");
 
-var GremlinScript = require('./gremlinscript');
 var ResultFormatter = require("./resultformatter");
 
 
@@ -53,8 +52,14 @@ module.exports = (function(){
    * results.
    *
    * @param {GremlinScript} gremlin A Gremlin-Groovy script to execute
+   *
+   * @return {Promise}
    */
-  RexsterClient.prototype.exec = function(gremlin) {
+  RexsterClient.prototype.exec = function(gremlin, callback) {
+    return this.doExec(gremlin).nodeify(callback);
+  };
+
+  RexsterClient.prototype.doExec = function(gremlin) {
     var deferred = Q.defer();
 
     var qs = {
@@ -88,6 +93,7 @@ module.exports = (function(){
         var transformedResults = this.transformResults(body.results);
         body.results = transformedResults.results;
         body.typeMap = transformedResults.typeMap;
+
         return deferred.resolve(body);
       }.bind(this));
 
@@ -106,11 +112,10 @@ module.exports = (function(){
    *
    * @param {GremlinScript} gremlin
    */
-  RexsterClient.prototype.fetch = function(gremlin) {
-    return this.exec(gremlin)
-    .then(function(response) {
+  RexsterClient.prototype.fetch = function(gremlin, callback) {
+    return this.doExec(gremlin).then(function(response) {
       return this.fetchHandler(response, response.results);
-    }.bind(this));
+    }.bind(this)).nodeify(callback);
   };
 
   /**
@@ -121,27 +126,6 @@ module.exports = (function(){
    */
   RexsterClient.prototype.defaultFetchHandler = function(response, results) {
     return results;
-  };
-
-  Object.defineProperty(RexsterClient.prototype, 'gremlin', {
-    get: function() {
-      return this.createGremlinScript.bind(this);
-    }
-  });
-
-  /**
-   * Instantiate a new GremlinScript and return a function responsible
-   * for appending bits of Gremlin to this GremlinScript.
-   *
-   * @return {Function} appender
-   */
-  RexsterClient.prototype.createGremlinScript = function(statement) {
-    var gremlinScript = new GremlinScript(this);
-    var appender = gremlinScript.getAppender();
-
-    appender.apply(appender, arguments);
-
-    return appender;
   };
 
   RexsterClient.prototype.transformResults = function(results) {

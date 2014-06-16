@@ -9,10 +9,9 @@ var Argument = require('./arguments/argument');
 var GremlinFunction = require('./functions/function');
 
 module.exports = (function() {
-  function GremlinScript(client) {
+  function GremlinScript() {
     this.script = '';
     this.params = {};
-    this.client = client;
     this.paramCount = 0;
     this.identifierCount = 0;
 
@@ -27,32 +26,13 @@ module.exports = (function() {
   }
 
   /**
-   * Send the script to the server for execution, returning raw results.
-   *
-   * @param {Function}
-   */
-  GremlinScript.prototype.exec = function(callback) {
-    return this.client.exec(this).nodeify(callback);
-  };
-
-  /**
-   * Send the script to the server for execution, returning instantiated
-   * results.
-   *
-   * @param {Function}
-   */
-  GremlinScript.prototype.fetch = function(callback) {
-    return this.client.fetch(this).nodeify(callback);
-  };
-
-  /**
    * Return a PipelineWrapper object with its own internal GremlinScript object to append
    * string to.
    *
    * @return {PipelineWrapper}
    */
   GremlinScript.prototype._ = function() {
-    var gremlin = new GremlinScript(this.client);
+    var gremlin = new GremlinScript();
     var func = new GremlinFunction('_', arguments);
     gremlin.append(func.toGroovy());
 
@@ -169,8 +149,6 @@ module.exports = (function() {
     /**
      * Proxy some GremlinScript methods/getters to the appender
      */
-    appendToScript.exec = GremlinScript.prototype.exec.bind(this);
-    appendToScript.fetch = GremlinScript.prototype.fetch.bind(this);
     appendToScript.line = GremlinScript.prototype.line.bind(this);
     appendToScript.append = GremlinScript.prototype.append.bind(this);
     appendToScript.var = GremlinScript.prototype.var.bind(this);
