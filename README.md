@@ -30,6 +30,8 @@ Grex does three things:
 
 ```javascript
 var grex = require('grex');
+var client = grex.createClient();
+var g = grex.g;
 
 var settings = {
   'graph': 'myGraphDB',
@@ -38,13 +40,11 @@ var settings = {
 };
 
 // 1. connect() takes two optional parameters: a settings Object and a Node style callback
-grex.connect(settings, function(err, client) {
+client.connect(settings, function(err, client) {
   if (err) {
     console.error(err);
   }
 
-  // Initialize some shortcuts
-  var g = client.g;
   var gremlin = client.gremlin;
 
   // 2. Initialize a Gremlin object to work with
@@ -61,12 +61,11 @@ grex.connect(settings, function(err, client) {
 
 A distinct `GremlinScript` object is created internally every time you call `client.gremlin()`. Each `GremlinScript` instance is independant from the others and [will be executed in a transaction](https://github.com/tinkerpop/rexster/wiki/Extension-Points#extensions-and-transactions).
 
-Once a connection is established to Rexster, it is recommended that you add the following shortcuts on top of your JavaScript files:
+It is recommended that you add the following shortcuts on top of your JavaScript files:
 
 ```javascript
-var gremlin = client.gremlin; // Gremlin script instantiator
-var g = client.g; // Graph getter
-var _ = client._; // Pipeline getter. Beware of conflicts and make sure you don't override libraries such as Underscore.js or Lodash.js
+var g = grex.g; // Graph getter
+var _ = grex._; // Pipeline getter. Beware of conflicts and make sure you don't override libraries such as Underscore.js or Lodash.js
 ```
 
 The main object you'll be working with is a function which is responsible for appending strings to an internal instance of `GremlinScript` class. This function is returned by the `client.gremlin` getter.
@@ -251,7 +250,7 @@ query.fetch(function(err, results) {
 });
 ```
 
-When creating your client with grex.connect(), it is also possible to define a function in `options.fetched` to change the behavior of `query.fetch()`. This is useful if you wish to automatically instantiate returned graph Elements with custom classes of your own. The default handlers only returns the `results` part of the `response`.
+When creating your client with grex.createClient(), it is also possible to define a function in `options.fetched` to change the behavior of `query.fetch()`. This is useful if you wish to automatically instantiate returned graph Elements with custom classes of your own. The default handlers only returns the `results` part of the `response`.
 
 ## API differences between Gremlin Groovy and Grex JavaScript
 
@@ -333,7 +332,7 @@ g.E().has('weight', T.gt, '0.5f').outV().transform('{[it.id,it.age]}');
 Make sure you declare the following on top of your script:
 
 ```javascript
-var _ = client._;
+var _ = grex._;
 // Beware of conflicts and make sure you don't override Underscore.js or Lodash.js
 ```
 This allows you to call the `_()` function directly, leaving no differences with a Groovy environment:

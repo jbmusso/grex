@@ -1,7 +1,8 @@
-var client = require('../');
+var grex = require('../');
+var client = grex.createClient();
 var gremlin = client.gremlin;
-var g = client.g;
-var _ = client._;
+var g = grex.g;
+var _ = grex._;
 
 describe('pipeline', function() {
   describe('and', function () {

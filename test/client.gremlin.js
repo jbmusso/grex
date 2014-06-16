@@ -1,7 +1,8 @@
 var should = require('should');
+var _    = require("lodash");
 
 var grex = require('../');
-var _    = require("lodash");
+var client = grex.createClient();
 var GremlinScript = require('../src/gremlinscript.js');
 
 var g = grex.g;
@@ -9,12 +10,10 @@ var g = grex.g;
 
 describe('client', function() {
   describe('.gremlin()', function() {
-    var client;
     var gremlin;
-    var query;
 
     before(function(done) {
-      grex.connect(function(err, client) {
+      client.connect(function(err, client) {
         gremlin = client.gremlin;
         done();
       });

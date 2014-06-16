@@ -1,14 +1,13 @@
 var grex = require('../');
+var client = grex.createClient();
 
-var client;
-var g;
+var g = grex.g;
 var gremlin;
 
-before(function(done){
-  grex.connect(function(err, rexsterClient) {
-    client = rexsterClient;
+
+before(function(done) {
+  client.connect(function(err, rexsterClient) {
     gremlin = client.gremlin;
-    g = client.g;
     done();
   });
 });

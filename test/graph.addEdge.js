@@ -1,8 +1,10 @@
-var client = require('../');
+var grex = require('../');
+var client = grex.createClient();
 var gremlin = client.gremlin;
-var g = client.g;
-var Edge = client.ClassTypes.Edge;
-var Vertex = client.ClassTypes.Vertex;
+var g = grex.g;
+
+var Edge = grex.ClassTypes.Edge;
+var Vertex = grex.ClassTypes.Vertex;
 
 describe('graph', function() {
   describe('.addEdge()', function() {

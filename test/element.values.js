@@ -1,6 +1,7 @@
-var client = require('../');
+var grex = require('../');
+var client = grex.createClient();
 var gremlin = client.gremlin;
-var g = client.g;
+var g = grex.g;
 
 describe('element', function() {
   describe('.values()', function() {

@@ -1,7 +1,9 @@
-var client = require('../');
+var grex = require('../');
+var client = grex.createClient();
 var gremlin = client.gremlin;
-var g = client.g;
-var Vertex = client.ClassTypes.Vertex;
+var g = grex.g;
+
+var Vertex = grex.Vertex;
 
 describe('graph', function() {
   describe('.createIndex(string, Element.class)', function() {

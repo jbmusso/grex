@@ -7,10 +7,6 @@ var Q = require("q");
 var _ = require("lodash");
 
 var GremlinScript = require('./gremlinscript');
-var GraphWrapper = require("./objects/graph");
-var PipelineWrapper = require('./objects/pipeline');
-var classes = require("./classes/classes");
-
 var ResultFormatter = require("./resultformatter");
 
 
@@ -25,26 +21,7 @@ module.exports = (function(){
     this.options = _.defaults(options, this.defaultOptions);
 
     this.resultFormatter = new ResultFormatter();
-
-    _.extend(this, classes);
-    this.ClassTypes = classes;
   }
-
-  Object.defineProperty(RexsterClient.prototype, 'g', {
-    get: function() {
-      var graph = new GraphWrapper('g');
-
-      return graph;
-    }
-  });
-
-  Object.defineProperty(RexsterClient.prototype, '_', {
-    get: function() {
-      return function() {
-        return new PipelineWrapper('_()');
-      };
-    }
-  });
 
   /**
    * Establish a connection with Rexster server.
@@ -68,6 +45,7 @@ module.exports = (function(){
       return this;
     }.bind(this))
     .nodeify(callback);
+
   };
 
   /**

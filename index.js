@@ -1,3 +1,1 @@
-var RexsterClient = require('./src/rexsterclient.js');
-
-module.exports = new RexsterClient();
+module.exports = require('./src/nodegremlin');
