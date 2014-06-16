@@ -103,8 +103,6 @@ module.exports = (function() {
       // Assume query(g.v(1)) signature
       this.handleHelper(statement);
     }
-
-    return this;
   };
 
   /**
@@ -119,6 +117,8 @@ module.exports = (function() {
 
     function GremlinAppender() {
       self.appendStatement.apply(self, arguments);
+
+      return self;
     }
 
     /**
