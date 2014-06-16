@@ -86,7 +86,8 @@ module.exports = (function() {
    * @param {String} statement
    */
   GremlinScript.prototype.handleString = function(statement) {
-    var currentParams = [statement, this.addBoundParams(_.rest(arguments))];
+    var currentParams = [statement];
+    currentParams = currentParams.concat(this.addBoundParams(_.rest(arguments)));
 
     this.line(util.format.apply(util.format, currentParams));
   };

@@ -65,6 +65,17 @@ describe('client', function() {
       });
     });
 
+    it('should string formatting with multiple parameters', function(done) {
+      var query = gremlin("g.addVertex(['name': %s, 'age': %s])", "Bob", 26);
+      query.script.should.equal("g.addVertex(['name': p0, 'age': p1])\n");
+
+      client.exec(query, function(err, response) {
+        should.not.exist(err);
+        response.results.length.should.equal(1);
+        done();
+      });
+    });
+
     it('should be executable', function(done) {
       client.exec(gremlin(g.v(1)), function(err, response) {
         should.not.exist(err);
