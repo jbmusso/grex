@@ -17,16 +17,6 @@ module.exports = (function() {
   }
 
   /**
-   * Append an arbitrary string to the script.
-   *
-   * @private
-   * @param {String} script
-   */
-  GremlinScript.prototype.append = function(script) {
-    this.script += script;
-  };
-
-  /**
    * Append an arbitrary string to the script as a new line.
    *
    * @private
@@ -102,6 +92,21 @@ module.exports = (function() {
     return wrapper;
   };
 
+  GremlinScript.prototype.appendStatement = function(statement) {
+    if (arguments.length > 1) {
+      // Assume query('g(%s)', 1) signature
+      this.handleString.apply(this, arguments);
+    } else if (_.isString(statement)) {
+      // Assume query('g.v(1)') signature
+      this.line(statement);
+    } else if (statement) {
+      // Assume query(g.v(1)) signature
+      this.handleHelper(statement);
+    }
+
+    return this;
+  };
+
   /**
    * Returns a function responsible for handling statements and ultimately
    * appending bits of Gremlin-Groovy to this GremlinScript.
@@ -110,19 +115,7 @@ module.exports = (function() {
    * @return {Function}
    */
   GremlinScript.prototype.getAppender = function() {
-    var appendToScript = (function(statement) {
-      if (_.isString(statement)) { // Assume query('g(%s)', 1) signature
-        if (arguments.length > 1) {
-          this.handleString.apply(this, arguments);
-        } else {
-          this.line(statement);
-        }
-      } else if (statement) { // Assume query(g.v(1)) signature
-        this.handleHelper(statement);
-      }
-
-      return this;
-    }).bind(this);
+    var appendToScript = this.appendStatement.bind(this);
 
     /**
      * Proxy some GremlinScript methods/getters to the appender
