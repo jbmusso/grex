@@ -150,8 +150,6 @@ module.exports = (function() {
     /**
      * Proxy some GremlinScript methods/getters to the appender
      */
-    appendToScript.line = GremlinScript.prototype.line.bind(this);
-    appendToScript.append = GremlinScript.prototype.append.bind(this);
     appendToScript.var = GremlinScript.prototype.var.bind(this);
 
     Object.defineProperty(appendToScript, 'script', {
