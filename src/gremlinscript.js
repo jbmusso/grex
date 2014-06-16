@@ -14,30 +14,7 @@ module.exports = (function() {
     this.params = {};
     this.paramCount = 0;
     this.identifierCount = 0;
-
-    // Define a default 'g' getter, returning a GraphWrapper
-    Object.defineProperty(this, 'g', {
-      get: function() {
-        var graph = new GraphWrapper('g');
-
-        return graph;
-      }
-    });
   }
-
-  /**
-   * Return a PipelineWrapper object with its own internal GremlinScript object to append
-   * string to.
-   *
-   * @return {PipelineWrapper}
-   */
-  GremlinScript.prototype._ = function() {
-    var gremlin = new GremlinScript();
-    var func = new GremlinFunction('_', arguments);
-    gremlin.append(func.toGroovy());
-
-    return new PipelineWrapper(gremlin);
-  };
 
   /**
    * Append an arbitrary string to the script.
@@ -52,7 +29,7 @@ module.exports = (function() {
   /**
    * Append an arbitrary string to the script as a new line.
    *
-   * @public
+   * @private
    * @param {String} line
    */
   GremlinScript.prototype.line = function(line) {
