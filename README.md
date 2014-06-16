@@ -234,6 +234,22 @@ client.fetch(query, function(err, results) {
 
 When creating your client with `grex.createClient(options)`, it is also possible to define your own custom function in `options.fetched` in order to change the behavior of `client.fetch()`. This is useful if you wish to automatically instantiate returned graph Elements with custom classes of your own. The default handlers in gRex only returns the `results` part of the `response`, making `client.fetch()` a very close cousin of `client.exec()`.
 
+### Accessing the internal GremlinScript instance of a query
+
+Calling `query()` returns the internal instance of `GremlinScript`:
+
+```javascript
+var query = gremlin(g.V('name', 'marko').out());
+
+console.log(query().constructor.name); // GremlinScript
+// query().script === "g.V('name','marko').out"
+```
+
+This is especially useful if you wish to gain direct access to the lower level/private methods of the `GremlinScript` class.
+
+This allows you to directly set the `GremlinScript.script` property with an arbitrary string of Gremlin/Groovy (for example, the content of a `.groovy` file). You can also set the `GremlinScript.params` map and manually attach custom bound parameters to your script.
+
+
 ## API differences between Gremlin Groovy and Grex JavaScript
 
 Grex tries to implement Gremlin (Groovy flavored) syntax as closely as possible. However, there are some notable differences.
