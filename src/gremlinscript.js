@@ -115,26 +115,30 @@ module.exports = (function() {
    * @return {Function}
    */
   GremlinScript.prototype.getAppender = function() {
-    var appendToScript = this.appendStatement.bind(this);
+    var self = this;
+
+    function GremlinAppender() {
+      self.appendStatement.apply(self, arguments);
+    }
 
     /**
      * Proxy some GremlinScript methods/getters to the appender
      */
-    appendToScript.var = GremlinScript.prototype.var.bind(this);
+    GremlinAppender.var = GremlinScript.prototype.var.bind(this);
 
-    Object.defineProperty(appendToScript, 'script', {
+    Object.defineProperty(GremlinAppender, 'script', {
       get: function() {
         return this.script;
       }.bind(this)
     });
 
-    Object.defineProperty(appendToScript, 'params', {
+    Object.defineProperty(GremlinAppender, 'params', {
       get: function() {
         return this.params;
       }.bind(this)
     });
 
-    return appendToScript;
+    return GremlinAppender;
   };
 
   return GremlinScript;
