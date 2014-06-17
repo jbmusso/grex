@@ -1,3 +1,5 @@
+/*jslint node: true */
+'use strict';
 var _ = require("lodash");
 
 
@@ -5,6 +7,9 @@ module.exports = (function() {
   function ResultFormatter() {
   }
 
+  /**
+   * @param {Array} results
+   */
   ResultFormatter.prototype.formatResults = function(results) {
     var formattedResult = {
       results: [],

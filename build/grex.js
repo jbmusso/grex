@@ -1643,7 +1643,7 @@ http.request = function (params, cb) {
     if (!params.host && params.hostname) {
         params.host = params.hostname;
     }
-    
+
     if (!params.scheme) params.scheme = window.location.protocol.split(':')[0];
     if (!params.host) {
         params.host = window.location.hostname || window.location.host;
@@ -1655,7 +1655,7 @@ http.request = function (params, cb) {
         params.host = params.host.split(':')[0];
     }
     if (!params.port) params.port = params.scheme == 'https' ? 443 : 80;
-    
+
     var req = new Request(new xhrHttp, params);
     if (cb) req.on('response', cb);
     return req;
@@ -1776,20 +1776,20 @@ var Request = module.exports = function (xhr, params) {
     self.writable = true;
     self.xhr = xhr;
     self.body = [];
-    
+
     self.uri = (params.scheme || 'http') + '://'
         + params.host
         + (params.port ? ':' + params.port : '')
         + (params.path || '/')
     ;
-    
+
     if (typeof params.withCredentials === 'undefined') {
         params.withCredentials = true;
     }
 
     try { xhr.withCredentials = params.withCredentials }
     catch (e) {}
-    
+
     xhr.open(
         params.method || 'GET',
         self.uri,
@@ -1797,7 +1797,7 @@ var Request = module.exports = function (xhr, params) {
     );
 
     self._headers = {};
-    
+
     if (params.headers) {
         var keys = objectKeys(params.headers);
         for (var i = 0; i < keys.length; i++) {
@@ -1807,7 +1807,7 @@ var Request = module.exports = function (xhr, params) {
             self.setHeader(key, value);
         }
     }
-    
+
     if (params.auth) {
         //basic auth
         this.setHeader('Authorization', 'Basic ' + Base64.btoa(params.auth));
@@ -1817,11 +1817,11 @@ var Request = module.exports = function (xhr, params) {
     res.on('close', function () {
         self.emit('close');
     });
-    
+
     res.on('ready', function () {
         self.emit('response', res);
     });
-    
+
     xhr.onreadystatechange = function () {
         // Fix for IE9 bug
         // SCRIPT575: Could not complete the operation due to error c00c023f
@@ -1890,7 +1890,7 @@ Request.prototype.end = function (s) {
         }
         var body = new(this.body[0].constructor)(len);
         var k = 0;
-        
+
         for (var i = 0; i < this.body.length; i++) {
             var b = this.body[i];
             for (var j = 0; j < b.length; j++) {
@@ -1978,13 +1978,13 @@ function parseHeaders (res) {
     for (var i = 0; i < lines.length; i++) {
         var line = lines[i];
         if (line === '') continue;
-        
+
         var m = line.match(/^([^:]+):\s*(.*)/);
         if (m) {
             var key = m[1].toLowerCase(), value = m[2];
-            
+
             if (headers[key] !== undefined) {
-            
+
                 if (isArray(headers[key])) {
                     headers[key].push(value);
                 }
@@ -2023,7 +2023,7 @@ Response.prototype.handle = function (res) {
         catch (err) {
             capable.status2 = false;
         }
-        
+
         if (capable.status2) {
             this.emit('ready');
         }
@@ -2037,7 +2037,7 @@ Response.prototype.handle = function (res) {
             }
         }
         catch (err) {}
-        
+
         try {
             this._emitData(res);
         }
@@ -2051,12 +2051,12 @@ Response.prototype.handle = function (res) {
             this.emit('ready');
         }
         this._emitData(res);
-        
+
         if (res.error) {
             this.emit('error', this.getResponse(res));
         }
         else this.emit('end');
-        
+
         this.emit('close');
     }
 };
@@ -4463,7 +4463,7 @@ Writable.prototype.write = function(chunk, encoding, cb) {
     chunk = new Buffer(chunk);
   if (isArrayBuffer(chunk) && typeof Uint8Array !== 'undefined')
     chunk = new Buffer(new Uint8Array(chunk));
-  
+
   if (Buffer.isBuffer(chunk))
     encoding = 'buffer';
   else if (!encoding)
@@ -15582,7 +15582,7 @@ var querystring = require('querystring');
 var Q = require("q"),
     _ = require("lodash");
 
-var Gremlin = require('./gremlin');
+var Gremlin = require('./');
 var Graph = require("./graph");
 var classes = require("./classes");
 
@@ -15678,8 +15678,8 @@ module.exports = (function(){
   return Grex;
 })();
 
-},{"./arguments/argumenthandler":30,"./classes":35,"./graph":39,"./gremlin":40,"./resultformatter":43,"http":6,"lodash":27,"q":28,"querystring":14}],42:[function(require,module,exports){
-var Gremlin = require('./gremlin');
+},{"./arguments/argumenthandler":30,"./classes":35,"./graph":39,"./":40,"./resultformatter":43,"http":6,"lodash":27,"q":28,"querystring":14}],42:[function(require,module,exports){
+var Gremlin = require('./');
 
 module.exports = (function () {
   function Pipeline(gremlin) {
@@ -16152,7 +16152,7 @@ module.exports = (function () {
 
 })();
 
-},{"./gremlin":40}],43:[function(require,module,exports){
+},{"./":40}],43:[function(require,module,exports){
 var _ = require("lodash");
 
 
