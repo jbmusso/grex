@@ -1,7 +1,7 @@
 Grex
 ====
 
-[Gremlin](https://github.com/tinkerpop/gremlin/wiki) inspired [Rexster Graph Server](https://github.com/tinkerpop/rexster/wiki) client for Node.js.
+[Gremlin](https://github.com/tinkerpop/gremlin/wiki) inspired [Rexster Graph Server](https://github.com/tinkerpop/rexster/wiki) client for Node.js, compatible with Tinkerpop 2.5.
 
 Grex is a Gremlin (Groovy-flavored) generating library written in JavaScript which helps you build, send over HTTP and execute arbitrary strings of Gremlin against any Blueprint compliant Graph database.
 
@@ -9,7 +9,13 @@ If you're interested in an Object-to-Graph mapper library, you may also want to 
 
 If you need help understanding the Gremlin API, you'll find [GremlinDocs](http://gremlindocs.com/), [SQL2Gremlin](http://sql2gremlin.com) and upcoming [Tinkerpop 3 documentation](http://www.tinkerpop.com/docs/tinkerpop3/3.0.0-SNAPSHOT/) to be useful resources.
 
-Feel free to [open issues](https://github.com/gulthor/grex/issues) if you have trouble using the library. I'll happily provide support. You can also reach me as Gulthor on IRC Freenode on #mogwai or #tinkerpop.
+## Support
+
+Feel free to [open issues](https://github.com/gulthor/grex/issues) if you have trouble using the library. I'll happily provide support. You can also reach me quite often as Gulthor on IRC Freenode on #mogwai or #tinkerpop channels.
+
+## Contributing
+
+The [master branch](https://github.com/gulthor/grex/tree/master) is a stable, release-only branch. Check out the [develop branch](https://github.com/gulthor/grex/tree/develop) for the latest changes. Pull requests are welcome and should be sent against [develop](https://github.com/gulthor/grex/tree/develop) as well.
 
 ## Installation
 
@@ -31,8 +37,9 @@ Grex does three things:
 ```javascript
 var grex = require('grex');
 var client = grex.createClient();
-var g = grex.g;
+// Init a couple shortcuts
 var gremlin = grex.gremlin;
+var g = grex.g;
 
 // 1. Connect to default tinkergraph on localhost:8182
 client.connect(function(err, client) {
@@ -52,14 +59,14 @@ client.connect(function(err, client) {
 
 A distinct `GremlinScript` object is created internally every time you call `grex.gremlin()`. Each `GremlinScript` instance is independant from the others and [will be executed in a transaction](https://github.com/tinkerpop/rexster/wiki/Extension-Points#extensions-and-transactions).
 
-It is recommended that you add the following shortcuts on top of your JavaScript files:
+In order to get an API closer to Groovy-flavored Gremlin, it is recommended that you add the following shortcuts on top of your JavaScript files:
 
 ```javascript
 var g = grex.g; // Graph getter
 var _ = grex._; // Pipeline getter. Beware of conflicts and make sure you don't override libraries such as Underscore.js or Lodash.js
 ```
 
-The main object you'll be working with is a function which is responsible for appending strings to an internal instance of `GremlinScript` class. This function is returned by the `grex.gremlin` getter.
+The main object you'll be working with is a `GremlinAppender` function which is responsible for appending strings to an internal instance of `GremlinScript` class. This function is returned by the `grex.gremlin` getter.
 
 ### Building a Gremlin script
 
