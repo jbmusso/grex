@@ -69,7 +69,7 @@ module.exports = (function(){
 
     // Build custom bound parameters string
     var paramString = '&'+ _.map(gremlin.params, function(value, key) {
-      return 'params.'+ key +'='+ value;
+      return 'params.'+ key +'='+ querystring.escape(value);
     }).join('&');
 
     var options = {
