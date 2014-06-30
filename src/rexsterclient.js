@@ -77,7 +77,7 @@ module.exports = (function(){
       port: this.options.port,
       path: '/graphs/' + this.options.graph + '/tp/gremlin?' + querystring.stringify(qs) + paramString,
       headers: {
-        'Content-type': 'application/json'
+        'Content-type': 'application/json;charset=utf-8'
       }
     };
 
