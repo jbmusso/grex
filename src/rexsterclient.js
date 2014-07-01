@@ -90,9 +90,15 @@ module.exports = (function(){
 
       res.on('end', function() {
         body = JSON.parse(body);
+
+        if (body.message || body.success === false) {
+          return deferred.reject(new Error(body));
+        }
+
         var transformedResults = this.transformResults(body.results);
         body.results = transformedResults.results;
         body.typeMap = transformedResults.typeMap;
+
 
         return deferred.resolve(body);
       }.bind(this));
@@ -100,7 +106,7 @@ module.exports = (function(){
     }.bind(this));
 
     req.on('error', function(e) {
-      return deferred.reject(e);
+      return deferred.reject(new Error(e));
     });
 
     return deferred.promise;

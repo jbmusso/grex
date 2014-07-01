@@ -1,3 +1,5 @@
+var should = require('should');
+
 var grex = require('../');
 var client = grex.createClient();
 var g = grex.g;
@@ -18,6 +20,7 @@ describe('Transaction commit', function() {
       var query = gremlin(g.addVertex({ name: "Alice" }));
 
       client.exec(query, function(err, result) {
+        should.not.exist(err);
         result.should.have.property('success', true);
         done();
       });
@@ -31,6 +34,7 @@ describe('Transaction commit', function() {
 
       query.script.split('\n').length.should.equal(4);
       client.exec(query, function(err, result) {
+        should.not.exist(err);
         result.should.have.property('success', true);
         done();
       });
