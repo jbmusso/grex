@@ -7,7 +7,8 @@ var Q = require("q");
 var _ = require("lodash");
 
 var ResultFormatter = require("./resultformatter");
-
+var ObjectWrapper = require('./objects/objectwrapper');
+var GremlinScript = require('./gremlinscript');
 
 module.exports = (function(){
   function RexsterClient(options) {
@@ -56,7 +57,24 @@ module.exports = (function(){
    * @return {Promise}
    */
   RexsterClient.prototype.exec = function(gremlin, callback) {
+    if (gremlin instanceof ObjectWrapper) {
+      var statement = gremlin;
+      gremlin = this.createGremlinFromWrapper(statement);
+    }
+
     return this.doExec(gremlin).nodeify(callback);
+  };
+
+  /**
+   * @param {ObjectWrapper} statement
+   * @return {GremlinScript}
+   */
+  RexsterClient.prototype.createGremlinFromWrapper = function(statement) {
+    var gremlin = new GremlinScript();
+    var appender = gremlin.getAppender();
+    appender(statement);
+
+    return gremlin;
   };
 
   RexsterClient.prototype.doExec = function(gremlin) {

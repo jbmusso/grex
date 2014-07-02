@@ -55,6 +55,14 @@ client.connect(function(err, client) {
 });
 ```
 
+Shorter version of (2) and (3), with dynamic query creation:
+
+```javascript
+client.exec(g.v(1)).done(function(response) {
+  // ...
+});
+```
+
 ## Documentation
 
 A distinct `GremlinScript` object is created internally every time you call `grex.gremlin()`. Each `GremlinScript` instance is independant from the others and [will be executed in a transaction](https://github.com/tinkerpop/rexster/wiki/Extension-Points#extensions-and-transactions).
@@ -220,6 +228,19 @@ Promise style:
 
 ```javascript
 client.exec(gremlin(g.v(1))).done(function (response) { console.log(response) });
+```
+
+##### Lazy query creation for one line scripts
+
+For single line scripts, gRex allows you to directly pass an instance of `ObjectWrapper` to `client.exec()` (and `client.fetch()`). These methods will internally create a 'GremlinScript' which will be executed right away.
+
+```javascript
+client.fetch(g.V(), function (e, vertices) { console.log(vertices) });
+```
+
+Which is a shorthand for:
+```javascript
+client.fetch(gremlin(g.V()), function (e, vertices) { console.log(vertices) });
 ```
 
 #### Fetching
