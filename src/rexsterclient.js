@@ -92,7 +92,7 @@ module.exports = (function(){
         body = JSON.parse(body);
 
         if (body.message || body.success === false) {
-          return deferred.reject(new Error(body));
+          return deferred.reject(new Error(body.error || body.message));
         }
 
         var transformedResults = this.transformResults(body.results);
