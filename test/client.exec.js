@@ -78,5 +78,30 @@ describe('client', function() {
         });
       });
     });
+
+    describe('when passing an ObjectWrapper', function() {
+      var client = grex.createClient();
+
+      it('should lazily instantiate a GremlinScript and execute it', function() {
+        client.exec(g.v(1), function(err, results) {
+          should.not.exist(err);
+          should.exist(results);
+        });
+      });
+    });
+
+    describe('when passing a query', function() {
+      var client = grex.createClient();
+
+      it('should execute it', function() {
+        var query = gremlin(g.v(1));
+
+        client.exec(query, function(err, results) {
+          should.not.exist(err);
+          should.exist(results);
+        });
+      });
+    });
+
   });
 });
