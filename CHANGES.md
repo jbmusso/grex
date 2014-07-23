@@ -1,5 +1,23 @@
-## TODO (upcoming releases)
-- Option to not use Transaction to do CUD (ie No need for commit()). eg. g.addVertex().then(); Batch kibble will not be required for these calls
+## 0.6.6
+- Handle stringification of nested objects
+
+## 0.6.5
+- Add dynamic query creation for single line scripts
+
+## 0.6.4
+- Fix error message issues in .exec()
+
+## 0.6.3
+- Better handle errors when host, port or graph is erroneous
+
+## 0.6.2
+- Send data to Rexster as utf8
+
+## 0.6.1
+- Escape bound parameters sent to Rexster
+
+## 0.6.0
+- Support bound parameters for queries using string format mode
 
 ## 0.4.0
 - Nodeify callbacks

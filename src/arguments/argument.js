@@ -19,28 +19,29 @@ module.exports = (function () {
       return 'null';
     }
 
-    // Check to see if the arg is referencing the graph ie. g.v(1)
-    if (_.isObject(argument) && argument.hasOwnProperty('params') && this.isGraphReference(argument.script)) {
-      return argument.script.toString();
-    }
-
-    if (this.isGraphReference(argument)) {
+    if (this.isClassReference()) {
       return argument.toString();
     }
 
-    // Cater for ids that are not numbers but pass parseFloat test
-    if (false && _.isString(this.value) || _.isNaN(parseFloat(argument))) {
+    if (this.isFloat()) {
+      return this.value;
+    }
+
+    // Handle ids that are not numbers but pass parseFloat test
+    // (ie. Titan edge ids)
+    if (_.isString(argument) && this.isFloat()) {
       return "'" + argument + "'";
     }
 
-    if (!_.isNaN(parseFloat(argument))) {
-      return argument.toString();
-    }
-
-    return argument;
+    return "'"+ argument +"'";
   };
 
-  Argument.prototype.isGraphReference = function() {
+  Argument.prototype.isFloat = function() {
+    return !_.isNaN(parseFloat(this.value)) && this.value.slice(-1) === 'f';
+    // return this.value.slice(-1) === 'f';
+  };
+
+  Argument.prototype.isClassReference = function() {
     var graphRegex = /^T\.(gt|gte|eq|neq|lte|lt|decr|incr|notin|in)$|^Contains\.(IN|NOT_IN)$|^g\.|^Vertex(\.class)$|^Edge(\.class)$|^String(\.class)$|^Integer(\.class)$|^Geoshape(\.class)$|^Direction\.(OUT|IN|BOTH)$|^TitanKey(\.class)$|^TitanLabel(\.class)$/;
 
     return _.isString(this.value) && graphRegex.test(this.value);
