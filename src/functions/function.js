@@ -78,6 +78,10 @@ module.exports = (function() {
         acc += ',';
     }
 
+    if(typeof val === 'undefined') {
+      val = null;
+    }
+
     var newVal;
     if(_.isObject(val)) {
         newVal = '[' +  _.reduce(val, stringify, '') + ']' ;

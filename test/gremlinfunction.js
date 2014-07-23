@@ -17,5 +17,12 @@ describe('GremlinFunction', function() {
       func.stringifyArgument({one: {left: '{', right: '}'}})
         .should.equal('["one":["left":"{","right":"}"]]');
     });
+
+    it('should handle undefined and null values as null', function () {
+      var func = new GremlinFunction('testFunction');
+
+      func.stringifyArgument({'null': null, 'undefined': undefined})
+        .should.equal('["null":null,"undefined":null]');
+    });
   });
 });
