@@ -1,3 +1,6 @@
+## 0.6.6
+- Handle stringification of nested objects
+
 ## 0.6.5
 - Add dynamic query creation for single line scripts
 
