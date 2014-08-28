@@ -1,3 +1,6 @@
+## 0.6.7
+- Fix stringification issues with arrays and booleans
+
 ## 0.6.6
 - Handle stringification of nested objects
 
