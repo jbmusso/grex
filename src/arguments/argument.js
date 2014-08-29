@@ -33,6 +33,22 @@ module.exports = (function () {
       return "'" + argument + "'";
     }
 
+    if (_.isArray(argument)) {
+      var parsedArray = _.map(argument, function(element) {
+        if (_.isString(element)) {
+          return "'" + element + "'";
+        }
+
+        return element;
+      });
+
+      return parsedArray.toString();
+    }
+
+    if (_.isBoolean(argument)) {
+      return argument.toString();
+    }
+
     return "'"+ argument +"'";
   };
 
