@@ -82,6 +82,7 @@ module.exports = (function(){
       }
     };
 
+    var self = this;
     var req = http.get(options, function(res) {
       var body = '';
 
@@ -96,15 +97,14 @@ module.exports = (function(){
           return deferred.reject(new Error(body.error || body.message));
         }
 
-        var transformedResults = this.transformResults(body.results);
+        var transformedResults = self.transformResults(body.results);
         body.results = transformedResults.results;
         body.typeMap = transformedResults.typeMap;
 
 
         return deferred.resolve(body);
-      }.bind(this));
-
-    }.bind(this));
+      });
+    });
 
     req.on('error', function(e) {
       return deferred.reject(new Error(e));
@@ -120,9 +120,11 @@ module.exports = (function(){
    * @param {GremlinScript} gremlin
    */
   RexsterClient.prototype.fetch = function(gremlin, callback) {
+    var self = this;
+
     return this.doExec(gremlin).then(function(response) {
-      return this.fetchHandler(response, response.results);
-    }.bind(this)).nodeify(callback);
+      return self.fetchHandler(response, response.results);
+    }).nodeify(callback);
   };
 
   /**
