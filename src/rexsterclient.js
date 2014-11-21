@@ -15,7 +15,8 @@ module.exports = (function(){
     var defaultOptions = {
       host: 'localhost',
       port: 8182,
-      graph: 'tinkergraph'
+      graph: 'tinkergraph',
+      showTypes: false
     };
 
     this.options = _.defaults(options || {}, defaultOptions);
@@ -59,7 +60,7 @@ module.exports = (function(){
 
     var qs = {
       script: gremlin.script.replace(/\$/g, "\\$"),
-      'rexster.showTypes': true
+      'rexster.showTypes': this.options.showTypes,
     };
 
     // Build custom bound parameters string

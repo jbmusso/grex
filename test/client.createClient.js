@@ -6,9 +6,10 @@ describe('client', function() {
   describe('.createClient()', function() {
     describe('when passing no parameters', function() {
       var defaultOptions = {
-        'host': 'localhost',
-        'port': 8182,
-        'graph': 'tinkergraph'
+        host: 'localhost',
+        port: 8182,
+        graph: 'tinkergraph',
+        showTypes: false
       };
 
       it('should use default options', function() {
