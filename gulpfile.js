@@ -23,11 +23,12 @@ gulp.task('scripts', function() {
 });
 
 gulp.task('test', function() {
-  require('should');
-
   gulp.src('test/**/*.js')
       .pipe(mocha({
         reporter: 'spec',
+        globals: {
+          should: require('should')
+        }
       }))
       .on('error', function(error) {
         console.error('\nError:', error.plugin);
