@@ -25,7 +25,7 @@ gulp.task('scripts', function() {
 gulp.task('test', function() {
   require('should');
 
-  gulp.src('test/**/*')
+  gulp.src('test/**/*.js')
       .pipe(mocha({
         reporter: 'spec',
       }))
