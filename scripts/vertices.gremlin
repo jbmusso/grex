@@ -1,0 +1,3 @@
+def allVertices() {
+  return g.V()
+}

@@ -17,6 +17,25 @@ Feel free to [open issues](https://github.com/gulthor/grex/issues) if you have t
 
 The [master branch](https://github.com/gulthor/grex/tree/master) is a stable, release-only branch. Check out the [develop branch](https://github.com/gulthor/grex/tree/develop) for the latest changes. Pull requests are welcome and should be sent against [develop](https://github.com/gulthor/grex/tree/develop) as well.
 
+## Testing
+
+gRex is being developed with rexster-server-2.5.0. We use a slightly modified rexster.xml file located in `conf/`. Please follow the following steps to setup your test environment:
+```
+cd /path/to/rexster-server-2.5.0
+ln -s /path/to/grex/conf/rexster-2.5.0.xml config/rexster-2.5.0-grex.xml
+ln -s /path/to/grex/scripts scripts
+bin/rexster.sh -s -c conf/rexster-2.5.0-grex.xml
+```
+This will start Rexster 2.5.0 with gRex test scripts folder loaded.
+
+
+Then run tests:
+```
+cd /path/to/grex
+npm install
+gulp test
+```
+
 ## Installation
 
 Grex works in Node.js.
