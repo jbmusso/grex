@@ -9,11 +9,6 @@ var g = grex.g;
 
 describe('client', function() {
   describe('.gremlin()', function() {
-    before(function(done) {
-      client.connect(function(err, client) {
-        done();
-      });
-    });
 
     it('should return an appender', function() { /*jshint -W030 */
       gremlin.should.be.a.Function;

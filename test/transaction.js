@@ -5,12 +5,6 @@ var client = grex.createClient();
 var g = grex.g;
 var gremlin = grex.gremlin;
 
-before(function(done) {
-  client.connect(function(err, rexsterClient) {
-    done();
-  });
-});
-
 var alice, bob;
 var james, waldo;
 

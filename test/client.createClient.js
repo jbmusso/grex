@@ -1,24 +1,19 @@
 var should = require('should');
 
 var grex = require('../');
-var client = grex.createClient();
-var client;
-
-var defaultOptions = {
-  'host': 'localhost',
-  'port': 8182,
-  'graph': 'tinkergraph'
-};
 
 describe('client', function() {
-  describe('.connect()', function() {
+  describe('.createClient()', function() {
     describe('when passing no parameters', function() {
-      it('should use default options', function(done) {
-        client.connect(function(err, rexsterClient) {
-          should.not.exist(err);
-          client.options.should.eql(defaultOptions);
-          done();
-        });
+      var defaultOptions = {
+        'host': 'localhost',
+        'port': 8182,
+        'graph': 'tinkergraph'
+      };
+
+      it('should use default options', function() {
+        var client = grex.createClient();
+        client.options.should.eql(defaultOptions);
       });
     });
 
@@ -29,15 +24,9 @@ describe('client', function() {
         'graph': 'gratefulgraph'
       };
 
-      before(function(done) {
-        client.connect(options, function(err, client) {
-          done();
-        });
-      });
-
-      it('should use this new options', function(done) {
+      it('should use this new options', function() {
+        var client = grex.createClient(options);
         client.options.graph.should.equal(options.graph);
-        done();
       });
     });
 
@@ -48,10 +37,9 @@ describe('client', function() {
         'graph': 'gratefulgraph'
       };
 
-      it('should use the right options', function(done) {
+      it('should use the right options', function() {
         var client = grex.createClient(options);
         client.options.graph.should.equal(options.graph);
-        done();
       });
     });
   });

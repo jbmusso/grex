@@ -12,41 +12,17 @@ var GremlinScript = require('./gremlinscript');
 
 module.exports = (function(){
   function RexsterClient(options) {
-    this.defaultOptions = {
+    var defaultOptions = {
       host: 'localhost',
       port: 8182,
       graph: 'tinkergraph'
     };
 
-    this.options = _.defaults(options, this.defaultOptions);
+    this.options = _.defaults(options || {}, defaultOptions);
+    this.fetchHandler = this.options.fetched || this.defaultFetchHandler;
 
     this.resultFormatter = new ResultFormatter();
   }
-
-  /**
-   * Establish a connection with Rexster server.
-   * While this method currently has an asynchronous behavior, it actually
-   * does synchronous stuff.
-   *
-   * Accept the double promise/callback API.
-   *
-   * @param {Function} callback
-   */
-  RexsterClient.prototype.connect = function(options, callback) {
-    if (typeof options === 'function') {
-      callback = options;
-      options = {};
-    }
-
-    this.options = _.defaults(options || {}, this.defaultOptions);
-    this.fetchHandler = this.options.fetched || this.defaultFetchHandler;
-
-    return Q.fcall(function() {
-      return this;
-    }.bind(this))
-    .nodeify(callback);
-
-  };
 
   /**
    * Send a GremlinScript script to Rexster for execution via HTTP, fetch and format
