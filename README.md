@@ -68,7 +68,7 @@ client.connect(function(err, client) {
   var query = gremlin(g.v(1)); // query.script === 'g.v(1)'
 
   // 3. Send script for execution, and return a raw response object with a 'results' Array property.
-  client.exec(query, function(err, response) {
+  client.execute(query, function(err, response) {
     // ...
   })
 });
@@ -77,7 +77,7 @@ client.connect(function(err, client) {
 Shorter version of (2) and (3), with dynamic query creation:
 
 ```javascript
-client.exec(g.v(1)).done(function(response) {
+client.execute(g.v(1)).done(function(response) {
   // ...
 });
 ```
@@ -201,7 +201,7 @@ For example, the following is currently unsafe if you don't trust your data sour
 ```javascript
 // JavaScript
 var query = gremlin(g.V('name', req.body.name));
-client.exec(query, function(err, result) {
+client.execute(query, function(err, result) {
   //...
 });
 ```
@@ -223,12 +223,12 @@ query(g.addVertex('name', 'Bob'))
 
 #### Executing
 
-A Gremlin script will be sent to Rexster for execution when you call the `client.exec()` method.
+A Gremlin script will be sent to Rexster for execution when you call the `client.execute()` method.
 
 The previous example can thus be executed the following way:
 
 ```javascript
-client.exec(query, function(err, response) {
+client.execute(query, function(err, response) {
   if(err) {
     console.error(err);
   }
@@ -239,19 +239,19 @@ client.exec(query, function(err, response) {
 Executing a one line script is trivial:
 
 ```javascript
-client.exec(gremlin(g.v(1)), function (e, response) { console.log(response) });
+client.execute(gremlin(g.v(1)), function (e, response) { console.log(response) });
 
 ```
 
 Promise style:
 
 ```javascript
-client.exec(gremlin(g.v(1))).done(function (response) { console.log(response) });
+client.execute(gremlin(g.v(1))).done(function (response) { console.log(response) });
 ```
 
 ##### Lazy query creation for one line scripts
 
-For single line scripts, gRex allows you to directly pass an instance of `ObjectWrapper` to `client.exec()` (and `client.fetch()`). These methods will internally create a 'GremlinScript' which will be executed right away.
+For single line scripts, gRex allows you to directly pass an instance of `ObjectWrapper` to `client.execute()` (and `client.fetch()`). These methods will internally create a 'GremlinScript' which will be executed right away.
 
 ```javascript
 client.fetch(g.V(), function (e, vertices) { console.log(vertices) });
@@ -266,7 +266,7 @@ client.fetch(gremlin(g.V()), function (e, vertices) { console.log(vertices) });
 
 Grex establishes a slight difference between executing and fetching.
 
-While `client.exec()` returns a raw Rexster response object, `client.fetch()` directly returns the `results` part of the response object, allowing you to directly manipulate objects in your scripts without having to call `response.results`.
+While `client.execute()` returns a raw Rexster response object, `client.fetch()` directly returns the `results` part of the response object, allowing you to directly manipulate objects in your scripts without having to call `response.results`.
 
 ```javascript
 var query = g.V('type', 'user');
@@ -279,7 +279,7 @@ client.fetch(query, function(err, results) {
 });
 ```
 
-When creating your client with `grex.createClient(options)`, it is also possible to define your own custom function in `options.fetched` in order to change the behavior of `client.fetch()`. This is useful if you wish to automatically instantiate returned graph Elements with custom classes of your own. The default handlers in gRex only returns the `results` part of the `response`, making `client.fetch()` a very close cousin of `client.exec()`.
+When creating your client with `grex.createClient(options)`, it is also possible to define your own custom function in `options.fetched` in order to change the behavior of `client.fetch()`. This is useful if you wish to automatically instantiate returned graph Elements with custom classes of your own. The default handlers in gRex only returns the `results` part of the `response`, making `client.fetch()` a very close cousin of `client.execute()`.
 
 ### Accessing the internal GremlinScript instance of a query
 
@@ -558,7 +558,7 @@ Grex.connect({
 
 This method has an asynchronous API although it does exclusively synchronous stuff. This will however make it compatible when Tinkerpop3 is released (support for Websocket).
 
-#### RexsterClient.exec(gremlinScript, callback)
+#### RexsterClient.execute(gremlinScript, callback)
 
 Sends the generated `GremlinScript` to the server for execution. This method either takes a callback, or returns a promise.
 

@@ -28,7 +28,7 @@ module.exports = (function () {
    */
   PipelineWrapper.prototype.exec =
   PipelineWrapper.prototype.execute = function(callback) {
-    return this.gremlin.exec(callback);
+    return this.gremlin.execute(callback);
   };
 
   /**

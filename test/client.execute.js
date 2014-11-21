@@ -17,7 +17,7 @@ describe('client', function() {
     });
   });
 
-  describe('.exec()', function() {
+  describe('.execute()', function() {
     describe('when port is incorrect', function() {
       it('should return an error', function(done) {
         var client = grex.createClient({
@@ -26,7 +26,7 @@ describe('client', function() {
           graph: 'tinkergraph'
         });
 
-        client.exec(gremlin(g.v(1)), function(err, results) {
+        client.execute(gremlin(g.v(1)), function(err, results) {
           should.exist(err);
           should.not.exist(results);
           done();
@@ -43,7 +43,7 @@ describe('client', function() {
         };
         var client = grex.createClient(options);
 
-        client.exec(gremlin(g.v(1)), function(err, results) {
+        client.execute(gremlin(g.v(1)), function(err, results) {
           should.exist(err);
           should.not.exist(results);
           done();
@@ -61,7 +61,7 @@ describe('client', function() {
 
         var client = grex.createClient(options);
 
-        client.exec(gremlin(g.v(1)), function(err, results) {
+        client.execute(gremlin(g.v(1)), function(err, results) {
           should.exist(err);
           should.not.exist(results);
           done();
@@ -73,7 +73,7 @@ describe('client', function() {
       var client = grex.createClient();
 
       it('should lazily instantiate a GremlinScript and execute it', function() {
-        client.exec(g.v(1), function(err, results) {
+        client.execute(g.v(1), function(err, results) {
           should.not.exist(err);
           should.exist(results);
         });
@@ -86,7 +86,7 @@ describe('client', function() {
       it('should execute it', function() {
         var query = gremlin(g.v(1));
 
-        client.exec(query, function(err, results) {
+        client.execute(query, function(err, results) {
           should.not.exist(err);
           should.exist(results);
         });

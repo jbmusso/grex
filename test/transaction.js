@@ -13,7 +13,7 @@ describe('Transaction commit', function() {
     it('should add a vertex in a transaction', function(done) {
       var query = gremlin(g.addVertex({ name: "Alice" }));
 
-      client.exec(query, function(err, result) {
+      client.execute(query, function(err, result) {
         should.not.exist(err);
         result.should.have.property('success', true);
         done();
@@ -27,7 +27,7 @@ describe('Transaction commit', function() {
       query(g.addEdge(bob, waldo, 'likes', { since: 'now' }));
 
       query.script.split('\n').length.should.equal(4);
-      client.exec(query, function(err, result) {
+      client.execute(query, function(err, result) {
         should.not.exist(err);
         result.should.have.property('success', true);
         done();
@@ -40,7 +40,7 @@ describe('Transaction commit', function() {
     //   james.remove();
     //   waldo.remove();
 
-    //   gremlin.exec()
+    //   gremlin.execute()
     //   .then(function(){
     //     done();
     //   });
@@ -68,7 +68,7 @@ describe('Transaction commit', function() {
     //   alice.remove();
     //   bob.remove();
 
-    //   gremlin.exec()
+    //   gremlin.execute()
     //   .then(function(result) {
     //     done();
     //   });
