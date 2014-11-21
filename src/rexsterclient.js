@@ -16,6 +16,7 @@ module.exports = (function(){
       host: 'localhost',
       port: 8182,
       graph: 'tinkergraph',
+      load: [],
       showTypes: false
     };
 
@@ -62,6 +63,10 @@ module.exports = (function(){
       script: gremlin.script.replace(/\$/g, "\\$"),
       'rexster.showTypes': this.options.showTypes,
     };
+
+    if (this.options.load.length > 0) {
+      qs.load = this.options.load.join('').replace('\'', '');
+    }
 
     // Build custom bound parameters string
     var paramString = '&'+ _.map(gremlin.params, function(value, key) {

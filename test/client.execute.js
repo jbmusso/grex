@@ -6,24 +6,40 @@ var g = grex.g;
 
 
 describe('client', function() {
-  describe('.execute()', function() {
-    it('should execute a script', function() {
+  describe('.execute() - script handling', function() {
+    it('should execute a script', function(done) {
       var client = grex.createClient();
 
       client.execute(gremlin(g.v(1)), function(err, response) {
         should.not.exist(err);
         should.exist(response.results);
+        done();
       });
     });
 
-    it('should automatically instantiate a GremlinScript and execute it', function() {
+    it('should automatically instantiate a GremlinScript and execute it', function(done) {
       var client = grex.createClient();
       client.execute(g.v(1), function(err, results) {
         should.not.exist(err);
         should.exist(results);
+        done();
       });
     });
 
+    it('should execute a stored script', function(done) {
+      var client = grex.createClient({
+        load: ['vertices']
+      });
+
+      client.execute(gremlin('allVertices()'), function(err, results) {
+        should.not.exist(err);
+        should.exist(results);
+        done();
+      });
+    });
+  });
+
+  describe('.execute() - error handling', function() {
     it('should return an error when port is incorrect', function(done) {
       var client = grex.createClient({
         host: 'localhost',
@@ -37,7 +53,6 @@ describe('client', function() {
         done();
       });
     });
-
 
     it('should return an error when host is incorrect', function(done) {
       var options = {

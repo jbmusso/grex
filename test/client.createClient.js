@@ -9,6 +9,7 @@ describe('client', function() {
         host: 'localhost',
         port: 8182,
         graph: 'tinkergraph',
+        load: [],
         showTypes: false
       };
 
