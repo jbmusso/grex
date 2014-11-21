@@ -6,6 +6,17 @@ var g = grex.g;
 
 
 describe('client', function() {
+  describe('.execute()', function() {
+    it('should execute a script', function() {
+      var client = grex.createClient();
+
+      client.execute(gremlin(g.v(1)), function(err, response) {
+        should.not.exist(err);
+        should.exist(response.results);
+      });
+    });
+  });
+
   describe('.exec()', function() {
     describe('when port is incorrect', function() {
       var client = grex.createClient();
@@ -102,6 +113,5 @@ describe('client', function() {
         });
       });
     });
-
   });
 });

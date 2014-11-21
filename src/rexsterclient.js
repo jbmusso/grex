@@ -56,6 +56,7 @@ module.exports = (function(){
    *
    * @return {Promise}
    */
+  RexsterClient.prototype.execute =
   RexsterClient.prototype.exec = function(gremlin, callback) {
     if (gremlin instanceof ObjectWrapper) {
       var statement = gremlin;
