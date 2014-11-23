@@ -240,13 +240,6 @@ Executing a one line script is trivial:
 
 ```javascript
 client.execute(gremlin(g.v(1)), function (e, response) { console.log(response) });
-
-```
-
-Promise style:
-
-```javascript
-client.execute(gremlin(g.v(1))).done(function (response) { console.log(response) });
 ```
 
 ##### Lazy query creation for one line scripts
@@ -535,38 +528,15 @@ A getter returning a `new Pipeline()` wrapper instance.
 
 ### RexsterClient
 
-Grex uses the [Q](http://documentup.com/kriskowal/q/) package to return a Promise when calling the asynchronous `connect()`, `exec()` and `fetch()` methods.
-
-#### RexsterClient.connect(options, callback)
-
-Option object is optional. Returns a promise.
-
-Options specify the location of the database and name of the graph.
-
-* `host` (default: localhost): Location of running Rexster server
-* `port` (default: 8182): Rexster server port
-* `graph` (default: tinkergraph): Graph name
-* `fetched` (default: return `response.results`): An optional, custom function to override the default behavior of `client.fetch()`
-
-```javascript
-Grex.connect({
-  host: 'localhost',
-  graph: 'tinkergraph',
-  port: 8182
-});
-```
-
-This method has an asynchronous API although it does exclusively synchronous stuff. This will however make it compatible when Tinkerpop3 is released (support for Websocket).
-
 #### RexsterClient.execute(gremlinScript, callback)
 
-Sends the generated `GremlinScript` to the server for execution. This method either takes a callback, or returns a promise.
+Sends the generated `GremlinScript` to the server for execution.
 
 Callback signature: `err, response`
 
 #### RexsterClient.fetch(gremlinScript, callback)
 
-Sends the generated `GremlinScript` to the server for execution. This method either takes a callback, or returns a promise.
+Sends the generated `GremlinScript` to the server for execution.
 
 Callback signature: `err, results, response`
 

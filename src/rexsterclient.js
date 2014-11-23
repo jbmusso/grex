@@ -3,7 +3,6 @@
 var http = require('http');
 var querystring = require('querystring');
 
-var Q = require("q");
 var _ = require("lodash");
 
 var ResultFormatter = require("./resultformatter");
@@ -27,6 +26,45 @@ module.exports = (function(){
   }
 
   /**
+   * @param {ObjectWrapper} statement
+   * @return {GremlinScript}
+   */
+  RexsterClient.prototype.createGremlinFromWrapper = function(statement) {
+    var gremlin = new GremlinScript();
+    var appender = gremlin.getAppender();
+    appender(statement);
+
+    return gremlin;
+  };
+
+  RexsterClient.prototype.buildRequestOptions = function(gremlin) {
+    var qs = {
+      script: gremlin.script.replace(/\$/g, "\\$"),
+      'rexster.showTypes': this.options.showTypes,
+    };
+
+    if (this.options.load.length > 0) {
+      qs.load = '['+ this.options.load.join(',') +']';
+    }
+
+    // Build custom bound parameters string
+    var paramString = '&'+ _.map(gremlin.params, function(value, key) {
+      return 'params.'+ key +'='+ querystring.escape(value);
+    }).join('&');
+
+    var requestOptions = {
+      hostname: this.options.host,
+      port: this.options.port,
+      path: '/graphs/' + this.options.graph + '/tp/gremlin?' + querystring.stringify(qs) + paramString,
+      headers: {
+        'Content-type': 'application/json;charset=utf-8'
+      }
+    };
+
+    return requestOptions;
+  };
+
+  /**
    * Send a GremlinScript script to Rexster for execution via HTTP, fetch and format
    * results.
    *
@@ -41,48 +79,7 @@ module.exports = (function(){
       gremlin = this.createGremlinFromWrapper(statement);
     }
 
-    return this.doExec(gremlin).nodeify(callback);
-  };
-
-  /**
-   * @param {ObjectWrapper} statement
-   * @return {GremlinScript}
-   */
-  RexsterClient.prototype.createGremlinFromWrapper = function(statement) {
-    var gremlin = new GremlinScript();
-    var appender = gremlin.getAppender();
-    appender(statement);
-
-    return gremlin;
-  };
-
-  RexsterClient.prototype.doExec = function(gremlin) {
-    var deferred = Q.defer();
-
-    var qs = {
-      script: gremlin.script.replace(/\$/g, "\\$"),
-      'rexster.showTypes': this.options.showTypes,
-    };
-
-    if (this.options.load.length > 0) {
-      qs.load = this.options.load.join('').replace('\'', '');
-    }
-
-    // Build custom bound parameters string
-    var paramString = '&'+ _.map(gremlin.params, function(value, key) {
-      return 'params.'+ key +'='+ querystring.escape(value);
-    }).join('&');
-
-    var options = {
-      hostname: this.options.host,
-      port: this.options.port,
-      path: '/graphs/' + this.options.graph + '/tp/gremlin?' + querystring.stringify(qs) + paramString,
-      headers: {
-        'Content-type': 'application/json;charset=utf-8'
-      }
-    };
-
-    var self = this;
+    var options = this.buildRequestOptions(gremlin);
     var req = http.get(options, function(res) {
       var body = '';
 
@@ -90,27 +87,23 @@ module.exports = (function(){
         body += chunk;
       });
 
+      res.on('error', function(err) {
+        callback(new Error(err));
+      });
+
       res.on('end', function() {
         body = JSON.parse(body);
 
         if (body.message || body.success === false) {
-          return deferred.reject(new Error(body.error || body.message));
+          return callback(new Error(body.message || body.results));
         }
-
-        var transformedResults = self.transformResults(body.results);
-        body.results = transformedResults.results;
-        body.typeMap = transformedResults.typeMap;
-
-
-        return deferred.resolve(body);
+        callback(null, body);
       });
     });
 
-    req.on('error', function(e) {
-      return deferred.reject(new Error(e));
+    req.on('error', function(err) {
+      callback(new Error(err));
     });
-
-    return deferred.promise;
   };
 
   /**
@@ -122,9 +115,9 @@ module.exports = (function(){
   RexsterClient.prototype.fetch = function(gremlin, callback) {
     var self = this;
 
-    return this.doExec(gremlin).then(function(response) {
-      return self.fetchHandler(response, response.results);
-    }).nodeify(callback);
+    this.execute(gremlin, function(err, response) {
+      callback(err, self.fetchHandler(response, response.results));
+    });
   };
 
   /**
