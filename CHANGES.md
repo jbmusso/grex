@@ -1,3 +1,11 @@
+## 0.7.0
+- Remove Q dependency: async functions no longer support the dual callback/promise API. Please use your own promise library
+- Replace `client.exec()` with `client.execute()`
+- Remove `client.connect()` - use `grex.createClient()` instead
+- No longer use rexster.showTypes by default - use options.showTypes
+- Add support of execution of stored scripts on a per client basis
+- Minor performance improvement
+
 ## 0.6.7
 - Fix stringification issues with arrays and booleans
 
