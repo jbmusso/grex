@@ -9,11 +9,6 @@ var g = grex.g;
 
 describe('client', function() {
   describe('.gremlin()', function() {
-    before(function(done) {
-      client.connect(function(err, client) {
-        done();
-      });
-    });
 
     it('should return an appender', function() { /*jshint -W030 */
       gremlin.should.be.a.Function;
@@ -48,7 +43,7 @@ describe('client', function() {
       query('g.v(%s)', 1);
       query.script.should.equal('g.v(p0)\n');
 
-      client.exec(query, function(err, response) {
+      client.execute(query, function(err, response) {
         response.results.length.should.equal(1);
         done();
       });
@@ -58,7 +53,7 @@ describe('client', function() {
       var query = gremlin('g.v(%s)', 1);
       query.script.should.equal('g.v(p0)\n');
 
-      client.exec(query, function(err, response) {
+      client.execute(query, function(err, response) {
         should.not.exist(err);
         response.results.length.should.equal(1);
         done();
@@ -69,7 +64,7 @@ describe('client', function() {
       var query = gremlin("g.addVertex(['name': %s, 'age': %s])", "Bob", 26);
       query.script.should.equal("g.addVertex(['name': p0, 'age': p1])\n");
 
-      client.exec(query, function(err, response) {
+      client.execute(query, function(err, response) {
         should.not.exist(err);
         response.results.length.should.equal(1);
         done();
@@ -77,7 +72,7 @@ describe('client', function() {
     });
 
     it('should be executable', function(done) {
-      client.exec(gremlin(g.v(1)), function(err, response) {
+      client.execute(gremlin(g.v(1)), function(err, response) {
         should.not.exist(err);
         response.results.length.should.equal(1);
         done();

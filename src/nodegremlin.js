@@ -17,7 +17,6 @@ module.exports = (function() {
 
   NodeGremlin.createClient = function(options) {
     var client = new RexsterClient(options);
-    client.connect(options);
 
     return client;
   };

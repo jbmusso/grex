@@ -3,7 +3,6 @@
 var http = require('http');
 var querystring = require('querystring');
 
-var Q = require("q");
 var _ = require("lodash");
 
 var ResultFormatter = require("./resultformatter");
@@ -12,58 +11,19 @@ var GremlinScript = require('./gremlinscript');
 
 module.exports = (function(){
   function RexsterClient(options) {
-    this.defaultOptions = {
+    var defaultOptions = {
       host: 'localhost',
       port: 8182,
-      graph: 'tinkergraph'
+      graph: 'tinkergraph',
+      load: [],
+      showTypes: false
     };
 
-    this.options = _.defaults(options, this.defaultOptions);
+    this.options = _.defaults(options || {}, defaultOptions);
+    this.fetchHandler = this.options.fetched || this.defaultFetchHandler;
 
     this.resultFormatter = new ResultFormatter();
   }
-
-  /**
-   * Establish a connection with Rexster server.
-   * While this method currently has an asynchronous behavior, it actually
-   * does synchronous stuff.
-   *
-   * Accept the double promise/callback API.
-   *
-   * @param {Function} callback
-   */
-  RexsterClient.prototype.connect = function(options, callback) {
-    if (typeof options === 'function') {
-      callback = options;
-      options = {};
-    }
-
-    this.options = _.defaults(options || {}, this.defaultOptions);
-    this.fetchHandler = this.options.fetched || this.defaultFetchHandler;
-
-    return Q.fcall(function() {
-      return this;
-    }.bind(this))
-    .nodeify(callback);
-
-  };
-
-  /**
-   * Send a GremlinScript script to Rexster for execution via HTTP, fetch and format
-   * results.
-   *
-   * @param {GremlinScript} gremlin A Gremlin-Groovy script to execute
-   *
-   * @return {Promise}
-   */
-  RexsterClient.prototype.exec = function(gremlin, callback) {
-    if (gremlin instanceof ObjectWrapper) {
-      var statement = gremlin;
-      gremlin = this.createGremlinFromWrapper(statement);
-    }
-
-    return this.doExec(gremlin).nodeify(callback);
-  };
 
   /**
    * @param {ObjectWrapper} statement
@@ -77,20 +37,22 @@ module.exports = (function(){
     return gremlin;
   };
 
-  RexsterClient.prototype.doExec = function(gremlin) {
-    var deferred = Q.defer();
-
+  RexsterClient.prototype.buildRequestOptions = function(gremlin) {
     var qs = {
       script: gremlin.script.replace(/\$/g, "\\$"),
-      'rexster.showTypes': true
+      'rexster.showTypes': this.options.showTypes,
     };
+
+    if (this.options.load.length > 0) {
+      qs.load = '['+ this.options.load.join(',') +']';
+    }
 
     // Build custom bound parameters string
     var paramString = '&'+ _.map(gremlin.params, function(value, key) {
       return 'params.'+ key +'='+ querystring.escape(value);
     }).join('&');
 
-    var options = {
+    var requestOptions = {
       hostname: this.options.host,
       port: this.options.port,
       path: '/graphs/' + this.options.graph + '/tp/gremlin?' + querystring.stringify(qs) + paramString,
@@ -99,6 +61,25 @@ module.exports = (function(){
       }
     };
 
+    return requestOptions;
+  };
+
+  /**
+   * Send a GremlinScript script to Rexster for execution via HTTP, fetch and format
+   * results.
+   *
+   * @param {GremlinScript} gremlin A Gremlin-Groovy script to execute
+   *
+   * @return {Promise}
+   */
+  RexsterClient.prototype.execute =
+  RexsterClient.prototype.exec = function(gremlin, callback) {
+    if (gremlin instanceof ObjectWrapper) {
+      var statement = gremlin;
+      gremlin = this.createGremlinFromWrapper(statement);
+    }
+
+    var options = this.buildRequestOptions(gremlin);
     var req = http.get(options, function(res) {
       var body = '';
 
@@ -106,28 +87,23 @@ module.exports = (function(){
         body += chunk;
       });
 
+      res.on('error', function(err) {
+        callback(new Error(err));
+      });
+
       res.on('end', function() {
         body = JSON.parse(body);
 
         if (body.message || body.success === false) {
-          return deferred.reject(new Error(body.error || body.message));
+          return callback(new Error(body.message || body.results));
         }
-
-        var transformedResults = this.transformResults(body.results);
-        body.results = transformedResults.results;
-        body.typeMap = transformedResults.typeMap;
-
-
-        return deferred.resolve(body);
-      }.bind(this));
-
-    }.bind(this));
-
-    req.on('error', function(e) {
-      return deferred.reject(new Error(e));
+        callback(null, body);
+      });
     });
 
-    return deferred.promise;
+    req.on('error', function(err) {
+      callback(new Error(err));
+    });
   };
 
   /**
@@ -137,9 +113,11 @@ module.exports = (function(){
    * @param {GremlinScript} gremlin
    */
   RexsterClient.prototype.fetch = function(gremlin, callback) {
-    return this.doExec(gremlin).then(function(response) {
-      return this.fetchHandler(response, response.results);
-    }.bind(this)).nodeify(callback);
+    var self = this;
+
+    this.execute(gremlin, function(err, response) {
+      callback(err, self.fetchHandler(response, response.results));
+    });
   };
 
   /**

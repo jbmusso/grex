@@ -1,7 +1,7 @@
 {
   "name": "grex",
   "description": "Client for Rexster Graph Server",
-  "version": "0.6.7",
+  "version": "0.7.0",
   "keywords": [
     "database",
     "graph",
@@ -34,7 +34,6 @@
     "url": "https://github.com/gulthor/grex/issues"
   },
   "dependencies": {
-    "q": "0.9.x",
     "inherits": "~2.0.1",
     "lodash": "~2.4.1"
   },
