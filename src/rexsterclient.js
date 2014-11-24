@@ -94,8 +94,8 @@ module.exports = (function(){
       res.on('end', function() {
         body = JSON.parse(body);
 
-        if (body.message || body.success === false) {
-          return callback(new Error(body.message || body.results));
+        if (body.error || body.message || body.success === false) {
+          return callback(new Error(body.error || body.message || body.results));
         }
         callback(null, body);
       });
