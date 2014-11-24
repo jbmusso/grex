@@ -1,16 +1,12 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-var Grex = require('./src/grex.js');
+module.exports = require('./src/nodegremlin');
 
-module.exports = new Grex();
-
-},{"./src/grex.js":41}],2:[function(require,module,exports){
-/**
+},{"./src/nodegremlin":52}],2:[function(require,module,exports){
+/*!
  * The buffer module from node.js, for the browser.
  *
- * Author:   Feross Aboukhadijeh <feross@feross.org> <http://feross.org>
- * License:  MIT
- *
- * `npm install buffer`
+ * @author   Feross Aboukhadijeh <feross@feross.org> <http://feross.org>
+ * @license  MIT
  */
 
 var base64 = require('base64-js')
@@ -27,17 +23,14 @@ Buffer.poolSize = 8192
  *   === false   Use Object implementation (compatible down to IE6)
  */
 Buffer._useTypedArrays = (function () {
-   // Detect if browser supports Typed Arrays. Supported browsers are IE 10+,
-   // Firefox 4+, Chrome 7+, Safari 5.1+, Opera 11.6+, iOS 4.2+.
-  if (typeof Uint8Array !== 'function' || typeof ArrayBuffer !== 'function')
-    return false
-
-  // Does the browser support adding properties to `Uint8Array` instances? If
-  // not, then that's the same as no `Uint8Array` support. We need to be able to
-  // add all the node Buffer API methods.
-  // Bug in Firefox 4-29, now fixed: https://bugzilla.mozilla.org/show_bug.cgi?id=695438
+  // Detect if browser supports Typed Arrays. Supported browsers are IE 10+, Firefox 4+,
+  // Chrome 7+, Safari 5.1+, Opera 11.6+, iOS 4.2+. If the browser does not support adding
+  // properties to `Uint8Array` instances, then that's the same as no `Uint8Array` support
+  // because we need to be able to add all the node Buffer API methods. This is an issue
+  // in Firefox 4-29. Now fixed: https://bugzilla.mozilla.org/show_bug.cgi?id=695438
   try {
-    var arr = new Uint8Array(0)
+    var buf = new ArrayBuffer(0)
+    var arr = new Uint8Array(buf)
     arr.foo = function () { return 42 }
     return 42 === arr.foo() &&
         typeof arr.subarray === 'function' // Chrome 9-10 lack `subarray`
@@ -80,14 +73,14 @@ function Buffer (subject, encoding, noZero) {
   else if (type === 'string')
     length = Buffer.byteLength(subject, encoding)
   else if (type === 'object')
-    length = coerce(subject.length) // Assume object is an array
+    length = coerce(subject.length) // assume that object is array-like
   else
     throw new Error('First argument needs to be a number, array or string.')
 
   var buf
   if (Buffer._useTypedArrays) {
     // Preferred: Return an augmented `Uint8Array` instance for best performance
-    buf = augment(new Uint8Array(length))
+    buf = Buffer._augment(new Uint8Array(length))
   } else {
     // Fallback: Return THIS instance of Buffer (created by `new`)
     buf = this
@@ -96,9 +89,8 @@ function Buffer (subject, encoding, noZero) {
   }
 
   var i
-  if (Buffer._useTypedArrays && typeof Uint8Array === 'function' &&
-      subject instanceof Uint8Array) {
-    // Speed optimization -- use set if we're copying from a Uint8Array
+  if (Buffer._useTypedArrays && typeof subject.byteLength === 'number') {
+    // Speed optimization -- use set if we're copying from a typed array
     buf._set(subject)
   } else if (isArrayish(subject)) {
     // Treat array-ish objects as a byte array
@@ -395,9 +387,14 @@ Buffer.prototype.copy = function (target, target_start, start, end) {
   if (target.length - target_start < end - start)
     end = target.length - target_start + start
 
-  // copy!
-  for (var i = 0; i < end - start; i++)
-    target[i + target_start] = this[i + start]
+  var len = end - start
+
+  if (len < 100 || !Buffer._useTypedArrays) {
+    for (var i = 0; i < len; i++)
+      target[i + target_start] = this[i + start]
+  } else {
+    target._set(this.subarray(start, start + len), target_start)
+  }
 }
 
 function _base64Slice (buf, start, end) {
@@ -466,7 +463,7 @@ Buffer.prototype.slice = function (start, end) {
   end = clamp(end, len, len)
 
   if (Buffer._useTypedArrays) {
-    return augment(this.subarray(start, end))
+    return Buffer._augment(this.subarray(start, end))
   } else {
     var sliceLen = end - start
     var newBuf = new Buffer(sliceLen, undefined, true)
@@ -909,7 +906,7 @@ Buffer.prototype.inspect = function () {
  * Added in Node 0.12. Only available in browsers that support ArrayBuffer.
  */
 Buffer.prototype.toArrayBuffer = function () {
-  if (typeof Uint8Array === 'function') {
+  if (typeof Uint8Array !== 'undefined') {
     if (Buffer._useTypedArrays) {
       return (new Buffer(this)).buffer
     } else {
@@ -934,9 +931,9 @@ function stringtrim (str) {
 var BP = Buffer.prototype
 
 /**
- * Augment the Uint8Array *instance* (not the class!) with Buffer methods
+ * Augment a Uint8Array *instance* (not the Uint8Array class!) with Buffer methods
  */
-function augment (arr) {
+Buffer._augment = function (arr) {
   arr._isBuffer = true
 
   // save reference to original Uint8Array get/set methods before overwriting
@@ -1125,7 +1122,6 @@ var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
     ? Uint8Array
     : Array
 
-	var ZERO   = '0'.charCodeAt(0)
 	var PLUS   = '+'.charCodeAt(0)
 	var SLASH  = '/'.charCodeAt(0)
 	var NUMBER = '0'.charCodeAt(0)
@@ -1234,9 +1230,9 @@ var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 		return output
 	}
 
-	module.exports.toByteArray = b64ToByteArray
-	module.exports.fromByteArray = uint8ToBase64
-}())
+	exports.toByteArray = b64ToByteArray
+	exports.fromByteArray = uint8ToBase64
+}(typeof exports === 'undefined' ? (this.base64js = {}) : exports))
 
 },{}],4:[function(require,module,exports){
 exports.read = function(buffer, offset, isLE, mLen, nBytes) {
@@ -1384,10 +1380,8 @@ EventEmitter.prototype.emit = function(type) {
       er = arguments[1];
       if (er instanceof Error) {
         throw er; // Unhandled 'error' event
-      } else {
-        throw TypeError('Uncaught, unspecified "error" event.');
       }
-      return false;
+      throw TypeError('Uncaught, unspecified "error" event.');
     }
   }
 
@@ -1472,7 +1466,10 @@ EventEmitter.prototype.addListener = function(type, listener) {
                     'leak detected. %d listeners added. ' +
                     'Use emitter.setMaxListeners() to increase limit.',
                     this._events[type].length);
-      console.trace();
+      if (typeof console.trace === 'function') {
+        // not supported in IE 10
+        console.trace();
+      }
     }
   }
 
@@ -1643,7 +1640,7 @@ http.request = function (params, cb) {
     if (!params.host && params.hostname) {
         params.host = params.hostname;
     }
-
+    
     if (!params.scheme) params.scheme = window.location.protocol.split(':')[0];
     if (!params.host) {
         params.host = window.location.hostname || window.location.host;
@@ -1655,7 +1652,7 @@ http.request = function (params, cb) {
         params.host = params.host.split(':')[0];
     }
     if (!params.port) params.port = params.scheme == 'https' ? 443 : 80;
-
+    
     var req = new Request(new xhrHttp, params);
     if (cb) req.on('response', cb);
     return req;
@@ -1776,20 +1773,20 @@ var Request = module.exports = function (xhr, params) {
     self.writable = true;
     self.xhr = xhr;
     self.body = [];
-
+    
     self.uri = (params.scheme || 'http') + '://'
         + params.host
         + (params.port ? ':' + params.port : '')
         + (params.path || '/')
     ;
-
+    
     if (typeof params.withCredentials === 'undefined') {
         params.withCredentials = true;
     }
 
     try { xhr.withCredentials = params.withCredentials }
     catch (e) {}
-
+    
     xhr.open(
         params.method || 'GET',
         self.uri,
@@ -1797,7 +1794,7 @@ var Request = module.exports = function (xhr, params) {
     );
 
     self._headers = {};
-
+    
     if (params.headers) {
         var keys = objectKeys(params.headers);
         for (var i = 0; i < keys.length; i++) {
@@ -1807,7 +1804,7 @@ var Request = module.exports = function (xhr, params) {
             self.setHeader(key, value);
         }
     }
-
+    
     if (params.auth) {
         //basic auth
         this.setHeader('Authorization', 'Basic ' + Base64.btoa(params.auth));
@@ -1817,11 +1814,11 @@ var Request = module.exports = function (xhr, params) {
     res.on('close', function () {
         self.emit('close');
     });
-
+    
     res.on('ready', function () {
         self.emit('response', res);
     });
-
+    
     xhr.onreadystatechange = function () {
         // Fix for IE9 bug
         // SCRIPT575: Could not complete the operation due to error c00c023f
@@ -1890,7 +1887,7 @@ Request.prototype.end = function (s) {
         }
         var body = new(this.body[0].constructor)(len);
         var k = 0;
-
+        
         for (var i = 0; i < this.body.length; i++) {
             var b = this.body[i];
             for (var j = 0; j < b.length; j++) {
@@ -1978,13 +1975,13 @@ function parseHeaders (res) {
     for (var i = 0; i < lines.length; i++) {
         var line = lines[i];
         if (line === '') continue;
-
+        
         var m = line.match(/^([^:]+):\s*(.*)/);
         if (m) {
             var key = m[1].toLowerCase(), value = m[2];
-
+            
             if (headers[key] !== undefined) {
-
+            
                 if (isArray(headers[key])) {
                     headers[key].push(value);
                 }
@@ -2023,7 +2020,7 @@ Response.prototype.handle = function (res) {
         catch (err) {
             capable.status2 = false;
         }
-
+        
         if (capable.status2) {
             this.emit('ready');
         }
@@ -2037,7 +2034,7 @@ Response.prototype.handle = function (res) {
             }
         }
         catch (err) {}
-
+        
         try {
             this._emitData(res);
         }
@@ -2051,12 +2048,12 @@ Response.prototype.handle = function (res) {
             this.emit('ready');
         }
         this._emitData(res);
-
+        
         if (res.error) {
             this.emit('error', this.getResponse(res));
         }
         else this.emit('end');
-
+        
         this.emit('close');
     }
 };
@@ -2117,7 +2114,7 @@ var isArray = Array.isArray || function (xs) {
   // [https://gist.github.com/1020396] by [https://github.com/atk]
   object.atob || (
   object.atob = function (input) {
-    input = input.replace(/=+$/, '')
+    input = input.replace(/=+$/, '');
     if (input.length % 4 == 1) {
       throw new InvalidCharacterError("'atob' failed: The string to be decoded is not correctly encoded.");
     }
@@ -2184,6 +2181,16 @@ process.title = 'browser';
 process.browser = true;
 process.env = {};
 process.argv = [];
+
+function noop() {}
+
+process.on = noop;
+process.addListener = noop;
+process.once = noop;
+process.off = noop;
+process.removeListener = noop;
+process.removeAllListeners = noop;
+process.emit = noop;
 
 process.binding = function (name) {
     throw new Error('process.binding is not supported');
@@ -3089,7 +3096,60 @@ Stream.prototype.pipe = function(dest, options) {
 };
 
 },{"./duplex.js":15,"./passthrough.js":18,"./readable.js":19,"./transform.js":20,"./writable.js":21,"events":5,"inherits":26}],17:[function(require,module,exports){
-module.exports=require(10)
+// shim for using process in browser
+
+var process = module.exports = {};
+
+process.nextTick = (function () {
+    var canSetImmediate = typeof window !== 'undefined'
+    && window.setImmediate;
+    var canPost = typeof window !== 'undefined'
+    && window.postMessage && window.addEventListener
+    ;
+
+    if (canSetImmediate) {
+        return function (f) { return window.setImmediate(f) };
+    }
+
+    if (canPost) {
+        var queue = [];
+        window.addEventListener('message', function (ev) {
+            var source = ev.source;
+            if ((source === window || source === null) && ev.data === 'process-tick') {
+                ev.stopPropagation();
+                if (queue.length > 0) {
+                    var fn = queue.shift();
+                    fn();
+                }
+            }
+        }, true);
+
+        return function nextTick(fn) {
+            queue.push(fn);
+            window.postMessage('process-tick', '*');
+        };
+    }
+
+    return function nextTick(fn) {
+        setTimeout(fn, 0);
+    };
+})();
+
+process.title = 'browser';
+process.browser = true;
+process.env = {};
+process.argv = [];
+
+process.binding = function (name) {
+    throw new Error('process.binding is not supported');
+}
+
+// TODO(shtylman)
+process.cwd = function () { return '/' };
+process.chdir = function (dir) {
+    throw new Error('process.chdir is not supported');
+};
+
 },{}],18:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -4069,8 +4129,8 @@ function indexOf (xs, x) {
   return -1;
 }
 
-}).call(this,require("/Users/speciman/Documents/development/grex/node_modules/gulp-browserify/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js"))
-},{"./index.js":16,"/Users/speciman/Documents/development/grex/node_modules/gulp-browserify/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js":10,"buffer":2,"events":5,"inherits":26,"process/browser.js":17,"string_decoder":22}],20:[function(require,module,exports){
+}).call(this,require("IrXUsu"))
+},{"./index.js":16,"IrXUsu":10,"buffer":2,"events":5,"inherits":26,"process/browser.js":17,"string_decoder":22}],20:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -4463,7 +4523,7 @@ Writable.prototype.write = function(chunk, encoding, cb) {
     chunk = new Buffer(chunk);
   if (isArrayBuffer(chunk) && typeof Uint8Array !== 'undefined')
     chunk = new Buffer(new Uint8Array(chunk));
-
+  
   if (Buffer.isBuffer(chunk))
     encoding = 'buffer';
   else if (!encoding)
@@ -4858,10 +4918,6 @@ function base64DetectIncompleteChar(buffer) {
 }
 
 },{"buffer":2}],23:[function(require,module,exports){
-/*jshint strict:true node:true es5:true onevar:true laxcomma:true laxbreak:true eqeqeq:true immed:true latedef:true*/
-(function () {
-  "use strict";
-
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -4890,6 +4946,23 @@ exports.resolve = urlResolve;
 exports.resolveObject = urlResolveObject;
 exports.format = urlFormat;
 
+exports.Url = Url;
+
+function Url() {
+  this.protocol = null;
+  this.slashes = null;
+  this.auth = null;
+  this.host = null;
+  this.port = null;
+  this.hostname = null;
+  this.hash = null;
+  this.search = null;
+  this.query = null;
+  this.pathname = null;
+  this.path = null;
+  this.href = null;
+}
+
 // Reference: RFC 3986, RFC 1808, RFC 2396
 
 // define these here so at least they only have to be
@@ -4902,20 +4975,19 @@ var protocolPattern = /^([a-z0-9.+-]+:)/i,
     delims = ['<', '>', '"', '`', ' ', '\r', '\n', '\t'],
 
     // RFC 2396: characters not allowed for various reasons.
-    unwise = ['{', '}', '|', '\\', '^', '~', '`'].concat(delims),
+    unwise = ['{', '}', '|', '\\', '^', '`'].concat(delims),
 
     // Allowed by RFCs, but cause of XSS attacks.  Always escape these.
-    autoEscape = ['\''].concat(delims),
+    autoEscape = ['\''].concat(unwise),
     // Characters that are never ever allowed in a hostname.
     // Note that any invalid chars are also handled, but these
     // are the ones that are *expected* to be seen, so we fast-path
     // them.
-    nonHostChars = ['%', '/', '?', ';', '#']
-      .concat(unwise).concat(autoEscape),
-    nonAuthChars = ['/', '@', '?', '#'].concat(delims),
+    nonHostChars = ['%', '/', '?', ';', '#'].concat(autoEscape),
+    hostEndingChars = ['/', '?', '#'],
     hostnameMaxLen = 255,
-    hostnamePartPattern = /^[a-zA-Z0-9][a-z0-9A-Z_-]{0,62}$/,
-    hostnamePartStart = /^([a-zA-Z0-9][a-z0-9A-Z_-]{0,62})(.*)$/,
+    hostnamePartPattern = /^[a-z0-9A-Z_-]{0,63}$/,
+    hostnamePartStart = /^([a-z0-9A-Z_-]{0,63})(.*)$/,
     // protocols that can allow "unsafe" and "unwise" chars.
     unsafeProtocol = {
       'javascript': true,
@@ -4925,18 +4997,6 @@ var protocolPattern = /^([a-z0-9.+-]+:)/i,
     hostlessProtocol = {
       'javascript': true,
       'javascript:': true
-    },
-    // protocols that always have a path component.
-    pathedProtocol = {
-      'http': true,
-      'https': true,
-      'ftp': true,
-      'gopher': true,
-      'file': true,
-      'http:': true,
-      'ftp:': true,
-      'gopher:': true,
-      'file:': true
     },
     // protocols that always contain a // bit.
     slashedProtocol = {
@@ -4954,14 +5014,19 @@ var protocolPattern = /^([a-z0-9.+-]+:)/i,
     querystring = require('querystring');
 
 function urlParse(url, parseQueryString, slashesDenoteHost) {
-  if (url && typeof(url) === 'object' && url.href) return url;
+  if (url && isObject(url) && url instanceof Url) return url;
 
-  if (typeof url !== 'string') {
+  var u = new Url;
+  u.parse(url, parseQueryString, slashesDenoteHost);
+  return u;
+}
+
+Url.prototype.parse = function(url, parseQueryString, slashesDenoteHost) {
+  if (!isString(url)) {
     throw new TypeError("Parameter 'url' must be a string, not " + typeof url);
   }
 
-  var out = {},
-      rest = url;
+  var rest = url;
 
   // trim before proceeding.
   // This is to support parse stuff like "  http://foo.com  \n"
@@ -4971,7 +5036,7 @@ function urlParse(url, parseQueryString, slashesDenoteHost) {
   if (proto) {
     proto = proto[0];
     var lowerProto = proto.toLowerCase();
-    out.protocol = lowerProto;
+    this.protocol = lowerProto;
     rest = rest.substr(proto.length);
   }
 
@@ -4983,78 +5048,85 @@ function urlParse(url, parseQueryString, slashesDenoteHost) {
     var slashes = rest.substr(0, 2) === '//';
     if (slashes && !(proto && hostlessProtocol[proto])) {
       rest = rest.substr(2);
-      out.slashes = true;
+      this.slashes = true;
     }
   }
 
   if (!hostlessProtocol[proto] &&
       (slashes || (proto && !slashedProtocol[proto]))) {
+
     // there's a hostname.
     // the first instance of /, ?, ;, or # ends the host.
-    // don't enforce full RFC correctness, just be unstupid about it.
-
+    //
     // If there is an @ in the hostname, then non-host chars *are* allowed
-    // to the left of the first @ sign, unless some non-auth character
+    // to the left of the last @ sign, unless some host-ending character
     // comes *before* the @-sign.
     // URLs are obnoxious.
-    var atSign = rest.indexOf('@');
-    if (atSign !== -1) {
-      var auth = rest.slice(0, atSign);
+    //
+    // ex:
+    // http://a@b@c/ => user:a@b host:c
+    // http://a@b?@c => user:a host:c path:/?@c
 
-      // there *may be* an auth
-      var hasAuth = true;
-      for (var i = 0, l = nonAuthChars.length; i < l; i++) {
-        if (auth.indexOf(nonAuthChars[i]) !== -1) {
-          // not a valid auth.  Something like http://foo.com/bar@baz/
-          hasAuth = false;
-          break;
-        }
-      }
+    // v0.12 TODO(isaacs): This is not quite how Chrome does things.
+    // Review our test case against browsers more comprehensively.
 
-      if (hasAuth) {
-        // pluck off the auth portion.
-        out.auth = decodeURIComponent(auth);
-        rest = rest.substr(atSign + 1);
-      }
+    // find the first instance of any hostEndingChars
+    var hostEnd = -1;
+    for (var i = 0; i < hostEndingChars.length; i++) {
+      var hec = rest.indexOf(hostEndingChars[i]);
+      if (hec !== -1 && (hostEnd === -1 || hec < hostEnd))
+        hostEnd = hec;
     }
 
-    var firstNonHost = -1;
-    for (var i = 0, l = nonHostChars.length; i < l; i++) {
-      var index = rest.indexOf(nonHostChars[i]);
-      if (index !== -1 &&
-          (firstNonHost < 0 || index < firstNonHost)) firstNonHost = index;
-    }
-
-    if (firstNonHost !== -1) {
-      out.host = rest.substr(0, firstNonHost);
-      rest = rest.substr(firstNonHost);
+    // at this point, either we have an explicit point where the
+    // auth portion cannot go past, or the last @ char is the decider.
+    var auth, atSign;
+    if (hostEnd === -1) {
+      // atSign can be anywhere.
+      atSign = rest.lastIndexOf('@');
     } else {
-      out.host = rest;
-      rest = '';
+      // atSign must be in auth portion.
+      // http://a@b/c@d => host:b auth:a path:/c@d
+      atSign = rest.lastIndexOf('@', hostEnd);
     }
+
+    // Now we have a portion which is definitely the auth.
+    // Pull that off.
+    if (atSign !== -1) {
+      auth = rest.slice(0, atSign);
+      rest = rest.slice(atSign + 1);
+      this.auth = decodeURIComponent(auth);
+    }
+
+    // the host is the remaining to the left of the first non-host char
+    hostEnd = -1;
+    for (var i = 0; i < nonHostChars.length; i++) {
+      var hec = rest.indexOf(nonHostChars[i]);
+      if (hec !== -1 && (hostEnd === -1 || hec < hostEnd))
+        hostEnd = hec;
+    }
+    // if we still have not hit it, then the entire thing is a host.
+    if (hostEnd === -1)
+      hostEnd = rest.length;
+
+    this.host = rest.slice(0, hostEnd);
+    rest = rest.slice(hostEnd);
 
     // pull out port.
-    var p = parseHost(out.host);
-    var keys = Object.keys(p);
-    for (var i = 0, l = keys.length; i < l; i++) {
-      var key = keys[i];
-      out[key] = p[key];
-    }
+    this.parseHost();
 
     // we've indicated that there is a hostname,
     // so even if it's empty, it has to be present.
-    out.hostname = out.hostname || '';
+    this.hostname = this.hostname || '';
 
     // if hostname begins with [ and ends with ]
     // assume that it's an IPv6 address.
-    var ipv6Hostname = out.hostname[0] === '[' &&
-        out.hostname[out.hostname.length - 1] === ']';
+    var ipv6Hostname = this.hostname[0] === '[' &&
+        this.hostname[this.hostname.length - 1] === ']';
 
     // validate a little.
-    if (out.hostname.length > hostnameMaxLen) {
-      out.hostname = '';
-    } else if (!ipv6Hostname) {
-      var hostparts = out.hostname.split(/\./);
+    if (!ipv6Hostname) {
+      var hostparts = this.hostname.split(/\./);
       for (var i = 0, l = hostparts.length; i < l; i++) {
         var part = hostparts[i];
         if (!part) continue;
@@ -5082,38 +5154,44 @@ function urlParse(url, parseQueryString, slashesDenoteHost) {
             if (notHost.length) {
               rest = '/' + notHost.join('.') + rest;
             }
-            out.hostname = validParts.join('.');
+            this.hostname = validParts.join('.');
             break;
           }
         }
       }
     }
 
-    // hostnames are always lower case.
-    out.hostname = out.hostname.toLowerCase();
+    if (this.hostname.length > hostnameMaxLen) {
+      this.hostname = '';
+    } else {
+      // hostnames are always lower case.
+      this.hostname = this.hostname.toLowerCase();
+    }
 
     if (!ipv6Hostname) {
       // IDNA Support: Returns a puny coded representation of "domain".
       // It only converts the part of the domain name that
       // has non ASCII characters. I.e. it dosent matter if
       // you call it with a domain that already is in ASCII.
-      var domainArray = out.hostname.split('.');
+      var domainArray = this.hostname.split('.');
       var newOut = [];
       for (var i = 0; i < domainArray.length; ++i) {
         var s = domainArray[i];
         newOut.push(s.match(/[^A-Za-z0-9_-]/) ?
             'xn--' + punycode.encode(s) : s);
       }
-      out.hostname = newOut.join('.');
+      this.hostname = newOut.join('.');
     }
 
-    out.host = (out.hostname || '') +
-        ((out.port) ? ':' + out.port : '');
-    out.href += out.host;
+    var p = this.port ? ':' + this.port : '';
+    var h = this.hostname || '';
+    this.host = h + p;
+    this.href += this.host;
 
     // strip [ and ] from the hostname
+    // the host field still retains them, though
     if (ipv6Hostname) {
-      out.hostname = out.hostname.substr(1, out.hostname.length - 2);
+      this.hostname = this.hostname.substr(1, this.hostname.length - 2);
       if (rest[0] !== '/') {
         rest = '/' + rest;
       }
@@ -5142,38 +5220,39 @@ function urlParse(url, parseQueryString, slashesDenoteHost) {
   var hash = rest.indexOf('#');
   if (hash !== -1) {
     // got a fragment string.
-    out.hash = rest.substr(hash);
+    this.hash = rest.substr(hash);
     rest = rest.slice(0, hash);
   }
   var qm = rest.indexOf('?');
   if (qm !== -1) {
-    out.search = rest.substr(qm);
-    out.query = rest.substr(qm + 1);
+    this.search = rest.substr(qm);
+    this.query = rest.substr(qm + 1);
     if (parseQueryString) {
-      out.query = querystring.parse(out.query);
+      this.query = querystring.parse(this.query);
     }
     rest = rest.slice(0, qm);
   } else if (parseQueryString) {
     // no query string, but parseQueryString still requested
-    out.search = '';
-    out.query = {};
+    this.search = '';
+    this.query = {};
   }
-  if (rest) out.pathname = rest;
-  if (slashedProtocol[proto] &&
-      out.hostname && !out.pathname) {
-    out.pathname = '/';
+  if (rest) this.pathname = rest;
+  if (slashedProtocol[lowerProto] &&
+      this.hostname && !this.pathname) {
+    this.pathname = '/';
   }
 
   //to support http.request
-  if (out.pathname || out.search) {
-    out.path = (out.pathname ? out.pathname : '') +
-               (out.search ? out.search : '');
+  if (this.pathname || this.search) {
+    var p = this.pathname || '';
+    var s = this.search || '';
+    this.path = p + s;
   }
 
   // finally, reconstruct the href based on what has been validated.
-  out.href = urlFormat(out);
-  return out;
-}
+  this.href = this.format();
+  return this;
+};
 
 // format a parsed object into a url string
 function urlFormat(obj) {
@@ -5181,44 +5260,49 @@ function urlFormat(obj) {
   // If it's an obj, this is a no-op.
   // this way, you can call url_format() on strings
   // to clean up potentially wonky urls.
-  if (typeof(obj) === 'string') obj = urlParse(obj);
+  if (isString(obj)) obj = urlParse(obj);
+  if (!(obj instanceof Url)) return Url.prototype.format.call(obj);
+  return obj.format();
+}
 
-  var auth = obj.auth || '';
+Url.prototype.format = function() {
+  var auth = this.auth || '';
   if (auth) {
     auth = encodeURIComponent(auth);
     auth = auth.replace(/%3A/i, ':');
     auth += '@';
   }
 
-  var protocol = obj.protocol || '',
-      pathname = obj.pathname || '',
-      hash = obj.hash || '',
+  var protocol = this.protocol || '',
+      pathname = this.pathname || '',
+      hash = this.hash || '',
       host = false,
       query = '';
 
-  if (obj.host !== undefined) {
-    host = auth + obj.host;
-  } else if (obj.hostname !== undefined) {
-    host = auth + (obj.hostname.indexOf(':') === -1 ?
-        obj.hostname :
-        '[' + obj.hostname + ']');
-    if (obj.port) {
-      host += ':' + obj.port;
+  if (this.host) {
+    host = auth + this.host;
+  } else if (this.hostname) {
+    host = auth + (this.hostname.indexOf(':') === -1 ?
+        this.hostname :
+        '[' + this.hostname + ']');
+    if (this.port) {
+      host += ':' + this.port;
     }
   }
 
-  if (obj.query && typeof obj.query === 'object' &&
-      Object.keys(obj.query).length) {
-    query = querystring.stringify(obj.query);
+  if (this.query &&
+      isObject(this.query) &&
+      Object.keys(this.query).length) {
+    query = querystring.stringify(this.query);
   }
 
-  var search = obj.search || (query && ('?' + query)) || '';
+  var search = this.search || (query && ('?' + query)) || '';
 
   if (protocol && protocol.substr(-1) !== ':') protocol += ':';
 
   // only the slashedProtocols get the //.  Not mailto:, xmpp:, etc.
   // unless they had them to begin with.
-  if (obj.slashes ||
+  if (this.slashes ||
       (!protocol || slashedProtocol[protocol]) && host !== false) {
     host = '//' + (host || '');
     if (pathname && pathname.charAt(0) !== '/') pathname = '/' + pathname;
@@ -5229,40 +5313,68 @@ function urlFormat(obj) {
   if (hash && hash.charAt(0) !== '#') hash = '#' + hash;
   if (search && search.charAt(0) !== '?') search = '?' + search;
 
+  pathname = pathname.replace(/[?#]/g, function(match) {
+    return encodeURIComponent(match);
+  });
+  search = search.replace('#', '%23');
+
   return protocol + host + pathname + search + hash;
-}
+};
 
 function urlResolve(source, relative) {
-  return urlFormat(urlResolveObject(source, relative));
+  return urlParse(source, false, true).resolve(relative);
 }
+
+Url.prototype.resolve = function(relative) {
+  return this.resolveObject(urlParse(relative, false, true)).format();
+};
 
 function urlResolveObject(source, relative) {
   if (!source) return relative;
+  return urlParse(source, false, true).resolveObject(relative);
+}
 
-  source = urlParse(urlFormat(source), false, true);
-  relative = urlParse(urlFormat(relative), false, true);
+Url.prototype.resolveObject = function(relative) {
+  if (isString(relative)) {
+    var rel = new Url();
+    rel.parse(relative, false, true);
+    relative = rel;
+  }
+
+  var result = new Url();
+  Object.keys(this).forEach(function(k) {
+    result[k] = this[k];
+  }, this);
 
   // hash is always overridden, no matter what.
-  source.hash = relative.hash;
+  // even href="" will remove it.
+  result.hash = relative.hash;
 
+  // if the relative url is empty, then there's nothing left to do here.
   if (relative.href === '') {
-    source.href = urlFormat(source);
-    return source;
+    result.href = result.format();
+    return result;
   }
 
   // hrefs like //foo/bar always cut to the protocol.
   if (relative.slashes && !relative.protocol) {
-    relative.protocol = source.protocol;
+    // take everything except the protocol from relative
+    Object.keys(relative).forEach(function(k) {
+      if (k !== 'protocol')
+        result[k] = relative[k];
+    });
+
     //urlParse appends trailing / to urls like http://www.example.com
-    if (slashedProtocol[relative.protocol] &&
-        relative.hostname && !relative.pathname) {
-      relative.path = relative.pathname = '/';
+    if (slashedProtocol[result.protocol] &&
+        result.hostname && !result.pathname) {
+      result.path = result.pathname = '/';
     }
-    relative.href = urlFormat(relative);
-    return relative;
+
+    result.href = result.format();
+    return result;
   }
 
-  if (relative.protocol && relative.protocol !== source.protocol) {
+  if (relative.protocol && relative.protocol !== result.protocol) {
     // if it's a known url protocol, then changing
     // the protocol does weird things
     // first, if it's not file:, then we MUST have a host,
@@ -5272,10 +5384,14 @@ function urlResolveObject(source, relative) {
     // because that's known to be hostless.
     // anything else is assumed to be absolute.
     if (!slashedProtocol[relative.protocol]) {
-      relative.href = urlFormat(relative);
-      return relative;
+      Object.keys(relative).forEach(function(k) {
+        result[k] = relative[k];
+      });
+      result.href = result.format();
+      return result;
     }
-    source.protocol = relative.protocol;
+
+    result.protocol = relative.protocol;
     if (!relative.host && !hostlessProtocol[relative.protocol]) {
       var relPath = (relative.pathname || '').split('/');
       while (relPath.length && !(relative.host = relPath.shift()));
@@ -5283,72 +5399,72 @@ function urlResolveObject(source, relative) {
       if (!relative.hostname) relative.hostname = '';
       if (relPath[0] !== '') relPath.unshift('');
       if (relPath.length < 2) relPath.unshift('');
-      relative.pathname = relPath.join('/');
+      result.pathname = relPath.join('/');
+    } else {
+      result.pathname = relative.pathname;
     }
-    source.pathname = relative.pathname;
-    source.search = relative.search;
-    source.query = relative.query;
-    source.host = relative.host || '';
-    source.auth = relative.auth;
-    source.hostname = relative.hostname || relative.host;
-    source.port = relative.port;
-    //to support http.request
-    if (source.pathname !== undefined || source.search !== undefined) {
-      source.path = (source.pathname ? source.pathname : '') +
-                    (source.search ? source.search : '');
+    result.search = relative.search;
+    result.query = relative.query;
+    result.host = relative.host || '';
+    result.auth = relative.auth;
+    result.hostname = relative.hostname || relative.host;
+    result.port = relative.port;
+    // to support http.request
+    if (result.pathname || result.search) {
+      var p = result.pathname || '';
+      var s = result.search || '';
+      result.path = p + s;
     }
-    source.slashes = source.slashes || relative.slashes;
-    source.href = urlFormat(source);
-    return source;
+    result.slashes = result.slashes || relative.slashes;
+    result.href = result.format();
+    return result;
   }
 
-  var isSourceAbs = (source.pathname && source.pathname.charAt(0) === '/'),
+  var isSourceAbs = (result.pathname && result.pathname.charAt(0) === '/'),
       isRelAbs = (
-          relative.host !== undefined ||
+          relative.host ||
           relative.pathname && relative.pathname.charAt(0) === '/'
       ),
       mustEndAbs = (isRelAbs || isSourceAbs ||
-                    (source.host && relative.pathname)),
+                    (result.host && relative.pathname)),
       removeAllDots = mustEndAbs,
-      srcPath = source.pathname && source.pathname.split('/') || [],
+      srcPath = result.pathname && result.pathname.split('/') || [],
       relPath = relative.pathname && relative.pathname.split('/') || [],
-      psychotic = source.protocol &&
-          !slashedProtocol[source.protocol];
+      psychotic = result.protocol && !slashedProtocol[result.protocol];
 
   // if the url is a non-slashed url, then relative
   // links like ../.. should be able
   // to crawl up to the hostname, as well.  This is strange.
-  // source.protocol has already been set by now.
+  // result.protocol has already been set by now.
   // Later on, put the first path part into the host field.
   if (psychotic) {
-
-    delete source.hostname;
-    delete source.port;
-    if (source.host) {
-      if (srcPath[0] === '') srcPath[0] = source.host;
-      else srcPath.unshift(source.host);
+    result.hostname = '';
+    result.port = null;
+    if (result.host) {
+      if (srcPath[0] === '') srcPath[0] = result.host;
+      else srcPath.unshift(result.host);
     }
-    delete source.host;
+    result.host = '';
     if (relative.protocol) {
-      delete relative.hostname;
-      delete relative.port;
+      relative.hostname = null;
+      relative.port = null;
       if (relative.host) {
         if (relPath[0] === '') relPath[0] = relative.host;
         else relPath.unshift(relative.host);
       }
-      delete relative.host;
+      relative.host = null;
     }
     mustEndAbs = mustEndAbs && (relPath[0] === '' || srcPath[0] === '');
   }
 
   if (isRelAbs) {
     // it's absolute.
-    source.host = (relative.host || relative.host === '') ?
-                      relative.host : source.host;
-    source.hostname = (relative.hostname || relative.hostname === '') ?
-                      relative.hostname : source.hostname;
-    source.search = relative.search;
-    source.query = relative.query;
+    result.host = (relative.host || relative.host === '') ?
+                  relative.host : result.host;
+    result.hostname = (relative.hostname || relative.hostname === '') ?
+                      relative.hostname : result.hostname;
+    result.search = relative.search;
+    result.query = relative.query;
     srcPath = relPath;
     // fall through to the dot-handling below.
   } else if (relPath.length) {
@@ -5357,53 +5473,55 @@ function urlResolveObject(source, relative) {
     if (!srcPath) srcPath = [];
     srcPath.pop();
     srcPath = srcPath.concat(relPath);
-    source.search = relative.search;
-    source.query = relative.query;
-  } else if ('search' in relative) {
+    result.search = relative.search;
+    result.query = relative.query;
+  } else if (!isNullOrUndefined(relative.search)) {
     // just pull out the search.
     // like href='?foo'.
     // Put this after the other two cases because it simplifies the booleans
     if (psychotic) {
-      source.hostname = source.host = srcPath.shift();
+      result.hostname = result.host = srcPath.shift();
       //occationaly the auth can get stuck only in host
       //this especialy happens in cases like
       //url.resolveObject('mailto:local1@domain1', 'local2@domain2')
-      var authInHost = source.host && source.host.indexOf('@') > 0 ?
-                       source.host.split('@') : false;
+      var authInHost = result.host && result.host.indexOf('@') > 0 ?
+                       result.host.split('@') : false;
       if (authInHost) {
-        source.auth = authInHost.shift();
-        source.host = source.hostname = authInHost.shift();
+        result.auth = authInHost.shift();
+        result.host = result.hostname = authInHost.shift();
       }
     }
-    source.search = relative.search;
-    source.query = relative.query;
+    result.search = relative.search;
+    result.query = relative.query;
     //to support http.request
-    if (source.pathname !== undefined || source.search !== undefined) {
-      source.path = (source.pathname ? source.pathname : '') +
-                    (source.search ? source.search : '');
+    if (!isNull(result.pathname) || !isNull(result.search)) {
+      result.path = (result.pathname ? result.pathname : '') +
+                    (result.search ? result.search : '');
     }
-    source.href = urlFormat(source);
-    return source;
+    result.href = result.format();
+    return result;
   }
+
   if (!srcPath.length) {
     // no path at all.  easy.
     // we've already handled the other stuff above.
-    delete source.pathname;
+    result.pathname = null;
     //to support http.request
-    if (!source.search) {
-      source.path = '/' + source.search;
+    if (result.search) {
+      result.path = '/' + result.search;
     } else {
-      delete source.path;
+      result.path = null;
     }
-    source.href = urlFormat(source);
-    return source;
+    result.href = result.format();
+    return result;
   }
+
   // if a url ENDs in . or .., then it must get a trailing slash.
   // however, if it ends in anything else non-slashy,
   // then it must NOT get a trailing slash.
   var last = srcPath.slice(-1)[0];
   var hasTrailingSlash = (
-      (source.host || relative.host) && (last === '.' || last === '..') ||
+      (result.host || relative.host) && (last === '.' || last === '..') ||
       last === '');
 
   // strip single dots, resolve double dots to parent dir
@@ -5443,52 +5561,70 @@ function urlResolveObject(source, relative) {
 
   // put the host back
   if (psychotic) {
-    source.hostname = source.host = isAbsolute ? '' :
+    result.hostname = result.host = isAbsolute ? '' :
                                     srcPath.length ? srcPath.shift() : '';
     //occationaly the auth can get stuck only in host
     //this especialy happens in cases like
     //url.resolveObject('mailto:local1@domain1', 'local2@domain2')
-    var authInHost = source.host && source.host.indexOf('@') > 0 ?
-                     source.host.split('@') : false;
+    var authInHost = result.host && result.host.indexOf('@') > 0 ?
+                     result.host.split('@') : false;
     if (authInHost) {
-      source.auth = authInHost.shift();
-      source.host = source.hostname = authInHost.shift();
+      result.auth = authInHost.shift();
+      result.host = result.hostname = authInHost.shift();
     }
   }
 
-  mustEndAbs = mustEndAbs || (source.host && srcPath.length);
+  mustEndAbs = mustEndAbs || (result.host && srcPath.length);
 
   if (mustEndAbs && !isAbsolute) {
     srcPath.unshift('');
   }
 
-  source.pathname = srcPath.join('/');
-  //to support request.http
-  if (source.pathname !== undefined || source.search !== undefined) {
-    source.path = (source.pathname ? source.pathname : '') +
-                  (source.search ? source.search : '');
+  if (!srcPath.length) {
+    result.pathname = null;
+    result.path = null;
+  } else {
+    result.pathname = srcPath.join('/');
   }
-  source.auth = relative.auth || source.auth;
-  source.slashes = source.slashes || relative.slashes;
-  source.href = urlFormat(source);
-  return source;
-}
 
-function parseHost(host) {
-  var out = {};
+  //to support request.http
+  if (!isNull(result.pathname) || !isNull(result.search)) {
+    result.path = (result.pathname ? result.pathname : '') +
+                  (result.search ? result.search : '');
+  }
+  result.auth = relative.auth || result.auth;
+  result.slashes = result.slashes || relative.slashes;
+  result.href = result.format();
+  return result;
+};
+
+Url.prototype.parseHost = function() {
+  var host = this.host;
   var port = portPattern.exec(host);
   if (port) {
     port = port[0];
     if (port !== ':') {
-      out.port = port.substr(1);
+      this.port = port.substr(1);
     }
     host = host.substr(0, host.length - port.length);
   }
-  if (host) out.hostname = host;
-  return out;
+  if (host) this.hostname = host;
+};
+
+function isString(arg) {
+  return typeof arg === "string";
 }
 
-}());
+function isObject(arg) {
+  return typeof arg === 'object' && arg !== null;
+}
+
+function isNull(arg) {
+  return arg === null;
+}
+function isNullOrUndefined(arg) {
+  return  arg == null;
+}
 
 },{"punycode":11,"querystring":14}],24:[function(require,module,exports){
 module.exports = function isBuffer(arg) {
@@ -6086,8 +6222,8 @@ function hasOwnProperty(obj, prop) {
   return Object.prototype.hasOwnProperty.call(obj, prop);
 }
 
-}).call(this,require("/Users/speciman/Documents/development/grex/node_modules/gulp-browserify/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":24,"/Users/speciman/Documents/development/grex/node_modules/gulp-browserify/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js":10,"inherits":26}],26:[function(require,module,exports){
+}).call(this,require("IrXUsu"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"./support/isBuffer":24,"IrXUsu":10,"inherits":26}],26:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -12902,2071 +13038,77 @@ if (typeof Object.create === 'function') {
 
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{}],28:[function(require,module,exports){
-(function (process){
-// vim:ts=4:sts=4:sw=4:
-/*!
- *
- * Copyright 2009-2012 Kris Kowal under the terms of the MIT
- * license found at http://github.com/kriskowal/q/raw/master/LICENSE
- *
- * With parts by Tyler Close
- * Copyright 2007-2009 Tyler Close under the terms of the MIT X license found
- * at http://www.opensource.org/licenses/mit-license.html
- * Forked at ref_send.js version: 2009-05-11
- *
- * With parts by Mark Miller
- * Copyright (C) 2011 Google Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- */
-
-(function (definition) {
-    // Turn off strict mode for this function so we can assign to global.Q
-    /* jshint strict: false */
-
-    // This file will function properly as a <script> tag, or a module
-    // using CommonJS and NodeJS or RequireJS module formats.  In
-    // Common/Node/RequireJS, the module exports the Q API and when
-    // executed as a simple <script>, it creates a Q global instead.
-
-    // Montage Require
-    if (typeof bootstrap === "function") {
-        bootstrap("promise", definition);
-
-    // CommonJS
-    } else if (typeof exports === "object") {
-        module.exports = definition();
-
-    // RequireJS
-    } else if (typeof define === "function" && define.amd) {
-        define(definition);
-
-    // SES (Secure EcmaScript)
-    } else if (typeof ses !== "undefined") {
-        if (!ses.ok()) {
-            return;
-        } else {
-            ses.makeQ = definition;
-        }
-
-    // <script>
-    } else {
-        Q = definition();
-    }
-
-})(function () {
-"use strict";
-
-var hasStacks = false;
-try {
-    throw new Error();
-} catch (e) {
-    hasStacks = !!e.stack;
-}
-
-// All code after this point will be filtered from stack traces reported
-// by Q.
-var qStartingLine = captureLine();
-var qFileName;
-
-// shims
-
-// used for fallback in "allResolved"
-var noop = function () {};
-
-// Use the fastest possible means to execute a task in a future turn
-// of the event loop.
-var nextTick =(function () {
-    // linked list of tasks (single, with head node)
-    var head = {task: void 0, next: null};
-    var tail = head;
-    var flushing = false;
-    var requestTick = void 0;
-    var isNodeJS = false;
-
-    function flush() {
-        /* jshint loopfunc: true */
-
-        while (head.next) {
-            head = head.next;
-            var task = head.task;
-            head.task = void 0;
-            var domain = head.domain;
-
-            if (domain) {
-                head.domain = void 0;
-                domain.enter();
-            }
-
-            try {
-                task();
-
-            } catch (e) {
-                if (isNodeJS) {
-                    // In node, uncaught exceptions are considered fatal errors.
-                    // Re-throw them synchronously to interrupt flushing!
-
-                    // Ensure continuation if the uncaught exception is suppressed
-                    // listening "uncaughtException" events (as domains does).
-                    // Continue in next event to avoid tick recursion.
-                    if (domain) {
-                        domain.exit();
-                    }
-                    setTimeout(flush, 0);
-                    if (domain) {
-                        domain.enter();
-                    }
-
-                    throw e;
-
-                } else {
-                    // In browsers, uncaught exceptions are not fatal.
-                    // Re-throw them asynchronously to avoid slow-downs.
-                    setTimeout(function() {
-                       throw e;
-                    }, 0);
-                }
-            }
-
-            if (domain) {
-                domain.exit();
-            }
-        }
-
-        flushing = false;
-    }
-
-    nextTick = function (task) {
-        tail = tail.next = {
-            task: task,
-            domain: isNodeJS && process.domain,
-            next: null
-        };
-
-        if (!flushing) {
-            flushing = true;
-            requestTick();
-        }
-    };
-
-    if (typeof process !== "undefined" && process.nextTick) {
-        // Node.js before 0.9. Note that some fake-Node environments, like the
-        // Mocha test runner, introduce a `process` global without a `nextTick`.
-        isNodeJS = true;
-
-        requestTick = function () {
-            process.nextTick(flush);
-        };
-
-    } else if (typeof setImmediate === "function") {
-        // In IE10, Node.js 0.9+, or https://github.com/NobleJS/setImmediate
-        if (typeof window !== "undefined") {
-            requestTick = setImmediate.bind(window, flush);
-        } else {
-            requestTick = function () {
-                setImmediate(flush);
-            };
-        }
-
-    } else if (typeof MessageChannel !== "undefined") {
-        // modern browsers
-        // http://www.nonblocking.io/2011/06/windownexttick.html
-        var channel = new MessageChannel();
-        // At least Safari Version 6.0.5 (8536.30.1) intermittently cannot create
-        // working message ports the first time a page loads.
-        channel.port1.onmessage = function () {
-            requestTick = requestPortTick;
-            channel.port1.onmessage = flush;
-            flush();
-        };
-        var requestPortTick = function () {
-            // Opera requires us to provide a message payload, regardless of
-            // whether we use it.
-            channel.port2.postMessage(0);
-        };
-        requestTick = function () {
-            setTimeout(flush, 0);
-            requestPortTick();
-        };
-
-    } else {
-        // old browsers
-        requestTick = function () {
-            setTimeout(flush, 0);
-        };
-    }
-
-    return nextTick;
-})();
-
-// Attempt to make generics safe in the face of downstream
-// modifications.
-// There is no situation where this is necessary.
-// If you need a security guarantee, these primordials need to be
-// deeply frozen anyway, and if you don’t need a security guarantee,
-// this is just plain paranoid.
-// However, this does have the nice side-effect of reducing the size
-// of the code by reducing x.call() to merely x(), eliminating many
-// hard-to-minify characters.
-// See Mark Miller’s explanation of what this does.
-// http://wiki.ecmascript.org/doku.php?id=conventions:safe_meta_programming
-var call = Function.call;
-function uncurryThis(f) {
-    return function () {
-        return call.apply(f, arguments);
-    };
-}
-// This is equivalent, but slower:
-// uncurryThis = Function_bind.bind(Function_bind.call);
-// http://jsperf.com/uncurrythis
-
-var array_slice = uncurryThis(Array.prototype.slice);
-
-var array_reduce = uncurryThis(
-    Array.prototype.reduce || function (callback, basis) {
-        var index = 0,
-            length = this.length;
-        // concerning the initial value, if one is not provided
-        if (arguments.length === 1) {
-            // seek to the first value in the array, accounting
-            // for the possibility that is is a sparse array
-            do {
-                if (index in this) {
-                    basis = this[index++];
-                    break;
-                }
-                if (++index >= length) {
-                    throw new TypeError();
-                }
-            } while (1);
-        }
-        // reduce
-        for (; index < length; index++) {
-            // account for the possibility that the array is sparse
-            if (index in this) {
-                basis = callback(basis, this[index], index);
-            }
-        }
-        return basis;
-    }
-);
-
-var array_indexOf = uncurryThis(
-    Array.prototype.indexOf || function (value) {
-        // not a very good shim, but good enough for our one use of it
-        for (var i = 0; i < this.length; i++) {
-            if (this[i] === value) {
-                return i;
-            }
-        }
-        return -1;
-    }
-);
-
-var array_map = uncurryThis(
-    Array.prototype.map || function (callback, thisp) {
-        var self = this;
-        var collect = [];
-        array_reduce(self, function (undefined, value, index) {
-            collect.push(callback.call(thisp, value, index, self));
-        }, void 0);
-        return collect;
-    }
-);
-
-var object_create = Object.create || function (prototype) {
-    function Type() { }
-    Type.prototype = prototype;
-    return new Type();
-};
-
-var object_hasOwnProperty = uncurryThis(Object.prototype.hasOwnProperty);
-
-var object_keys = Object.keys || function (object) {
-    var keys = [];
-    for (var key in object) {
-        if (object_hasOwnProperty(object, key)) {
-            keys.push(key);
-        }
-    }
-    return keys;
-};
-
-var object_toString = uncurryThis(Object.prototype.toString);
-
-function isObject(value) {
-    return value === Object(value);
-}
-
-// generator related shims
-
-// FIXME: Remove this function once ES6 generators are in SpiderMonkey.
-function isStopIteration(exception) {
-    return (
-        object_toString(exception) === "[object StopIteration]" ||
-        exception instanceof QReturnValue
-    );
-}
-
-// FIXME: Remove this helper and Q.return once ES6 generators are in
-// SpiderMonkey.
-var QReturnValue;
-if (typeof ReturnValue !== "undefined") {
-    QReturnValue = ReturnValue;
-} else {
-    QReturnValue = function (value) {
-        this.value = value;
-    };
-}
-
-// Until V8 3.19 / Chromium 29 is released, SpiderMonkey is the only
-// engine that has a deployed base of browsers that support generators.
-// However, SM's generators use the Python-inspired semantics of
-// outdated ES6 drafts.  We would like to support ES6, but we'd also
-// like to make it possible to use generators in deployed browsers, so
-// we also support Python-style generators.  At some point we can remove
-// this block.
-var hasES6Generators;
-try {
-    /* jshint evil: true, nonew: false */
-    new Function("(function* (){ yield 1; })");
-    hasES6Generators = true;
-} catch (e) {
-    hasES6Generators = false;
-}
-
-// long stack traces
-
-var STACK_JUMP_SEPARATOR = "From previous event:";
-
-function makeStackTraceLong(error, promise) {
-    // If possible, transform the error stack trace by removing Node and Q
-    // cruft, then concatenating with the stack trace of `promise`. See #57.
-    if (hasStacks &&
-        promise.stack &&
-        typeof error === "object" &&
-        error !== null &&
-        error.stack &&
-        error.stack.indexOf(STACK_JUMP_SEPARATOR) === -1
-    ) {
-        var stacks = [];
-        for (var p = promise; !!p; p = p.source) {
-            if (p.stack) {
-                stacks.unshift(p.stack);
-            }
-        }
-        stacks.unshift(error.stack);
-
-        var concatedStacks = stacks.join("\n" + STACK_JUMP_SEPARATOR + "\n");
-        error.stack = filterStackString(concatedStacks);
-    }
-}
-
-function filterStackString(stackString) {
-    var lines = stackString.split("\n");
-    var desiredLines = [];
-    for (var i = 0; i < lines.length; ++i) {
-        var line = lines[i];
-
-        if (!isInternalFrame(line) && !isNodeFrame(line) && line) {
-            desiredLines.push(line);
-        }
-    }
-    return desiredLines.join("\n");
-}
-
-function isNodeFrame(stackLine) {
-    return stackLine.indexOf("(module.js:") !== -1 ||
-           stackLine.indexOf("(node.js:") !== -1;
-}
-
-function getFileNameAndLineNumber(stackLine) {
-    // Named functions: "at functionName (filename:lineNumber:columnNumber)"
-    // In IE10 function name can have spaces ("Anonymous function") O_o
-    var attempt1 = /at .+ \((.+):(\d+):(?:\d+)\)$/.exec(stackLine);
-    if (attempt1) {
-        return [attempt1[1], Number(attempt1[2])];
-    }
-
-    // Anonymous functions: "at filename:lineNumber:columnNumber"
-    var attempt2 = /at ([^ ]+):(\d+):(?:\d+)$/.exec(stackLine);
-    if (attempt2) {
-        return [attempt2[1], Number(attempt2[2])];
-    }
-
-    // Firefox style: "function@filename:lineNumber or @filename:lineNumber"
-    var attempt3 = /.*@(.+):(\d+)$/.exec(stackLine);
-    if (attempt3) {
-        return [attempt3[1], Number(attempt3[2])];
-    }
-}
-
-function isInternalFrame(stackLine) {
-    var fileNameAndLineNumber = getFileNameAndLineNumber(stackLine);
-
-    if (!fileNameAndLineNumber) {
-        return false;
-    }
-
-    var fileName = fileNameAndLineNumber[0];
-    var lineNumber = fileNameAndLineNumber[1];
-
-    return fileName === qFileName &&
-        lineNumber >= qStartingLine &&
-        lineNumber <= qEndingLine;
-}
-
-// discover own file name and line number range for filtering stack
-// traces
-function captureLine() {
-    if (!hasStacks) {
-        return;
-    }
-
-    try {
-        throw new Error();
-    } catch (e) {
-        var lines = e.stack.split("\n");
-        var firstLine = lines[0].indexOf("@") > 0 ? lines[1] : lines[2];
-        var fileNameAndLineNumber = getFileNameAndLineNumber(firstLine);
-        if (!fileNameAndLineNumber) {
-            return;
-        }
-
-        qFileName = fileNameAndLineNumber[0];
-        return fileNameAndLineNumber[1];
-    }
-}
-
-function deprecate(callback, name, alternative) {
-    return function () {
-        if (typeof console !== "undefined" &&
-            typeof console.warn === "function") {
-            console.warn(name + " is deprecated, use " + alternative +
-                         " instead.", new Error("").stack);
-        }
-        return callback.apply(callback, arguments);
-    };
-}
-
-// end of shims
-// beginning of real work
-
-/**
- * Constructs a promise for an immediate reference, passes promises through, or
- * coerces promises from different systems.
- * @param value immediate reference or promise
- */
-function Q(value) {
-    // If the object is already a Promise, return it directly.  This enables
-    // the resolve function to both be used to created references from objects,
-    // but to tolerably coerce non-promises to promises.
-    if (isPromise(value)) {
-        return value;
-    }
-
-    // assimilate thenables
-    if (isPromiseAlike(value)) {
-        return coerce(value);
-    } else {
-        return fulfill(value);
-    }
-}
-Q.resolve = Q;
-
-/**
- * Performs a task in a future turn of the event loop.
- * @param {Function} task
- */
-Q.nextTick = nextTick;
-
-/**
- * Controls whether or not long stack traces will be on
- */
-Q.longStackSupport = false;
-
-/**
- * Constructs a {promise, resolve, reject} object.
- *
- * `resolve` is a callback to invoke with a more resolved value for the
- * promise. To fulfill the promise, invoke `resolve` with any value that is
- * not a thenable. To reject the promise, invoke `resolve` with a rejected
- * thenable, or invoke `reject` with the reason directly. To resolve the
- * promise to another thenable, thus putting it in the same state, invoke
- * `resolve` with that other thenable.
- */
-Q.defer = defer;
-function defer() {
-    // if "messages" is an "Array", that indicates that the promise has not yet
-    // been resolved.  If it is "undefined", it has been resolved.  Each
-    // element of the messages array is itself an array of complete arguments to
-    // forward to the resolved promise.  We coerce the resolution value to a
-    // promise using the `resolve` function because it handles both fully
-    // non-thenable values and other thenables gracefully.
-    var messages = [], progressListeners = [], resolvedPromise;
-
-    var deferred = object_create(defer.prototype);
-    var promise = object_create(Promise.prototype);
-
-    promise.promiseDispatch = function (resolve, op, operands) {
-        var args = array_slice(arguments);
-        if (messages) {
-            messages.push(args);
-            if (op === "when" && operands[1]) { // progress operand
-                progressListeners.push(operands[1]);
-            }
-        } else {
-            nextTick(function () {
-                resolvedPromise.promiseDispatch.apply(resolvedPromise, args);
-            });
-        }
-    };
-
-    // XXX deprecated
-    promise.valueOf = deprecate(function () {
-        if (messages) {
-            return promise;
-        }
-        var nearerValue = nearer(resolvedPromise);
-        if (isPromise(nearerValue)) {
-            resolvedPromise = nearerValue; // shorten chain
-        }
-        return nearerValue;
-    }, "valueOf", "inspect");
-
-    promise.inspect = function () {
-        if (!resolvedPromise) {
-            return { state: "pending" };
-        }
-        return resolvedPromise.inspect();
-    };
-
-    if (Q.longStackSupport && hasStacks) {
-        try {
-            throw new Error();
-        } catch (e) {
-            // NOTE: don't try to use `Error.captureStackTrace` or transfer the
-            // accessor around; that causes memory leaks as per GH-111. Just
-            // reify the stack trace as a string ASAP.
-            //
-            // At the same time, cut off the first line; it's always just
-            // "[object Promise]\n", as per the `toString`.
-            promise.stack = e.stack.substring(e.stack.indexOf("\n") + 1);
-        }
-    }
-
-    // NOTE: we do the checks for `resolvedPromise` in each method, instead of
-    // consolidating them into `become`, since otherwise we'd create new
-    // promises with the lines `become(whatever(value))`. See e.g. GH-252.
-
-    function become(newPromise) {
-        resolvedPromise = newPromise;
-        promise.source = newPromise;
-
-        array_reduce(messages, function (undefined, message) {
-            nextTick(function () {
-                newPromise.promiseDispatch.apply(newPromise, message);
-            });
-        }, void 0);
-
-        messages = void 0;
-        progressListeners = void 0;
-    }
-
-    deferred.promise = promise;
-    deferred.resolve = function (value) {
-        if (resolvedPromise) {
-            return;
-        }
-
-        become(Q(value));
-    };
-
-    deferred.fulfill = function (value) {
-        if (resolvedPromise) {
-            return;
-        }
-
-        become(fulfill(value));
-    };
-    deferred.reject = function (reason) {
-        if (resolvedPromise) {
-            return;
-        }
-
-        become(reject(reason));
-    };
-    deferred.notify = function (progress) {
-        if (resolvedPromise) {
-            return;
-        }
-
-        array_reduce(progressListeners, function (undefined, progressListener) {
-            nextTick(function () {
-                progressListener(progress);
-            });
-        }, void 0);
-    };
-
-    return deferred;
-}
-
-/**
- * Creates a Node-style callback that will resolve or reject the deferred
- * promise.
- * @returns a nodeback
- */
-defer.prototype.makeNodeResolver = function () {
-    var self = this;
-    return function (error, value) {
-        if (error) {
-            self.reject(error);
-        } else if (arguments.length > 2) {
-            self.resolve(array_slice(arguments, 1));
-        } else {
-            self.resolve(value);
-        }
-    };
-};
-
-/**
- * @param resolver {Function} a function that returns nothing and accepts
- * the resolve, reject, and notify functions for a deferred.
- * @returns a promise that may be resolved with the given resolve and reject
- * functions, or rejected by a thrown exception in resolver
- */
-Q.promise = promise;
-function promise(resolver) {
-    if (typeof resolver !== "function") {
-        throw new TypeError("resolver must be a function.");
-    }
-    var deferred = defer();
-    try {
-        resolver(deferred.resolve, deferred.reject, deferred.notify);
-    } catch (reason) {
-        deferred.reject(reason);
-    }
-    return deferred.promise;
-}
-
-// XXX experimental.  This method is a way to denote that a local value is
-// serializable and should be immediately dispatched to a remote upon request,
-// instead of passing a reference.
-Q.passByCopy = function (object) {
-    //freeze(object);
-    //passByCopies.set(object, true);
-    return object;
-};
-
-Promise.prototype.passByCopy = function () {
-    //freeze(object);
-    //passByCopies.set(object, true);
-    return this;
-};
-
-/**
- * If two promises eventually fulfill to the same value, promises that value,
- * but otherwise rejects.
- * @param x {Any*}
- * @param y {Any*}
- * @returns {Any*} a promise for x and y if they are the same, but a rejection
- * otherwise.
- *
- */
-Q.join = function (x, y) {
-    return Q(x).join(y);
-};
-
-Promise.prototype.join = function (that) {
-    return Q([this, that]).spread(function (x, y) {
-        if (x === y) {
-            // TODO: "===" should be Object.is or equiv
-            return x;
-        } else {
-            throw new Error("Can't join: not the same: " + x + " " + y);
-        }
-    });
-};
-
-/**
- * Returns a promise for the first of an array of promises to become fulfilled.
- * @param answers {Array[Any*]} promises to race
- * @returns {Any*} the first promise to be fulfilled
- */
-Q.race = race;
-function race(answerPs) {
-    return promise(function(resolve, reject) {
-        // Switch to this once we can assume at least ES5
-        // answerPs.forEach(function(answerP) {
-        //     Q(answerP).then(resolve, reject);
-        // });
-        // Use this in the meantime
-        for (var i = 0, len = answerPs.length; i < len; i++) {
-            Q(answerPs[i]).then(resolve, reject);
-        }
-    });
-}
-
-Promise.prototype.race = function () {
-    return this.then(Q.race);
-};
-
-/**
- * Constructs a Promise with a promise descriptor object and optional fallback
- * function.  The descriptor contains methods like when(rejected), get(name),
- * set(name, value), post(name, args), and delete(name), which all
- * return either a value, a promise for a value, or a rejection.  The fallback
- * accepts the operation name, a resolver, and any further arguments that would
- * have been forwarded to the appropriate method above had a method been
- * provided with the proper name.  The API makes no guarantees about the nature
- * of the returned object, apart from that it is usable whereever promises are
- * bought and sold.
- */
-Q.makePromise = Promise;
-function Promise(descriptor, fallback, inspect) {
-    if (fallback === void 0) {
-        fallback = function (op) {
-            return reject(new Error(
-                "Promise does not support operation: " + op
-            ));
-        };
-    }
-    if (inspect === void 0) {
-        inspect = function () {
-            return {state: "unknown"};
-        };
-    }
-
-    var promise = object_create(Promise.prototype);
-
-    promise.promiseDispatch = function (resolve, op, args) {
-        var result;
-        try {
-            if (descriptor[op]) {
-                result = descriptor[op].apply(promise, args);
-            } else {
-                result = fallback.call(promise, op, args);
-            }
-        } catch (exception) {
-            result = reject(exception);
-        }
-        if (resolve) {
-            resolve(result);
-        }
-    };
-
-    promise.inspect = inspect;
-
-    // XXX deprecated `valueOf` and `exception` support
-    if (inspect) {
-        var inspected = inspect();
-        if (inspected.state === "rejected") {
-            promise.exception = inspected.reason;
-        }
-
-        promise.valueOf = deprecate(function () {
-            var inspected = inspect();
-            if (inspected.state === "pending" ||
-                inspected.state === "rejected") {
-                return promise;
-            }
-            return inspected.value;
-        });
-    }
-
-    return promise;
-}
-
-Promise.prototype.toString = function () {
-    return "[object Promise]";
-};
-
-Promise.prototype.then = function (fulfilled, rejected, progressed) {
-    var self = this;
-    var deferred = defer();
-    var done = false;   // ensure the untrusted promise makes at most a
-                        // single call to one of the callbacks
-
-    function _fulfilled(value) {
-        try {
-            return typeof fulfilled === "function" ? fulfilled(value) : value;
-        } catch (exception) {
-            return reject(exception);
-        }
-    }
-
-    function _rejected(exception) {
-        if (typeof rejected === "function") {
-            makeStackTraceLong(exception, self);
-            try {
-                return rejected(exception);
-            } catch (newException) {
-                return reject(newException);
-            }
-        }
-        return reject(exception);
-    }
-
-    function _progressed(value) {
-        return typeof progressed === "function" ? progressed(value) : value;
-    }
-
-    nextTick(function () {
-        self.promiseDispatch(function (value) {
-            if (done) {
-                return;
-            }
-            done = true;
-
-            deferred.resolve(_fulfilled(value));
-        }, "when", [function (exception) {
-            if (done) {
-                return;
-            }
-            done = true;
-
-            deferred.resolve(_rejected(exception));
-        }]);
-    });
-
-    // Progress propagator need to be attached in the current tick.
-    self.promiseDispatch(void 0, "when", [void 0, function (value) {
-        var newValue;
-        var threw = false;
-        try {
-            newValue = _progressed(value);
-        } catch (e) {
-            threw = true;
-            if (Q.onerror) {
-                Q.onerror(e);
-            } else {
-                throw e;
-            }
-        }
-
-        if (!threw) {
-            deferred.notify(newValue);
-        }
-    }]);
-
-    return deferred.promise;
-};
-
-/**
- * Registers an observer on a promise.
- *
- * Guarantees:
- *
- * 1. that fulfilled and rejected will be called only once.
- * 2. that either the fulfilled callback or the rejected callback will be
- *    called, but not both.
- * 3. that fulfilled and rejected will not be called in this turn.
- *
- * @param value      promise or immediate reference to observe
- * @param fulfilled  function to be called with the fulfilled value
- * @param rejected   function to be called with the rejection exception
- * @param progressed function to be called on any progress notifications
- * @return promise for the return value from the invoked callback
- */
-Q.when = when;
-function when(value, fulfilled, rejected, progressed) {
-    return Q(value).then(fulfilled, rejected, progressed);
-}
-
-Promise.prototype.thenResolve = function (value) {
-    return this.then(function () { return value; });
-};
-
-Q.thenResolve = function (promise, value) {
-    return Q(promise).thenResolve(value);
-};
-
-Promise.prototype.thenReject = function (reason) {
-    return this.then(function () { throw reason; });
-};
-
-Q.thenReject = function (promise, reason) {
-    return Q(promise).thenReject(reason);
-};
-
-/**
- * If an object is not a promise, it is as "near" as possible.
- * If a promise is rejected, it is as "near" as possible too.
- * If it’s a fulfilled promise, the fulfillment value is nearer.
- * If it’s a deferred promise and the deferred has been resolved, the
- * resolution is "nearer".
- * @param object
- * @returns most resolved (nearest) form of the object
- */
-
-// XXX should we re-do this?
-Q.nearer = nearer;
-function nearer(value) {
-    if (isPromise(value)) {
-        var inspected = value.inspect();
-        if (inspected.state === "fulfilled") {
-            return inspected.value;
-        }
-    }
-    return value;
-}
-
-/**
- * @returns whether the given object is a promise.
- * Otherwise it is a fulfilled value.
- */
-Q.isPromise = isPromise;
-function isPromise(object) {
-    return isObject(object) &&
-        typeof object.promiseDispatch === "function" &&
-        typeof object.inspect === "function";
-}
-
-Q.isPromiseAlike = isPromiseAlike;
-function isPromiseAlike(object) {
-    return isObject(object) && typeof object.then === "function";
-}
-
-/**
- * @returns whether the given object is a pending promise, meaning not
- * fulfilled or rejected.
- */
-Q.isPending = isPending;
-function isPending(object) {
-    return isPromise(object) && object.inspect().state === "pending";
-}
-
-Promise.prototype.isPending = function () {
-    return this.inspect().state === "pending";
-};
-
-/**
- * @returns whether the given object is a value or fulfilled
- * promise.
- */
-Q.isFulfilled = isFulfilled;
-function isFulfilled(object) {
-    return !isPromise(object) || object.inspect().state === "fulfilled";
-}
-
-Promise.prototype.isFulfilled = function () {
-    return this.inspect().state === "fulfilled";
-};
-
-/**
- * @returns whether the given object is a rejected promise.
- */
-Q.isRejected = isRejected;
-function isRejected(object) {
-    return isPromise(object) && object.inspect().state === "rejected";
-}
-
-Promise.prototype.isRejected = function () {
-    return this.inspect().state === "rejected";
-};
-
-//// BEGIN UNHANDLED REJECTION TRACKING
-
-// This promise library consumes exceptions thrown in handlers so they can be
-// handled by a subsequent promise.  The exceptions get added to this array when
-// they are created, and removed when they are handled.  Note that in ES6 or
-// shimmed environments, this would naturally be a `Set`.
-var unhandledReasons = [];
-var unhandledRejections = [];
-var unhandledReasonsDisplayed = false;
-var trackUnhandledRejections = true;
-function displayUnhandledReasons() {
-    if (
-        !unhandledReasonsDisplayed &&
-        typeof window !== "undefined" &&
-        !window.Touch &&
-        window.console
-    ) {
-        console.warn("[Q] Unhandled rejection reasons (should be empty):",
-                     unhandledReasons);
-    }
-
-    unhandledReasonsDisplayed = true;
-}
-
-function logUnhandledReasons() {
-    for (var i = 0; i < unhandledReasons.length; i++) {
-        var reason = unhandledReasons[i];
-        console.warn("Unhandled rejection reason:", reason);
-    }
-}
-
-function resetUnhandledRejections() {
-    unhandledReasons.length = 0;
-    unhandledRejections.length = 0;
-    unhandledReasonsDisplayed = false;
-
-    if (!trackUnhandledRejections) {
-        trackUnhandledRejections = true;
-
-        // Show unhandled rejection reasons if Node exits without handling an
-        // outstanding rejection.  (Note that Browserify presently produces a
-        // `process` global without the `EventEmitter` `on` method.)
-        if (typeof process !== "undefined" && process.on) {
-            process.on("exit", logUnhandledReasons);
-        }
-    }
-}
-
-function trackRejection(promise, reason) {
-    if (!trackUnhandledRejections) {
-        return;
-    }
-
-    unhandledRejections.push(promise);
-    if (reason && typeof reason.stack !== "undefined") {
-        unhandledReasons.push(reason.stack);
-    } else {
-        unhandledReasons.push("(no stack) " + reason);
-    }
-    displayUnhandledReasons();
-}
-
-function untrackRejection(promise) {
-    if (!trackUnhandledRejections) {
-        return;
-    }
-
-    var at = array_indexOf(unhandledRejections, promise);
-    if (at !== -1) {
-        unhandledRejections.splice(at, 1);
-        unhandledReasons.splice(at, 1);
-    }
-}
-
-Q.resetUnhandledRejections = resetUnhandledRejections;
-
-Q.getUnhandledReasons = function () {
-    // Make a copy so that consumers can't interfere with our internal state.
-    return unhandledReasons.slice();
-};
-
-Q.stopUnhandledRejectionTracking = function () {
-    resetUnhandledRejections();
-    if (typeof process !== "undefined" && process.on) {
-        process.removeListener("exit", logUnhandledReasons);
-    }
-    trackUnhandledRejections = false;
-};
-
-resetUnhandledRejections();
-
-//// END UNHANDLED REJECTION TRACKING
-
-/**
- * Constructs a rejected promise.
- * @param reason value describing the failure
- */
-Q.reject = reject;
-function reject(reason) {
-    var rejection = Promise({
-        "when": function (rejected) {
-            // note that the error has been handled
-            if (rejected) {
-                untrackRejection(this);
-            }
-            return rejected ? rejected(reason) : this;
-        }
-    }, function fallback() {
-        return this;
-    }, function inspect() {
-        return { state: "rejected", reason: reason };
-    });
-
-    // Note that the reason has not been handled.
-    trackRejection(rejection, reason);
-
-    return rejection;
-}
-
-/**
- * Constructs a fulfilled promise for an immediate reference.
- * @param value immediate reference
- */
-Q.fulfill = fulfill;
-function fulfill(value) {
-    return Promise({
-        "when": function () {
-            return value;
-        },
-        "get": function (name) {
-            return value[name];
-        },
-        "set": function (name, rhs) {
-            value[name] = rhs;
-        },
-        "delete": function (name) {
-            delete value[name];
-        },
-        "post": function (name, args) {
-            // Mark Miller proposes that post with no name should apply a
-            // promised function.
-            if (name === null || name === void 0) {
-                return value.apply(void 0, args);
-            } else {
-                return value[name].apply(value, args);
-            }
-        },
-        "apply": function (thisp, args) {
-            return value.apply(thisp, args);
-        },
-        "keys": function () {
-            return object_keys(value);
-        }
-    }, void 0, function inspect() {
-        return { state: "fulfilled", value: value };
-    });
-}
-
-/**
- * Converts thenables to Q promises.
- * @param promise thenable promise
- * @returns a Q promise
- */
-function coerce(promise) {
-    var deferred = defer();
-    nextTick(function () {
-        try {
-            promise.then(deferred.resolve, deferred.reject, deferred.notify);
-        } catch (exception) {
-            deferred.reject(exception);
-        }
-    });
-    return deferred.promise;
-}
-
-/**
- * Annotates an object such that it will never be
- * transferred away from this process over any promise
- * communication channel.
- * @param object
- * @returns promise a wrapping of that object that
- * additionally responds to the "isDef" message
- * without a rejection.
- */
-Q.master = master;
-function master(object) {
-    return Promise({
-        "isDef": function () {}
-    }, function fallback(op, args) {
-        return dispatch(object, op, args);
-    }, function () {
-        return Q(object).inspect();
-    });
-}
-
-/**
- * Spreads the values of a promised array of arguments into the
- * fulfillment callback.
- * @param fulfilled callback that receives variadic arguments from the
- * promised array
- * @param rejected callback that receives the exception if the promise
- * is rejected.
- * @returns a promise for the return value or thrown exception of
- * either callback.
- */
-Q.spread = spread;
-function spread(value, fulfilled, rejected) {
-    return Q(value).spread(fulfilled, rejected);
-}
-
-Promise.prototype.spread = function (fulfilled, rejected) {
-    return this.all().then(function (array) {
-        return fulfilled.apply(void 0, array);
-    }, rejected);
-};
-
-/**
- * The async function is a decorator for generator functions, turning
- * them into asynchronous generators.  Although generators are only part
- * of the newest ECMAScript 6 drafts, this code does not cause syntax
- * errors in older engines.  This code should continue to work and will
- * in fact improve over time as the language improves.
- *
- * ES6 generators are currently part of V8 version 3.19 with the
- * --harmony-generators runtime flag enabled.  SpiderMonkey has had them
- * for longer, but under an older Python-inspired form.  This function
- * works on both kinds of generators.
- *
- * Decorates a generator function such that:
- *  - it may yield promises
- *  - execution will continue when that promise is fulfilled
- *  - the value of the yield expression will be the fulfilled value
- *  - it returns a promise for the return value (when the generator
- *    stops iterating)
- *  - the decorated function returns a promise for the return value
- *    of the generator or the first rejected promise among those
- *    yielded.
- *  - if an error is thrown in the generator, it propagates through
- *    every following yield until it is caught, or until it escapes
- *    the generator function altogether, and is translated into a
- *    rejection for the promise returned by the decorated generator.
- */
-Q.async = async;
-function async(makeGenerator) {
-    return function () {
-        // when verb is "send", arg is a value
-        // when verb is "throw", arg is an exception
-        function continuer(verb, arg) {
-            var result;
-            if (hasES6Generators) {
-                try {
-                    result = generator[verb](arg);
-                } catch (exception) {
-                    return reject(exception);
-                }
-                if (result.done) {
-                    return result.value;
-                } else {
-                    return when(result.value, callback, errback);
-                }
-            } else {
-                // FIXME: Remove this case when SM does ES6 generators.
-                try {
-                    result = generator[verb](arg);
-                } catch (exception) {
-                    if (isStopIteration(exception)) {
-                        return exception.value;
-                    } else {
-                        return reject(exception);
-                    }
-                }
-                return when(result, callback, errback);
-            }
-        }
-        var generator = makeGenerator.apply(this, arguments);
-        var callback = continuer.bind(continuer, "next");
-        var errback = continuer.bind(continuer, "throw");
-        return callback();
-    };
-}
-
-/**
- * The spawn function is a small wrapper around async that immediately
- * calls the generator and also ends the promise chain, so that any
- * unhandled errors are thrown instead of forwarded to the error
- * handler. This is useful because it's extremely common to run
- * generators at the top-level to work with libraries.
- */
-Q.spawn = spawn;
-function spawn(makeGenerator) {
-    Q.done(Q.async(makeGenerator)());
-}
-
-// FIXME: Remove this interface once ES6 generators are in SpiderMonkey.
-/**
- * Throws a ReturnValue exception to stop an asynchronous generator.
- *
- * This interface is a stop-gap measure to support generator return
- * values in older Firefox/SpiderMonkey.  In browsers that support ES6
- * generators like Chromium 29, just use "return" in your generator
- * functions.
- *
- * @param value the return value for the surrounding generator
- * @throws ReturnValue exception with the value.
- * @example
- * // ES6 style
- * Q.async(function* () {
- *      var foo = yield getFooPromise();
- *      var bar = yield getBarPromise();
- *      return foo + bar;
- * })
- * // Older SpiderMonkey style
- * Q.async(function () {
- *      var foo = yield getFooPromise();
- *      var bar = yield getBarPromise();
- *      Q.return(foo + bar);
- * })
- */
-Q["return"] = _return;
-function _return(value) {
-    throw new QReturnValue(value);
-}
-
-/**
- * The promised function decorator ensures that any promise arguments
- * are settled and passed as values (`this` is also settled and passed
- * as a value).  It will also ensure that the result of a function is
- * always a promise.
- *
- * @example
- * var add = Q.promised(function (a, b) {
- *     return a + b;
- * });
- * add(Q(a), Q(B));
- *
- * @param {function} callback The function to decorate
- * @returns {function} a function that has been decorated.
- */
-Q.promised = promised;
-function promised(callback) {
-    return function () {
-        return spread([this, all(arguments)], function (self, args) {
-            return callback.apply(self, args);
-        });
-    };
-}
-
-/**
- * sends a message to a value in a future turn
- * @param object* the recipient
- * @param op the name of the message operation, e.g., "when",
- * @param args further arguments to be forwarded to the operation
- * @returns result {Promise} a promise for the result of the operation
- */
-Q.dispatch = dispatch;
-function dispatch(object, op, args) {
-    return Q(object).dispatch(op, args);
-}
-
-Promise.prototype.dispatch = function (op, args) {
-    var self = this;
-    var deferred = defer();
-    nextTick(function () {
-        self.promiseDispatch(deferred.resolve, op, args);
-    });
-    return deferred.promise;
-};
-
-/**
- * Gets the value of a property in a future turn.
- * @param object    promise or immediate reference for target object
- * @param name      name of property to get
- * @return promise for the property value
- */
-Q.get = function (object, key) {
-    return Q(object).dispatch("get", [key]);
-};
-
-Promise.prototype.get = function (key) {
-    return this.dispatch("get", [key]);
-};
-
-/**
- * Sets the value of a property in a future turn.
- * @param object    promise or immediate reference for object object
- * @param name      name of property to set
- * @param value     new value of property
- * @return promise for the return value
- */
-Q.set = function (object, key, value) {
-    return Q(object).dispatch("set", [key, value]);
-};
-
-Promise.prototype.set = function (key, value) {
-    return this.dispatch("set", [key, value]);
-};
-
-/**
- * Deletes a property in a future turn.
- * @param object    promise or immediate reference for target object
- * @param name      name of property to delete
- * @return promise for the return value
- */
-Q.del = // XXX legacy
-Q["delete"] = function (object, key) {
-    return Q(object).dispatch("delete", [key]);
-};
-
-Promise.prototype.del = // XXX legacy
-Promise.prototype["delete"] = function (key) {
-    return this.dispatch("delete", [key]);
-};
-
-/**
- * Invokes a method in a future turn.
- * @param object    promise or immediate reference for target object
- * @param name      name of method to invoke
- * @param value     a value to post, typically an array of
- *                  invocation arguments for promises that
- *                  are ultimately backed with `resolve` values,
- *                  as opposed to those backed with URLs
- *                  wherein the posted value can be any
- *                  JSON serializable object.
- * @return promise for the return value
- */
-// bound locally because it is used by other methods
-Q.mapply = // XXX As proposed by "Redsandro"
-Q.post = function (object, name, args) {
-    return Q(object).dispatch("post", [name, args]);
-};
-
-Promise.prototype.mapply = // XXX As proposed by "Redsandro"
-Promise.prototype.post = function (name, args) {
-    return this.dispatch("post", [name, args]);
-};
-
-/**
- * Invokes a method in a future turn.
- * @param object    promise or immediate reference for target object
- * @param name      name of method to invoke
- * @param ...args   array of invocation arguments
- * @return promise for the return value
- */
-Q.send = // XXX Mark Miller's proposed parlance
-Q.mcall = // XXX As proposed by "Redsandro"
-Q.invoke = function (object, name /*...args*/) {
-    return Q(object).dispatch("post", [name, array_slice(arguments, 2)]);
-};
-
-Promise.prototype.send = // XXX Mark Miller's proposed parlance
-Promise.prototype.mcall = // XXX As proposed by "Redsandro"
-Promise.prototype.invoke = function (name /*...args*/) {
-    return this.dispatch("post", [name, array_slice(arguments, 1)]);
-};
-
-/**
- * Applies the promised function in a future turn.
- * @param object    promise or immediate reference for target function
- * @param args      array of application arguments
- */
-Q.fapply = function (object, args) {
-    return Q(object).dispatch("apply", [void 0, args]);
-};
-
-Promise.prototype.fapply = function (args) {
-    return this.dispatch("apply", [void 0, args]);
-};
-
-/**
- * Calls the promised function in a future turn.
- * @param object    promise or immediate reference for target function
- * @param ...args   array of application arguments
- */
-Q["try"] =
-Q.fcall = function (object /* ...args*/) {
-    return Q(object).dispatch("apply", [void 0, array_slice(arguments, 1)]);
-};
-
-Promise.prototype.fcall = function (/*...args*/) {
-    return this.dispatch("apply", [void 0, array_slice(arguments)]);
-};
-
-/**
- * Binds the promised function, transforming return values into a fulfilled
- * promise and thrown errors into a rejected one.
- * @param object    promise or immediate reference for target function
- * @param ...args   array of application arguments
- */
-Q.fbind = function (object /*...args*/) {
-    var promise = Q(object);
-    var args = array_slice(arguments, 1);
-    return function fbound() {
-        return promise.dispatch("apply", [
-            this,
-            args.concat(array_slice(arguments))
-        ]);
-    };
-};
-Promise.prototype.fbind = function (/*...args*/) {
-    var promise = this;
-    var args = array_slice(arguments);
-    return function fbound() {
-        return promise.dispatch("apply", [
-            this,
-            args.concat(array_slice(arguments))
-        ]);
-    };
-};
-
-/**
- * Requests the names of the owned properties of a promised
- * object in a future turn.
- * @param object    promise or immediate reference for target object
- * @return promise for the keys of the eventually settled object
- */
-Q.keys = function (object) {
-    return Q(object).dispatch("keys", []);
-};
-
-Promise.prototype.keys = function () {
-    return this.dispatch("keys", []);
-};
-
-/**
- * Turns an array of promises into a promise for an array.  If any of
- * the promises gets rejected, the whole array is rejected immediately.
- * @param {Array*} an array (or promise for an array) of values (or
- * promises for values)
- * @returns a promise for an array of the corresponding values
- */
-// By Mark Miller
-// http://wiki.ecmascript.org/doku.php?id=strawman:concurrency&rev=1308776521#allfulfilled
-Q.all = all;
-function all(promises) {
-    return when(promises, function (promises) {
-        var countDown = 0;
-        var deferred = defer();
-        array_reduce(promises, function (undefined, promise, index) {
-            var snapshot;
-            if (
-                isPromise(promise) &&
-                (snapshot = promise.inspect()).state === "fulfilled"
-            ) {
-                promises[index] = snapshot.value;
-            } else {
-                ++countDown;
-                when(
-                    promise,
-                    function (value) {
-                        promises[index] = value;
-                        if (--countDown === 0) {
-                            deferred.resolve(promises);
-                        }
-                    },
-                    deferred.reject,
-                    function (progress) {
-                        deferred.notify({ index: index, value: progress });
-                    }
-                );
-            }
-        }, void 0);
-        if (countDown === 0) {
-            deferred.resolve(promises);
-        }
-        return deferred.promise;
-    });
-}
-
-Promise.prototype.all = function () {
-    return all(this);
-};
-
-/**
- * Waits for all promises to be settled, either fulfilled or
- * rejected.  This is distinct from `all` since that would stop
- * waiting at the first rejection.  The promise returned by
- * `allResolved` will never be rejected.
- * @param promises a promise for an array (or an array) of promises
- * (or values)
- * @return a promise for an array of promises
- */
-Q.allResolved = deprecate(allResolved, "allResolved", "allSettled");
-function allResolved(promises) {
-    return when(promises, function (promises) {
-        promises = array_map(promises, Q);
-        return when(all(array_map(promises, function (promise) {
-            return when(promise, noop, noop);
-        })), function () {
-            return promises;
-        });
-    });
-}
-
-Promise.prototype.allResolved = function () {
-    return allResolved(this);
-};
-
-/**
- * @see Promise#allSettled
- */
-Q.allSettled = allSettled;
-function allSettled(promises) {
-    return Q(promises).allSettled();
-}
-
-/**
- * Turns an array of promises into a promise for an array of their states (as
- * returned by `inspect`) when they have all settled.
- * @param {Array[Any*]} values an array (or promise for an array) of values (or
- * promises for values)
- * @returns {Array[State]} an array of states for the respective values.
- */
-Promise.prototype.allSettled = function () {
-    return this.then(function (promises) {
-        return all(array_map(promises, function (promise) {
-            promise = Q(promise);
-            function regardless() {
-                return promise.inspect();
-            }
-            return promise.then(regardless, regardless);
-        }));
-    });
-};
-
-/**
- * Captures the failure of a promise, giving an oportunity to recover
- * with a callback.  If the given promise is fulfilled, the returned
- * promise is fulfilled.
- * @param {Any*} promise for something
- * @param {Function} callback to fulfill the returned promise if the
- * given promise is rejected
- * @returns a promise for the return value of the callback
- */
-Q.fail = // XXX legacy
-Q["catch"] = function (object, rejected) {
-    return Q(object).then(void 0, rejected);
-};
-
-Promise.prototype.fail = // XXX legacy
-Promise.prototype["catch"] = function (rejected) {
-    return this.then(void 0, rejected);
-};
-
-/**
- * Attaches a listener that can respond to progress notifications from a
- * promise's originating deferred. This listener receives the exact arguments
- * passed to ``deferred.notify``.
- * @param {Any*} promise for something
- * @param {Function} callback to receive any progress notifications
- * @returns the given promise, unchanged
- */
-Q.progress = progress;
-function progress(object, progressed) {
-    return Q(object).then(void 0, void 0, progressed);
-}
-
-Promise.prototype.progress = function (progressed) {
-    return this.then(void 0, void 0, progressed);
-};
-
-/**
- * Provides an opportunity to observe the settling of a promise,
- * regardless of whether the promise is fulfilled or rejected.  Forwards
- * the resolution to the returned promise when the callback is done.
- * The callback can return a promise to defer completion.
- * @param {Any*} promise
- * @param {Function} callback to observe the resolution of the given
- * promise, takes no arguments.
- * @returns a promise for the resolution of the given promise when
- * ``fin`` is done.
- */
-Q.fin = // XXX legacy
-Q["finally"] = function (object, callback) {
-    return Q(object)["finally"](callback);
-};
-
-Promise.prototype.fin = // XXX legacy
-Promise.prototype["finally"] = function (callback) {
-    callback = Q(callback);
-    return this.then(function (value) {
-        return callback.fcall().then(function () {
-            return value;
-        });
-    }, function (reason) {
-        // TODO attempt to recycle the rejection with "this".
-        return callback.fcall().then(function () {
-            throw reason;
-        });
-    });
-};
-
-/**
- * Terminates a chain of promises, forcing rejections to be
- * thrown as exceptions.
- * @param {Any*} promise at the end of a chain of promises
- * @returns nothing
- */
-Q.done = function (object, fulfilled, rejected, progress) {
-    return Q(object).done(fulfilled, rejected, progress);
-};
-
-Promise.prototype.done = function (fulfilled, rejected, progress) {
-    var onUnhandledError = function (error) {
-        // forward to a future turn so that ``when``
-        // does not catch it and turn it into a rejection.
-        nextTick(function () {
-            makeStackTraceLong(error, promise);
-            if (Q.onerror) {
-                Q.onerror(error);
-            } else {
-                throw error;
-            }
-        });
-    };
-
-    // Avoid unnecessary `nextTick`ing via an unnecessary `when`.
-    var promise = fulfilled || rejected || progress ?
-        this.then(fulfilled, rejected, progress) :
-        this;
-
-    if (typeof process === "object" && process && process.domain) {
-        onUnhandledError = process.domain.bind(onUnhandledError);
-    }
-
-    promise.then(void 0, onUnhandledError);
-};
-
-/**
- * Causes a promise to be rejected if it does not get fulfilled before
- * some milliseconds time out.
- * @param {Any*} promise
- * @param {Number} milliseconds timeout
- * @param {String} custom error message (optional)
- * @returns a promise for the resolution of the given promise if it is
- * fulfilled before the timeout, otherwise rejected.
- */
-Q.timeout = function (object, ms, message) {
-    return Q(object).timeout(ms, message);
-};
-
-Promise.prototype.timeout = function (ms, message) {
-    var deferred = defer();
-    var timeoutId = setTimeout(function () {
-        deferred.reject(new Error(message || "Timed out after " + ms + " ms"));
-    }, ms);
-
-    this.then(function (value) {
-        clearTimeout(timeoutId);
-        deferred.resolve(value);
-    }, function (exception) {
-        clearTimeout(timeoutId);
-        deferred.reject(exception);
-    }, deferred.notify);
-
-    return deferred.promise;
-};
-
-/**
- * Returns a promise for the given value (or promised value), some
- * milliseconds after it resolved. Passes rejections immediately.
- * @param {Any*} promise
- * @param {Number} milliseconds
- * @returns a promise for the resolution of the given promise after milliseconds
- * time has elapsed since the resolution of the given promise.
- * If the given promise rejects, that is passed immediately.
- */
-Q.delay = function (object, timeout) {
-    if (timeout === void 0) {
-        timeout = object;
-        object = void 0;
-    }
-    return Q(object).delay(timeout);
-};
-
-Promise.prototype.delay = function (timeout) {
-    return this.then(function (value) {
-        var deferred = defer();
-        setTimeout(function () {
-            deferred.resolve(value);
-        }, timeout);
-        return deferred.promise;
-    });
-};
-
-/**
- * Passes a continuation to a Node function, which is called with the given
- * arguments provided as an array, and returns a promise.
- *
- *      Q.nfapply(FS.readFile, [__filename])
- *      .then(function (content) {
- *      })
- *
- */
-Q.nfapply = function (callback, args) {
-    return Q(callback).nfapply(args);
-};
-
-Promise.prototype.nfapply = function (args) {
-    var deferred = defer();
-    var nodeArgs = array_slice(args);
-    nodeArgs.push(deferred.makeNodeResolver());
-    this.fapply(nodeArgs).fail(deferred.reject);
-    return deferred.promise;
-};
-
-/**
- * Passes a continuation to a Node function, which is called with the given
- * arguments provided individually, and returns a promise.
- * @example
- * Q.nfcall(FS.readFile, __filename)
- * .then(function (content) {
- * })
- *
- */
-Q.nfcall = function (callback /*...args*/) {
-    var args = array_slice(arguments, 1);
-    return Q(callback).nfapply(args);
-};
-
-Promise.prototype.nfcall = function (/*...args*/) {
-    var nodeArgs = array_slice(arguments);
-    var deferred = defer();
-    nodeArgs.push(deferred.makeNodeResolver());
-    this.fapply(nodeArgs).fail(deferred.reject);
-    return deferred.promise;
-};
-
-/**
- * Wraps a NodeJS continuation passing function and returns an equivalent
- * version that returns a promise.
- * @example
- * Q.nfbind(FS.readFile, __filename)("utf-8")
- * .then(console.log)
- * .done()
- */
-Q.nfbind =
-Q.denodeify = function (callback /*...args*/) {
-    var baseArgs = array_slice(arguments, 1);
-    return function () {
-        var nodeArgs = baseArgs.concat(array_slice(arguments));
-        var deferred = defer();
-        nodeArgs.push(deferred.makeNodeResolver());
-        Q(callback).fapply(nodeArgs).fail(deferred.reject);
-        return deferred.promise;
-    };
-};
-
-Promise.prototype.nfbind =
-Promise.prototype.denodeify = function (/*...args*/) {
-    var args = array_slice(arguments);
-    args.unshift(this);
-    return Q.denodeify.apply(void 0, args);
-};
-
-Q.nbind = function (callback, thisp /*...args*/) {
-    var baseArgs = array_slice(arguments, 2);
-    return function () {
-        var nodeArgs = baseArgs.concat(array_slice(arguments));
-        var deferred = defer();
-        nodeArgs.push(deferred.makeNodeResolver());
-        function bound() {
-            return callback.apply(thisp, arguments);
-        }
-        Q(bound).fapply(nodeArgs).fail(deferred.reject);
-        return deferred.promise;
-    };
-};
-
-Promise.prototype.nbind = function (/*thisp, ...args*/) {
-    var args = array_slice(arguments, 0);
-    args.unshift(this);
-    return Q.nbind.apply(void 0, args);
-};
-
-/**
- * Calls a method of a Node-style object that accepts a Node-style
- * callback with a given array of arguments, plus a provided callback.
- * @param object an object that has the named method
- * @param {String} name name of the method of object
- * @param {Array} args arguments to pass to the method; the callback
- * will be provided by Q and appended to these arguments.
- * @returns a promise for the value or error
- */
-Q.nmapply = // XXX As proposed by "Redsandro"
-Q.npost = function (object, name, args) {
-    return Q(object).npost(name, args);
-};
-
-Promise.prototype.nmapply = // XXX As proposed by "Redsandro"
-Promise.prototype.npost = function (name, args) {
-    var nodeArgs = array_slice(args || []);
-    var deferred = defer();
-    nodeArgs.push(deferred.makeNodeResolver());
-    this.dispatch("post", [name, nodeArgs]).fail(deferred.reject);
-    return deferred.promise;
-};
-
-/**
- * Calls a method of a Node-style object that accepts a Node-style
- * callback, forwarding the given variadic arguments, plus a provided
- * callback argument.
- * @param object an object that has the named method
- * @param {String} name name of the method of object
- * @param ...args arguments to pass to the method; the callback will
- * be provided by Q and appended to these arguments.
- * @returns a promise for the value or error
- */
-Q.nsend = // XXX Based on Mark Miller's proposed "send"
-Q.nmcall = // XXX Based on "Redsandro's" proposal
-Q.ninvoke = function (object, name /*...args*/) {
-    var nodeArgs = array_slice(arguments, 2);
-    var deferred = defer();
-    nodeArgs.push(deferred.makeNodeResolver());
-    Q(object).dispatch("post", [name, nodeArgs]).fail(deferred.reject);
-    return deferred.promise;
-};
-
-Promise.prototype.nsend = // XXX Based on Mark Miller's proposed "send"
-Promise.prototype.nmcall = // XXX Based on "Redsandro's" proposal
-Promise.prototype.ninvoke = function (name /*...args*/) {
-    var nodeArgs = array_slice(arguments, 1);
-    var deferred = defer();
-    nodeArgs.push(deferred.makeNodeResolver());
-    this.dispatch("post", [name, nodeArgs]).fail(deferred.reject);
-    return deferred.promise;
-};
-
-/**
- * If a function would like to support both Node continuation-passing-style and
- * promise-returning-style, it can end its internal promise chain with
- * `nodeify(nodeback)`, forwarding the optional nodeback argument.  If the user
- * elects to use a nodeback, the result will be sent there.  If they do not
- * pass a nodeback, they will receive the result promise.
- * @param object a result (or a promise for a result)
- * @param {Function} nodeback a Node.js-style callback
- * @returns either the promise or nothing
- */
-Q.nodeify = nodeify;
-function nodeify(object, nodeback) {
-    return Q(object).nodeify(nodeback);
-}
-
-Promise.prototype.nodeify = function (nodeback) {
-    if (nodeback) {
-        this.then(function (value) {
-            nextTick(function () {
-                nodeback(null, value);
-            });
-        }, function (error) {
-            nextTick(function () {
-                nodeback(error);
-            });
-        });
-    } else {
-        return this;
-    }
-};
-
-// All code before this point will be filtered from stack traces.
-var qEndingLine = captureLine();
-
-return Q;
-
-});
-
-}).call(this,require("/Users/speciman/Documents/development/grex/node_modules/gulp-browserify/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js"))
-},{"/Users/speciman/Documents/development/grex/node_modules/gulp-browserify/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js":10}],29:[function(require,module,exports){
+/*jslint node: true */
+'use strict';
 var _ = require('lodash');
 
 module.exports = (function () {
-  function Argument(raw, options) {
-    this.raw = raw;
-    this.options = options;
+  function Argument(value, func) {
+    this.value = value;
+    this.func = func;
   }
 
-  Argument.prototype.toString = function() {
+  Argument.prototype.toGroovy = function() {
     return this.parse();
   };
 
-  Argument.prototype.updateList = function(argumentList) {
-    argumentList.parenthesizedArguments.push(this.parse());
-  };
-
   Argument.prototype.parse = function() {
-    var argument = this.raw;
+    var argument = this.value;
 
     if (argument === null) {
       return 'null';
     }
 
-    // Check to see if the arg is referencing the graph ie. g.v(1)
-    if (_.isObject(argument) && argument.hasOwnProperty('params') && this.isGraphReference(argument.script)) {
-      return argument.script.toString();
-    }
-
-    if (this.isGraphReference(argument)) {
+    if (this.isClassReference()) {
       return argument.toString();
     }
 
-    // Cater for ids that are not numbers but pass parseFloat test
-    if (this.isRegexId() || _.isNaN(parseFloat(argument))) {
+    if (this.isFloat()) {
+      return this.value;
+    }
+
+    // Handle ids that are not numbers but pass parseFloat test
+    // (ie. Titan edge ids)
+    if (_.isString(argument) && this.isFloat()) {
       return "'" + argument + "'";
     }
 
-    if (!_.isNaN(parseFloat(argument))) {
+    if (_.isArray(argument)) {
+      var parsedArray = _.map(argument, function(element) {
+        if (_.isString(element)) {
+          return "'" + element + "'";
+        }
+
+        return element;
+      });
+
+      return parsedArray.toString();
+    }
+
+    if (_.isBoolean(argument)) {
       return argument.toString();
     }
 
-    return argument;
+    return "'"+ argument +"'";
   };
 
-  Argument.prototype.isRegexId = function() {
-    return !!this.options.idRegex && _.isString(this.raw) && this.options.idRegex.test(this.raw);
+  Argument.prototype.isFloat = function() {
+    return !_.isNaN(parseFloat(this.value)) && this.value.slice(-1) === 'f';
+    // return this.value.slice(-1) === 'f';
   };
 
-  Argument.prototype.isGraphReference = function() {
+  Argument.prototype.isClassReference = function() {
     var graphRegex = /^T\.(gt|gte|eq|neq|lte|lt|decr|incr|notin|in)$|^Contains\.(IN|NOT_IN)$|^g\.|^Vertex(\.class)$|^Edge(\.class)$|^String(\.class)$|^Integer(\.class)$|^Geoshape(\.class)$|^Direction\.(OUT|IN|BOTH)$|^TitanKey(\.class)$|^TitanLabel(\.class)$/;
 
-    return _.isString(this.raw) && graphRegex.test(this.raw);
+    return _.isString(this.value) && graphRegex.test(this.value);
   };
 
   return Argument;
 })();
-},{"lodash":27}],30:[function(require,module,exports){
-var _ = require("lodash");
 
-var ArgumentList = require('./argumentlist');
-
-module.exports = (function () {
-  function ArgumentHandler(options) {
-    this.options = options;
-  }
-
-  ArgumentHandler.prototype.buildString = function(args, retainArray) {
-    var argList = new ArgumentList(args, this.options);
-    argList.buildArguments(retainArray);
-
-    return argList.toString();
-  };
-
-  return ArgumentHandler;
-})();
-
-},{"./argumentlist":31,"lodash":27}],31:[function(require,module,exports){
-var _ = require('lodash');
-
-var Argument = require('./argument');
-var ClosureArgument = require('./closure');
-var ObjectArgument = require('./object');
-var ArrayArgument = require('./array');
-
-module.exports = (function () {
-  function ArgumentList(rawArgs, options) {
-    this.rawArgs = rawArgs;
-    this.options = options;
-
-    this.parenthesizedArguments = [];
-    this.appendedArguments = [];
-  }
-
-  ArgumentList.prototype.toString = function() {
-    var appendedArguments = this.appendedArguments.join(',');
-
-    return '(' + this.parenthesizedArguments.join(',') + ')' + appendedArguments;
-  };
-
-  ArgumentList.prototype.buildArguments = function(retainArray) {
-    _.each(this.rawArgs, function(rawArg) {
-      if (this.isClosure(rawArg)) {
-        built = new ClosureArgument(rawArg, this);
-      } else if (retainArray && _.isArray(rawArg)) {
-        built = new ArrayArgument(rawArg, this);
-      } else if (_.isObject(rawArg)) {
-        built = new ObjectArgument(rawArg, this);
-      } else {
-        built = new Argument(rawArg, this);
-      }
-
-      built.updateList(this);
-    }, this);
-  };
-
-  ArgumentList.prototype.isClosure = function(val) {
-    var closureRegex = /^\{.*\}$/;
-
-    return _.isString(val) && closureRegex.test(val);
-  };
-
-  return ArgumentList;
-})();
-},{"./argument":29,"./array":32,"./closure":33,"./object":34,"lodash":27}],32:[function(require,module,exports){
+},{"lodash":27}],29:[function(require,module,exports){
+/*jslint node: true */
+'use strict';
 var inherits = require('inherits');
 var Argument = require('./argument');
 
@@ -14977,13 +13119,34 @@ module.exports = (function () {
 
   inherits(ArrayArgument, Argument);
 
-  ArrayArgument.prototype.updateList = function(argumentList) {
-    argumentList.parenthesizedArguments.push("[" + this.parse() + "]");
+  ArrayArgument.prototype.toGroovy = function() {
+    return "[" + this.parse() + "]";
   };
 
   return ArrayArgument;
 })();
-},{"./argument":29,"inherits":26}],33:[function(require,module,exports){
+},{"./argument":28,"inherits":26}],30:[function(require,module,exports){
+/*jslint node: true */
+'use strict';
+var inherits = require('inherits');
+var Argument = require('./argument');
+
+module.exports = (function() {
+  function ClassArgument() {
+    Argument.apply(this, arguments);
+  }
+
+  inherits(ClassArgument, Argument);
+
+  ClassArgument.prototype.toGroovy = function() {
+    return this.value.toGroovy();
+  };
+
+  return ClassArgument;
+})();
+},{"./argument":28,"inherits":26}],31:[function(require,module,exports){
+/*jslint node: true */
+'use strict';
 var inherits = require('inherits');
 var Argument = require('./argument');
 
@@ -14994,17 +13157,34 @@ module.exports = (function() {
 
   inherits(ClosureArgument, Argument);
 
-  ClosureArgument.prototype.toString = function() {
-    return this.raw;
-  };
-
-  ClosureArgument.prototype.updateList = function(argumentList) {
-    argumentList.appendedArguments.push(this.toString());
+  ClosureArgument.prototype.toGroovy = function() {
+    return this.value;
   };
 
   return ClosureArgument;
 })();
-},{"./argument":29,"inherits":26}],34:[function(require,module,exports){
+},{"./argument":28,"inherits":26}],32:[function(require,module,exports){
+/*jslint node: true */
+'use strict';
+var inherits = require('inherits');
+var Argument = require('./argument');
+
+module.exports = (function() {
+  function IntegerArgument() {
+    Argument.apply(this, arguments);
+  }
+
+  inherits(IntegerArgument, Argument);
+
+  IntegerArgument.prototype.toGroovy = function() {
+    return this.value;
+  };
+
+  return IntegerArgument;
+})();
+},{"./argument":28,"inherits":26}],33:[function(require,module,exports){
+/*jslint node: true */
+'use strict';
 var inherits = require('inherits');
 var Argument = require('./argument');
 
@@ -15015,18 +13195,26 @@ module.exports = (function() {
 
   inherits(ObjectArgument, Argument);
 
-  ObjectArgument.prototype.toString = function() {
-    return JSON.stringify(this.raw).replace('{', '[').replace('}', ']');
-  };
-
-  ObjectArgument.prototype.updateList = function(argumentList) {
-    argumentList.parenthesizedArguments.push(this.toString());
+  ObjectArgument.prototype.toGroovy = function() {
+    return JSON.stringify(this.value).replace('{', '[').replace('}', ']');
   };
 
   return ObjectArgument;
 })();
-},{"./argument":29,"inherits":26}],35:[function(require,module,exports){
-module.exports = {
+},{"./argument":28,"inherits":26}],34:[function(require,module,exports){
+/*jslint node: true */
+'use strict';
+var VertexWrapper = require('../objects/vertex');
+var EdgeWrapper = require('../objects/edge');
+
+var JavaClass = require('./javaclass');
+
+var classes = {
+  Vertex: VertexWrapper,
+  Edge: EdgeWrapper,
+  Geoshape: new JavaClass('Geoshape'),
+  'String': new JavaClass('String'),
+  Integer: new JavaClass('Integer'),
   T: {
     'gt': 'T.gt',
     'gte': 'T.gte',
@@ -15045,115 +13233,859 @@ module.exports = {
     'NOT_IN': 'Contains.NOT_IN'
   },
 
-  Vertex: {
-    'class': 'Vertex.class'
-  },
-
-  Edge: {
-    'class': 'Edge.class'
-  },
-
-  'String': {
-    'class': 'String.class'
-  },
-
-  Integer: {
-    'class': 'Integer.class'
-  },
-
-  Geoshape: {
-    'class': 'Geoshape.class'
-  },
-
   Direction: {
     'OUT': 'Direction.OUT',
     'IN': 'Direction.IN',
     'BOTH': 'Direction.BOTH'
   },
 
-  TitanKey: {
-    'class': 'TitanKey.class'
-  },
-
-  TitanLabel : {
-    'class': 'TitanLabel.class'
-  }
+  TitanKey: new JavaClass('TitanKey'),
+  TitanLabel : new JavaClass('TitanLabel'),
 };
 
-},{}],36:[function(require,module,exports){
-var inherits = require("inherits");
-
-var Element = require("./element");
-
-module.exports = (function (){
-  function Edge() {
-    this._type = "edge";
-
-    Element.apply(this, arguments); // Call parent constructor
+module.exports = classes;
+},{"../objects/edge":53,"../objects/vertex":58,"./javaclass":35}],35:[function(require,module,exports){
+/*jslint node: true */
+'use strict';
+module.exports = (function() {
+  function JavaClass(name) {
+    this.name = name;
   }
 
-  inherits(Edge, Element);
+  JavaClass.prototype.toGroovy = function() {
+    return this.name + '.class';
+  };
 
-  return Edge;
+  Object.defineProperty(JavaClass.prototype, 'class', {
+    get: function() {
+      return this.toGroovy();
+    }
+  });
+
+  return JavaClass;
+})();
+},{}],36:[function(require,module,exports){
+/*jslint node: true */
+'use strict';
+var inherits = require('util').inherits;
+
+var GremlinMethod = require('./method');
+
+module.exports = (function() {
+  function CollectionAccessor() {
+    GremlinMethod.call(this, null, arguments[0]);
+  }
+
+  inherits(CollectionAccessor, GremlinMethod);
+
+  CollectionAccessor.prototype.toGroovy = function() {
+    var str = '['+ this.arguments[0].toString() + ']';
+
+    return str;
+  };
+
+  return CollectionAccessor;
+})();
+},{"./method":46,"util":25}],37:[function(require,module,exports){
+/*jslint node: true */
+'use strict';
+var inherits = require('util').inherits;
+
+var GremlinMethod = require('../function');
+
+module.exports = (function() {
+  function AddPropertiesMethod() {
+    GremlinMethod.call(this, 'addProperties', arguments[0]);
+  }
+
+  inherits(AddPropertiesMethod, GremlinMethod);
+
+  AddPropertiesMethod.prototype.run = function(element) {
+    var key;
+    var args = this.arguments;
+
+    for (key in args) {
+      element[key] = args[key];
+    }
+
+    return element;
+  };
+
+  AddPropertiesMethod.prototype.toGroovy = function() {
+    return '.addProperties('+ this.stringifyArgument(this.arguments) +')';
+  };
+
+  return AddPropertiesMethod;
+})();
+},{"../function":42,"util":25}],38:[function(require,module,exports){
+/*jslint node: true */
+'use strict';
+var inherits = require('util').inherits;
+
+var GremlinMethod = require('../function');
+
+module.exports = (function() {
+  function AddPropertyMethod() {
+    GremlinMethod.call(this, 'addProperty', arguments[0]);
+  }
+
+  inherits(AddPropertyMethod, GremlinMethod);
+
+  AddPropertyMethod.prototype.run = function(element) {
+    var key = this.arguments.key;
+    var value = this.arguments.value;
+
+    element[key] = value;
+
+    return element;
+  };
+
+  AddPropertyMethod.prototype.toGroovy = function() {
+    var key = this.arguments.key;
+    var value = this.arguments.value;
+
+    return ".addProperty('" + key + "','" + value + "')";
+  };
+
+  return AddPropertyMethod;
+})();
+},{"../function":42,"util":25}],39:[function(require,module,exports){
+/*jslint node: true */
+'use strict';
+var inherits = require('util').inherits;
+
+var _ = require('lodash');
+
+var GremlinMethod = require('../function');
+
+module.exports = (function() {
+  function GetPropertiesMethod() {
+    GremlinMethod.call(this, 'getProperties', arguments[0]);
+  }
+
+  inherits(GetPropertiesMethod, GremlinMethod);
+
+  GetPropertiesMethod.prototype.run = function(element) {
+    var o = {};
+
+    return element.properties;
+  };
+
+  return GetPropertiesMethod;
+})();
+},{"../function":42,"lodash":27,"util":25}],40:[function(require,module,exports){
+/*jslint node: true */
+'use strict';
+var inherits = require('util').inherits;
+
+var GremlinMethod = require('../function');
+
+module.exports = (function() {
+  function SetPropertiesMethod() {
+    GremlinMethod.call(this, 'setProperties', arguments[0]);
+  }
+
+  inherits(SetPropertiesMethod, GremlinMethod);
+
+  SetPropertiesMethod.prototype.run = function(element) {
+    var key;
+    var args = this.arguments;
+
+    for (key in args) {
+      element[key] = args[key];
+    }
+
+    return element;
+  };
+
+  SetPropertiesMethod.prototype.toGroovy = function() {
+    return '.setProperties('+ this.stringifyArgument(this.arguments) +')';
+  };
+
+  return SetPropertiesMethod;
+})();
+},{"../function":42,"util":25}],41:[function(require,module,exports){
+/*jslint node: true */
+'use strict';
+var inherits = require('util').inherits;
+
+var GremlinMethod = require('../function');
+
+module.exports = (function() {
+  function SetPropertyMethod() {
+    GremlinMethod.call(this, 'setProperty', arguments[0]);
+  }
+
+  inherits(SetPropertyMethod, GremlinMethod);
+
+  SetPropertyMethod.prototype.run = function(element) {
+    var key = this.arguments.key;
+    var value = this.arguments.value;
+
+    element.properties[key] = value;
+
+    return element;
+  };
+
+  SetPropertyMethod.prototype.toGroovy = function() {
+    var key = this.arguments.key;
+    var value = this.arguments.value;
+
+    return ".setProperty('" + key + "','" + value + "')";
+  };
+
+  return SetPropertyMethod;
+})();
+},{"../function":42,"util":25}],42:[function(require,module,exports){
+/*jslint node: true */
+'use strict';
+var _ = require('lodash');
+
+var Argument = require('../arguments/argument');
+var ClosureArgument = require('../arguments/closure');
+var ObjectArgument = require('../arguments/object');
+var ArrayArgument = require('../arguments/array');
+var ClassArgument = require('../arguments/class');
+var NumberArgument = require('../arguments/number');
+
+module.exports = (function() {
+  function GremlinFunction(name, args) {
+    this.name = name;
+    this.arguments = args;
+    this.closures = [];
+    this.parenthesizedArguments = [];
+    this.buildArguments();
+  }
+
+  GremlinFunction.prototype.toGroovy = function() {
+    return this.name + this.groovifyArguments();
+  };
+
+  GremlinFunction.prototype.groovifyArguments = function() {
+    var args = [];
+
+    // Append arguments between parentheses, if any
+    var groovy = '(' + _.map(this.parenthesizedArguments, function(argument) {
+      return argument.toGroovy();
+    }).join(',') + ')';
+
+    // Append closures, if any
+    groovy += _.map(this.closures, function(closure) {
+      return closure.toGroovy();
+    }).join(',');
+
+    return groovy;
+  };
+
+  GremlinFunction.prototype.buildArguments = function() {
+    var built;
+    _.each(this.arguments, function(argument) {
+      if (this.isClosure(argument)) {
+        built = new ClosureArgument(argument, this);
+        this.closures.push(built);
+      } else if (_.isArray(argument)) {
+        built = new ArrayArgument(argument, this);
+        this.parenthesizedArguments.push(built);
+      } else if (this.isClass(argument)) {
+        built = new ClassArgument(argument, this);
+        this.parenthesizedArguments.push(built);
+      } else if (_.isObject(argument)) {
+        built = new ObjectArgument(argument, this);
+        this.parenthesizedArguments.push(built);
+      } else if (_.isNumber(argument)) {
+        built = new NumberArgument(argument, this);
+        this.parenthesizedArguments.push(built);
+      } else {
+        built = new Argument(argument, this);
+        this.parenthesizedArguments.push(built);
+      }
+    }, this);
+  };
+
+  GremlinFunction.prototype.isClosure = function(val) {
+    var closureRegex = /^\{.*\}$/;
+
+    return _.isString(val) && closureRegex.test(val);
+  };
+
+  GremlinFunction.prototype.isClass = function(argument) {
+    return argument && !!argument.class;
+  };
+
+  var stringify = function(accumulated, value, key, obj) {
+    var newVal;
+    var newKey = JSON.stringify(key);
+    var newEntry;
+
+    if (accumulated) {
+      accumulated += ',';
+    }
+
+    if (typeof value === 'undefined') {
+      value = null;
+    }
+
+    if (_.isObject(value)) {
+      newVal = '[' +  _.reduce(value, stringify, '') + ']' ;
+    } else {
+      newVal = JSON.stringify(value);
+    }
+
+    if (_.isObject(obj) && !_.isArray(obj)) {
+      newEntry = newKey + ':' + newVal;
+    } else {
+      newEntry = newVal;
+    }
+
+    return accumulated += newEntry;
+  };
+
+  GremlinFunction.prototype.stringifyArgument = function(argument) {
+    var string = stringify('', argument, null, null);
+    return string;
+  };
+
+  return GremlinFunction;
+})();
+
+},{"../arguments/argument":28,"../arguments/array":29,"../arguments/class":30,"../arguments/closure":31,"../arguments/number":32,"../arguments/object":33,"lodash":27}],43:[function(require,module,exports){
+/*jslint node: true */
+'use strict';
+var inherits = require('util').inherits;
+
+var _ = require('lodash');
+
+var GremlinMethod = require('../method');
+
+module.exports = (function() {
+  function AddEdgeMethod(edge, properties) {
+    this.edge = edge;
+    GremlinMethod.call(this, 'addEdge', properties);
+  }
+
+  inherits(AddEdgeMethod, GremlinMethod);
+
+  AddEdgeMethod.prototype.run = function(object) {
+    if (this.arguments.properties && this.arguments.properties._id) {
+      this.edge._id = this.arguments.properties._id;
+    }
+
+    this.edge._outV = this.arguments.v1;
+    this.edge._inV = this.arguments.v2;
+    this.edge._label = this.arguments.label;
+
+    var properties = this.arguments.properties;
+
+    _.each(properties, function(value, key) {
+      this.edge[key] = value;
+    }, this);
+
+    delete this.arguments._id;
+
+    return this.edge;
+  };
+
+  AddEdgeMethod.prototype.groovifyArguments = function() {
+    var id = this.edge._id ? this.edge._id + ',' : '';
+
+    var properties = this.arguments.properties;
+    var propArgument = !_.isEmpty(properties) ? ','+ this.stringifyArgument(this.arguments.properties) : '';
+
+    var _outV = this.edge._outV.identifier || this.arguments.v1;
+    var _inV = this.edge._inV.identifier || this.arguments.v2;
+
+    return '('+ id + _outV +','+ _inV +',"'+ this.edge._label +'"'+ propArgument + ')';
+  };
+
+  return AddEdgeMethod;
+})();
+},{"../method":46,"lodash":27,"util":25}],44:[function(require,module,exports){
+/*jslint node: true */
+'use strict';
+var inherits = require('util').inherits;
+
+var _ = require('lodash');
+
+var GremlinMethod = require('../method');
+
+module.exports = (function() {
+  function AddVertexMethod(vertex, properties) {
+    this.vertex = vertex;
+    GremlinMethod.call(this, 'addVertex', properties);
+  }
+
+  inherits(AddVertexMethod, GremlinMethod);
+
+  AddVertexMethod.prototype.run = function() {
+    _.each(this.arguments, function(value, key) {
+      this.vertex.properties[key] = value;
+    }, this);
+
+    return this.vertex;
+  };
+
+  AddVertexMethod.prototype.groovifyArguments = function() {
+    var args = [];
+    var id = this.vertex._id ? this.vertex._id +',' : '';
+
+    if (this.arguments && this.arguments._id) {
+      args.push(this.arguments._id);
+      delete this.arguments._id;
+    }
+
+    if (!_.isEmpty(this.arguments)) {
+      args.push(this.stringifyArgument(this.arguments));
+    }
+
+    return '('+ args.join(',') + ')';
+  };
+
+  return AddVertexMethod;
+})();
+},{"../method":46,"lodash":27,"util":25}],45:[function(require,module,exports){
+/*jslint node: true */
+'use strict';
+var inherits = require('util').inherits;
+
+var GremlinMethod = require('../function');
+
+module.exports = (function() {
+  function IdxGremlinFunction() {
+    GremlinMethod.call(this, 'idx', arguments[0]);
+  }
+
+  inherits(IdxGremlinFunction, GremlinMethod);
+
+  IdxGremlinFunction.prototype.toGroovy = function() {
+    var str = ".idx('" + this.arguments[0] + "')";
+    var properties = this.arguments[1];
+
+    if (properties) {
+      var keys = [];
+
+      for (var key in properties) {
+        keys.push(key + ":'" + properties[key] + "'");
+      }
+
+      str += "[["+ keys.join(',') + "]]";
+    }
+
+    return str;
+  };
+
+  return IdxGremlinFunction;
+})();
+},{"../function":42,"util":25}],46:[function(require,module,exports){
+/*jslint node: true */
+'use strict';
+var inherits = require('util').inherits;
+
+var GremlinFunction = require('./function');
+
+module.exports = (function() {
+  function GremlinMethod() {
+    GremlinFunction.apply(this, arguments);
+  }
+
+  inherits(GremlinMethod, GremlinFunction);
+
+  GremlinMethod.prototype.toGroovy = function() {
+    return '.' + this.name + this.groovifyArguments();
+  };
+
+  return GremlinMethod;
+})();
+},{"./function":42,"util":25}],47:[function(require,module,exports){
+/*jslint node: true */
+'use strict';
+var inherits = require('util').inherits;
+
+var _ = require('lodash');
+
+var GremlinStep = require('./step');
+
+module.exports = (function() {
+  function CollectionStep() {
+    GremlinStep.apply(this, arguments);
+  }
+
+  inherits(CollectionStep, GremlinStep);
+
+  CollectionStep.prototype.toGroovy = function() {
+    var str = '.'+ this.name;
+    var argumentList = [];
+    var args = this.arguments;
+    var firstArg = args[0];
+
+    if (_.isArray(firstArg)) {
+      // Handle .method([g.v(1), g.v(2)]) signature
+      var pipelines = _.map(firstArg, function(a) { return a.toGroovy(); }).join(',');
+      str += "([" + pipelines + "])";
+    } else {
+      str += "('"+ this.arguments[0] + "')";
+    }
+
+    return str;
+  };
+
+  return CollectionStep;
+})();
+},{"./step":50,"lodash":27,"util":25}],48:[function(require,module,exports){
+/*jslint node: true */
+'use strict';
+var inherits = require('util').inherits;
+
+var _ = require('lodash');
+
+var GremlinStep = require('./step');
+var Argument = require('../../arguments/argument');
+
+module.exports = (function() {
+  function PipesStep() {
+    GremlinStep.apply(this, arguments);
+  }
+
+  inherits(PipesStep, GremlinStep);
+
+  PipesStep.prototype.toGroovy = function() {
+    var str = '';
+    var argumentList = [];
+    var args = this.arguments;
+
+    args = _.isArray(args[0]) ? args[0] : args;
+
+    _.each(args, function(arg) {
+      var argObj = new Argument(arg);
+      var partialScript = (arg.toGroovy && arg.toGroovy()) || argObj.parse();
+      argumentList.push(partialScript);
+    }, this);
+
+    str += '.'+ this.name + '('+ argumentList.join(',') +')';
+
+    return str;
+  };
+
+  return PipesStep;
+})();
+},{"../../arguments/argument":28,"./step":50,"lodash":27,"util":25}],49:[function(require,module,exports){
+/*jslint node: true */
+'use strict';
+var inherits = require('util').inherits;
+
+var GremlinStep = require('./step');
+
+module.exports = (function() {
+  function SelectStep() {
+    GremlinStep.call(this, 'select', arguments[0]);
+  }
+
+  inherits(SelectStep, GremlinStep);
+
+  SelectStep.prototype.toGroovy = function() {
+    return '.select' + this.groovifyArguments().replace(/\"/g, '\'');
+  };
+
+  return SelectStep;
+})();
+},{"./step":50,"util":25}],50:[function(require,module,exports){
+/*jslint node: true */
+'use strict';
+var inherits = require('util').inherits;
+
+var GremlinMethod = require('../method');
+
+module.exports = (function() {
+  function GremlinStep(name, args) {
+    GremlinMethod.apply(this, arguments);
+  }
+
+  inherits(GremlinStep, GremlinMethod);
+
+  return GremlinStep;
+})();
+},{"../method":46,"util":25}],51:[function(require,module,exports){
+/*jslint node: true */
+'use strict';
+var _ = require("lodash");
+var util = require('util');
+
+var GraphWrapper = require('./objects/graph');
+var PipelineWrapper = require('./objects/pipeline');
+var Argument = require('./arguments/argument');
+var GremlinFunction = require('./functions/function');
+
+module.exports = (function() {
+  function GremlinScript() {
+    this.script = '';
+    this.params = {};
+    this.paramCount = 0;
+    this.identifierCount = 0;
+  }
+
+  /**
+   * Append an arbitrary string to the script as a new line.
+   *
+   * @private
+   * @param {String} line
+   */
+  GremlinScript.prototype.line = function(line) {
+    this.script += line + '\n';
+  };
+
+  /**
+   * Add bound parameters to the script. This currently only works when
+   * using the formatted string. It does not work with gRex helpers/wrappers.
+   *
+   * @private
+   * @param {Array} boundParams
+   */
+  GremlinScript.prototype.addBoundParams = function(boundParams) {
+    var currentParamNames = [];
+    var identifier;
+
+    _.each(boundParams, function(boundParam) {
+      identifier = 'p'+ this.paramCount++;
+      this.params[identifier] = boundParam;
+      currentParamNames.push(identifier);
+    }, this);
+
+    return currentParamNames;
+  };
+
+  /**
+   * Handle a string statement using Node util.format() function.
+   *
+   * @private
+   * @param {String} statement
+   */
+  GremlinScript.prototype.handleString = function(statement) {
+    var currentParams = [statement];
+    currentParams = currentParams.concat(this.addBoundParams(_.rest(arguments)));
+
+    this.line(util.format.apply(util.format, currentParams));
+  };
+
+  /**
+   * Handle a helper statement wrapped in one of gRex Wrapper classes
+   *
+   * @private
+   * @param {ObjectWrapper} wrapper
+   * @return {ObjectWrapper}
+   */
+  GremlinScript.prototype.handleHelper = function(wrapper) {
+    this.line(wrapper.toGroovy());
+
+    return wrapper;
+  };
+
+  /**
+   * Identify a statement within the script with the provided optional
+   * identifier. Will assign an automatica identifier instead.
+   *
+   * @public
+   * @param {ObjectWrapper} wrapper
+   * @param {String} identifier - an optional identifier
+   */
+  GremlinScript.prototype.var = function(wrapper, identifier) {
+    identifier = identifier || 'i'+ this.identifierCount++;
+    wrapper.identifier = identifier;
+    var prefix = identifier + '=';
+
+    var groovyCode = wrapper.toGroovy ? wrapper.toGroovy() : wrapper;
+
+    this.script += prefix + groovyCode + '\n';
+
+    return wrapper;
+  };
+
+  /**
+   * According to its type (ie. String or ObjectWrapper), handle and add a
+   * statement to the current script.
+   *
+   * @private
+   * @param {String|ObjectWrapper} statement
+   */
+  GremlinScript.prototype.appendStatement = function(statement) {
+    if (arguments.length > 1) {
+      // Assume query('g(%s)', 1) signature
+      this.handleString.apply(this, arguments);
+    } else if (_.isString(statement)) {
+      // Assume query('g.v(1)') signature
+      this.line(statement);
+    } else if (statement) {
+      // Assume query(g.v(1)) signature
+      this.handleHelper(statement);
+    }
+  };
+
+  /**
+   * Returns a function responsible for handling statements and ultimately
+   * appending bits of Gremlin-Groovy to this GremlinScript.
+   *
+   * @private
+   * @return {Function}
+   */
+  GremlinScript.prototype.getAppender = function() {
+    var self = this;
+
+    function GremlinAppender() {
+      self.appendStatement.apply(self, arguments);
+
+      return self;
+    }
+
+    /**
+     * Proxy some GremlinScript methods/getters to the appender
+     */
+    GremlinAppender.var = GremlinScript.prototype.var.bind(this);
+
+    Object.defineProperty(GremlinAppender, 'script', {
+      get: function() {
+        return self.script;
+      }
+    });
+
+    Object.defineProperty(GremlinAppender, 'params', {
+      get: function() {
+        return self.params;
+      }
+    });
+
+    return GremlinAppender;
+  };
+
+  return GremlinScript;
+})();
+
+},{"./arguments/argument":28,"./functions/function":42,"./objects/graph":55,"./objects/pipeline":57,"lodash":27,"util":25}],52:[function(require,module,exports){
+var _ = require('lodash');
+
+var RexsterClient = require('./rexsterclient');
+var GremlinScript = require('./gremlinscript');
+var classes = require('./classes/classes');
+var GraphWrapper = require("./objects/graph");
+var PipelineWrapper = require('./objects/pipeline');
+
+
+module.exports = (function() {
+  function NodeGremlin() {
+  }
+
+  _.extend(NodeGremlin, classes);
+
+  NodeGremlin.ClassTypes = classes;
+
+  NodeGremlin.createClient = function(options) {
+    var client = new RexsterClient(options);
+
+    return client;
+  };
+
+  Object.defineProperty(NodeGremlin, 'gremlin', {
+    get: function() {
+      return function() {
+        var gremlinScript = new GremlinScript();
+        var appender = gremlinScript.getAppender();
+
+        appender.apply(appender, arguments);
+
+        return appender;
+      };
+    }
+  });
+
+  Object.defineProperty(NodeGremlin, 'g', {
+    get: function() {
+      var graph = new GraphWrapper('g');
+
+      return graph;
+    }
+  });
+
+  Object.defineProperty(NodeGremlin, '_', {
+    get: function() {
+      return function() {
+        return new PipelineWrapper('_()');
+      };
+    }
+  });
+
+  return NodeGremlin;
+})();
+},{"./classes/classes":34,"./gremlinscript":51,"./objects/graph":55,"./objects/pipeline":57,"./rexsterclient":60,"lodash":27}],53:[function(require,module,exports){
+/*jslint node: true */
+'use strict';
+var inherits = require("inherits");
+
+var ElementWrapper = require("./element");
+
+module.exports = (function (){
+  function EdgeWrapper() {
+    ElementWrapper.apply(this, arguments);
+    this.properties._type = "edge";
+  }
+
+  inherits(EdgeWrapper, ElementWrapper);
+
+  EdgeWrapper.toGroovy = function() {
+    return 'Edge.class';
+  };
+
+  Object.defineProperty(EdgeWrapper, 'class', {
+    get: function() {
+      return this.toGroovy();
+    }
+  });
+
+  return EdgeWrapper;
 
 })();
 
-},{"./element":37,"inherits":26}],37:[function(require,module,exports){
+},{"./element":54,"inherits":26}],54:[function(require,module,exports){
+/*jslint node: true */
+'use strict';
+var inherits = require('util').inherits;
+
 var _ = require('lodash');
 
-/*
-* Abstract Element class
-*/
-module.exports = (function() {
-  // Graph Elements are currently Vertex or Edge
-  function Element(gremlin, identifier) {
-    this._id = null;
-    this.identifier = identifier;
+var ObjectWrapper = require('./objectwrapper');
+var GetPropertiesMethod = require('../functions/element/getproperties');
+var SetPropertiesMethod = require('../functions/element/setproperties');
+var AddPropertiesMethod = require('../functions/element/addproperties');
+var SetPropertyMethod = require('../functions/element/setproperty');
+var AddPropertyMethod = require('../functions/element/addproperty');
+var GremlinMethod = require('../functions/method');
 
-    Object.defineProperty(this, "gremlin", {
-      value: gremlin,
-      enumerable: false,
-      writable: false
-    });
+/**
+ * Abstract ElementWrapper class
+ */
+module.exports = (function() {
+  function ElementWrapper() {
+    ObjectWrapper.apply(this, arguments);
+    this.properties._id = null;
   }
 
-  // Keep track of a temporary transaction id for each element
-  Object.defineProperty(Element.prototype, "identifier", {
-    value: null,
-    enumerable: false,
-    writable: true
-  });
+  inherits(ElementWrapper, ObjectWrapper);
 
-  Element.prototype.getProperties = function() {
-    var o = {};
+  ElementWrapper.prototype.getProperties = function() {
+    var method = new GetPropertiesMethod();
+    this.methods.push(method.toGroovy());
 
-    _.each(this, function(property, propertyName) {
-      o[propertyName] = this[propertyName];
-    }, this);
-
-    this.gremlin.line(this.identifier + '.getProperties()');
-
-    return o;
+    return method.run(this);
   };
 
-  Element.prototype.setProperty = function(key, value) {
-    this[key] = value;
+  ElementWrapper.prototype.setProperty = function(key, value) {
+    var method = new SetPropertyMethod({ key: key, value: value });
+    this.methods.push(method.toGroovy());
 
-    this.gremlin.line(this.identifier + ".setProperty('"+key+"','"+value+"')");
-
-    return this;
+    return method.run(this);
   };
 
-  Element.prototype.setProperties = function(properties) {
-    _.each(properties, function(value, key) {
-      this[key] = value;
-    }, this);
+  ElementWrapper.prototype.setProperties = function(properties) {
+    var method = new SetPropertiesMethod(properties);
+    this.methods.push(method.toGroovy());
 
-    var line = this.identifier +'.setProperties('+ this.gremlin.stringifyArgument(properties) +')';
-
-    this.gremlin.line(line);
-
-    return this;
+    return method.run(this);
   };
 
   /**
@@ -15165,11 +14097,11 @@ module.exports = (function() {
    * @param {String} key
    * @param {Object} value
    */
-  Element.prototype.addProperty = function(key, value) {
-    this[key] = value;
-    this.gremlin.line(this.identifier + ".addProperty('"+key+"','"+value+"')");
+  ElementWrapper.prototype.addProperty = function(key, value) {
+    var method = new AddPropertyMethod({ key: key, value: value });
+    this.methods.push(method.toGroovy());
 
-    return this;
+    return method.run(this);
   };
 
   /**
@@ -15180,979 +14112,983 @@ module.exports = (function() {
    *
    * @param {Object} properties
    */
-  Element.prototype.addProperties = function(properties) {
-    _.each(properties, function(value, key) {
-      this[key] = value;
-    }, this);
+  ElementWrapper.prototype.addProperties = function(properties) {
+    var method = new AddPropertiesMethod(properties);
+    this.methods.push(method.toGroovy());
 
-    var line = this.identifier +'.addProperties('+ this.gremlin.stringifyArgument(properties) +')';
+    return method.run(this);
+  };
 
-    this.gremlin.line(line);
-
+  ElementWrapper.prototype.remove = function() {
+    var method = new GremlinMethod('remove', []);
+    this.methods.push(method.toGroovy());
 
     return this;
   };
 
-  Element.prototype.remove = function() {
-    var line = this.identifier +'.remove()';
-    this.gremlin.line(line);
-  };
-
-  return Element;
+  return ElementWrapper;
 
 })();
 
-},{"lodash":27}],38:[function(require,module,exports){
-var inherits = require("inherits");
+},{"../functions/element/addproperties":37,"../functions/element/addproperty":38,"../functions/element/getproperties":39,"../functions/element/setproperties":40,"../functions/element/setproperty":41,"../functions/method":46,"./objectwrapper":56,"lodash":27,"util":25}],55:[function(require,module,exports){
+/*jslint node: true */
+'use strict';
+var inherits = require('util').inherits;
 
-var Element = require("./element");
-
-module.exports = (function (){
-  function Vertex() {
-    this._type = "vertex";
-
-    Element.apply(this, arguments); // Call parent constructor
-  }
-
-  inherits(Vertex, Element);
-
-  return Vertex;
-
-})();
-
-},{"./element":37,"inherits":26}],39:[function(require,module,exports){
 var _ = require("lodash");
 
-var Pipeline = require('./pipeline');
-var Vertex = require('./elements/vertex');
-var Edge = require('./elements/edge');
+var ObjectWrapper = require('./objectwrapper');
+var VertexWrapper = require('./vertex');
+var EdgeWrapper = require('./edge');
+var GremlinMethod = require('../functions/method');
+var IdxGremlinFunction = require('../functions/graph/idx');
+var AddVertexMethod = require('../functions/graph/addvertex');
+var AddEdgeMethod = require('../functions/graph/addedge');
+
+var PipelineWrapper = require('./pipeline');
 
 module.exports = (function() {
-  function Graph(parentGremlin) {
-    this.parentGremlin = parentGremlin;
-    this.gremlin = this.parentGremlin.subScript();
+  function GraphWrapper() {
+    ObjectWrapper.apply(this, arguments);
   }
 
-  Graph.prototype.E = function() {
-    this.gremlin.append('g');
-    this.gremlin.appendMain('E', arguments);
+  inherits(GraphWrapper, ObjectWrapper);
 
-    return new Pipeline(this.gremlin);
+  GraphWrapper.prototype.E = function() {
+    var func = new GremlinMethod('E', arguments);
+
+    var pipeline = new PipelineWrapper(this.objectName);
+    pipeline.methods.push(func.toGroovy());
+
+    return pipeline;
   };
 
-  Graph.prototype.V = function() {
-    this.gremlin.append('g');
-    this.gremlin.appendMain('V', arguments);
+  GraphWrapper.prototype.V = function() {
+    var func = new GremlinMethod('V', arguments);
 
-    return new Pipeline(this.gremlin);
+    var pipeline = new PipelineWrapper(this.objectName);
+    pipeline.methods.push(func.toGroovy());
+
+    return pipeline;
   };
 
-  Graph.prototype.e = function() {
-    this.gremlin.append('g');
-    this.gremlin.appendMain('e', arguments);
+  GraphWrapper.prototype.e = function() {
+    var func = new GremlinMethod('e', arguments);
 
-    return new Pipeline(this.gremlin);
+    var pipeline = new PipelineWrapper(this.objectName);
+    pipeline.methods.push(func.toGroovy());
+
+    return pipeline;
   };
 
-  Graph.prototype.idx = function() {
-    var indexName = arguments[0];
-    var properties = arguments[1];
+  GraphWrapper.prototype.idx = function() {
+    var func = new IdxGremlinFunction(arguments);
 
-    this.gremlin.append('g');
-    this.gremlin.append(".idx('" + indexName + "')");
+    var pipeline = new PipelineWrapper(this.objectName);
+    pipeline.methods.push(func.toGroovy());
 
-    if (properties) {
-      var appendArg = '';
-
-      _.each(properties, function(value, key) {
-        appendArg = key + ":'" + value + "'";
-      });
-
-      appendArg = "[["+ appendArg + "]]";
-      this.gremlin.append(appendArg);
-    }
-
-    return new Pipeline(this.gremlin);
+    return pipeline;
   };
 
-  Graph.prototype.v = function() {
-    this.gremlin.append('g');
-    this.gremlin.appendMain('v', arguments);
+  GraphWrapper.prototype.v = function() {
+    var func = new GremlinMethod('v', arguments);
 
-    return new Pipeline(this.gremlin);
+    var pipeline = new PipelineWrapper(this.objectName);
+    pipeline.methods.push(func.toGroovy());
+
+    return pipeline;
   };
 
   // Indexing
-  Graph.prototype.createIndex = function() {
-    this.gremlin.append('g');
-    this.gremlin.appendMain('createIndex', arguments);
+  GraphWrapper.prototype.createIndex = function() {
+    var func = new GremlinMethod('createIndex', arguments);
 
-    return new Pipeline(this.gremlin);
+    var pipeline = new PipelineWrapper(this.objectName);
+    pipeline.methods.push(func.toGroovy());
+
+    return pipeline;
   };
 
-  Graph.prototype.createKeyIndex = function() {
-    this.gremlin.append('g');
-    this.gremlin.appendMain('createKeyIndex', arguments);
+  GraphWrapper.prototype.createKeyIndex = function() {
+    var func = new GremlinMethod('createKeyIndex', arguments);
 
-    return new Pipeline(this.gremlin);
+    var pipeline = new PipelineWrapper(this.objectName);
+    pipeline.methods.push(func.toGroovy());
+
+    return pipeline;
   };
 
-  Graph.prototype.getIndices = function() {
-    this.gremlin.append('g');
-    this.gremlin.appendMain('getIndices', arguments);
+  GraphWrapper.prototype.getIndices = function() {
+    var func = new GremlinMethod('getIndices', arguments);
 
-    return new Pipeline(this.gremlin);
+    var pipeline = new PipelineWrapper(this.objectName);
+    pipeline.methods.push(func.toGroovy());
+
+    return pipeline;
   };
 
-  Graph.prototype.getIndexedKeys = function() {
-    this.gremlin.append('g');
-    this.gremlin.appendMain('getIndexedKeys', arguments);
+  GraphWrapper.prototype.getIndexedKeys = function() {
+    var func = new GremlinMethod('getIndexedKeys', arguments);
 
-    return new Pipeline(this.gremlin);
+    var pipeline = new PipelineWrapper(this.objectName);
+    pipeline.methods.push(func.toGroovy());
+
+    return pipeline;
   };
 
-  Graph.prototype.getIndex = function() {
-    this.gremlin.append('g');
-    this.gremlin.appendMain('getIndex', arguments);
+  GraphWrapper.prototype.getIndex = function() {
+    var func = new GremlinMethod('getIndex', arguments);
 
-    return new Pipeline(this.gremlin);
+    var pipeline = new PipelineWrapper(this.objectName);
+    pipeline.methods.push(func.toGroovy());
+
+    return pipeline;
   };
 
-  Graph.prototype.dropIndex = function() {
-    this.gremlin.append('g');
-    this.gremlin.appendMain('dropIndex', arguments);
+  GraphWrapper.prototype.dropIndex = function() {
+    var func = new GremlinMethod('dropIndex', arguments);
 
-    return new Pipeline(this.gremlin);
+    var pipeline = new PipelineWrapper(this.objectName);
+    pipeline.methods.push(func.toGroovy());
+
+    return pipeline;
   };
 
-  Graph.prototype.dropKeyIndex = function() {
-    this.gremlin.append('g');
-    this.gremlin.appendMain('dropKeyIndex', arguments);
+  GraphWrapper.prototype.dropKeyIndex = function() {
+    var func = new GremlinMethod('dropKeyIndex', arguments);
 
-    return new Pipeline(this.gremlin);
+    var pipeline = new PipelineWrapper(this.objectName);
+    pipeline.methods.push(func.toGroovy());
+
+    return pipeline;
   };
 
   // Types
-  Graph.prototype.makeKey = function() {
-    this.gremlin.append('g');
-    this.gremlin.appendMain('makeKey', arguments);
+  GraphWrapper.prototype.makeKey = function() {
+    var func = new GremlinMethod('makeKey', arguments);
 
-    return new Pipeline(this.gremlin);
+    var pipeline = new PipelineWrapper(this.objectName);
+    pipeline.methods.push(func.toGroovy());
+
+    return pipeline;
   };
 
-  Graph.prototype.clear = function() {
-    this.gremlin.append('g');
-    this.gremlin.appendMain('clear', arguments);
+  GraphWrapper.prototype.clear = function() {
+    var func = new GremlinMethod('clear', arguments);
 
-    return new Pipeline(this.gremlin);
+    var pipeline = new PipelineWrapper(this.objectName);
+    pipeline.methods.push(func.toGroovy());
+
+    return pipeline;
   };
 
-  Graph.prototype.shutdown = function() {
-    this.gremlin.append('g');
-    this.gremlin.appendMain('shutdown', arguments);
+  GraphWrapper.prototype.shutdown = function() {
+    var func = new GremlinMethod('shutdown', arguments);
 
-    return new Pipeline(this.gremlin);
+    var pipeline = new PipelineWrapper(this.objectName);
+    pipeline.methods.push(func.toGroovy());
+
+    return pipeline;
   };
 
-  Graph.prototype.getFeatures = function() {
-    this.gremlin.append('g');
-    this.gremlin.appendMain('getFeatures', arguments);
+  GraphWrapper.prototype.getFeatures = function() {
+    var func = new GremlinMethod('getFeatures', arguments);
 
-    return new Pipeline(this.gremlin);
+    var pipeline = new PipelineWrapper(this.objectName);
+    pipeline.methods.push(func.toGroovy());
+
+    return pipeline;
   };
 
   // Titan specifics
-  Graph.prototype.getTypes = function() {
-    this.gremlin.append('g');
-    this.gremlin.appendMain('getTypes', arguments);
+  GraphWrapper.prototype.getTypes = function() {
+    var func = new GremlinMethod('getTypes', arguments);
 
-    return new Pipeline(this.gremlin);
+    var pipeline = new PipelineWrapper(this.objectName);
+    pipeline.methods.push(func.toGroovy());
+
+    return pipeline;
   };
 
 
   /**
-   * Build a Gremlin line used for adding a Vertex in the graph.
+   * Build a Gremlin line used for adding a VertexWrapper in the graph.
+   *
    * Note: for databases which accept custom _id properties (ie. non generated)
-   * the user must pass a valid _id value in the properties map.
+   * the user must pass a valid _id value in the `properties` map rather than
+   * supply an optional argument parameter as first argument (TinkerPop style).
    * This slight change to the API of addVertex makes it easier to use
    * in a JavaScript environment.
    *
    * @param {Object} properties
-   * @param {String} identifier Optional variable name used within the script context
+   * @param {String} object Optional variable name used within the script
+   *    context
+   * @return {VertexWrapper}
    */
-  Graph.prototype.addVertex = function(properties, identifier) {
-    var vertex = new Vertex(this.gremlin);
-    var id = properties._id ? properties._id +',' : '';
-    var identifierPrefix = identifier ? identifier + ' = ' : '';
+  GraphWrapper.prototype.addVertex = function(properties, object) {
+    var vertex = new VertexWrapper('g');
+    var method = new AddVertexMethod(vertex, properties);
 
-    vertex.identifier = identifier; // Non-enumerable property
+    method.run();
 
-    _.each(properties, function(value, key) {
-      vertex[key] = value;
-    });
-
-    var gremlinLine = identifierPrefix +'g.addVertex('+ id + this.gremlin.stringifyArgument(properties) +')';
-    this.gremlin.line(gremlinLine);
-
-    this.parentGremlin.append(this.gremlin.script);
+    vertex.methods.push(method.toGroovy());
 
     return vertex;
   };
 
-  Graph.prototype.addEdge = function(v1, v2, label, properties, identifier) {
-    var edge = new Edge(this.gremlin);
-    var optionalId = '';
+  /**
+   * @param {VertexWrapper|Number} v1
+   * @param {VertexWrapper|Number} v2
+   * @param {String} label
+   * @param {Object} properties
+   * @param {String} object Optional variable name used within the script
+   *    context
+   * @return {EdgeWrapper}
+   */
+  GraphWrapper.prototype.addEdge = function(v1, v2, label, properties, object) {
+    var params = {
+      v1: v1,
+      v2: v2,
+      label: label,
+      properties: properties
+    };
 
-    edge.identifier = identifier; // Non-enumerable property
+    var edge = new EdgeWrapper('g');
+    var method = new AddEdgeMethod(edge, params);
 
-    if (properties._id) {
-      edge._id = properties._id;
-      optionalId = edge._id + ',';
-    }
+    method.run();
 
-    edge._outV = arguments[0];
-    edge._inV = arguments[1];
-    edge._label = arguments[2];
-
-    _.each(properties, function(value, key) {
-      edge[key] = value;
-    });
-
-    delete properties._id;
-
-    var gremlinLine = 'g.addEdge('+ optionalId + edge._outV.identifier +','+ edge._inV.identifier +',"'+ edge._label +'",'+ this.gremlin.stringifyArgument(properties) +')';
-
-    this.gremlin.line(gremlinLine);
-
-    this.parentGremlin.append(this.gremlin.script);
+    edge.methods.push(method.toGroovy());
 
     return edge;
   };
 
-  return Graph;
+  return GraphWrapper;
 })();
 
-},{"./elements/edge":36,"./elements/vertex":38,"./pipeline":42,"lodash":27}],40:[function(require,module,exports){
-var _ = require("lodash");
-
-var Graph = require('./graph');
-var Pipeline = require('./pipeline');
-var Argument = require('./arguments/argument');
+},{"../functions/graph/addedge":43,"../functions/graph/addvertex":44,"../functions/graph/idx":45,"../functions/method":46,"./edge":53,"./objectwrapper":56,"./pipeline":57,"./vertex":58,"lodash":27,"util":25}],56:[function(require,module,exports){
+/*jslint node: true */
+'use strict';
 
 module.exports = (function() {
-  function Gremlin(gRex, options) {
-    this.script = '';
-    this.gRex = gRex;
-    this.argumentHandler = gRex.argumentHandler;
-
-    var settings = _.defaults(options || {
-      graph: 'g'
-    });
-
-    Object.defineProperty(this, settings.graph, {
-      get: function() {
-        var graph = new Graph(this);
-
-        return graph;
-      }
-    });
+  function ObjectWrapper(objectName) {
+    this.objectName = objectName;
+    this.methods = [];
+    this.identifier = '';
+    this.properties = {};
   }
 
-  Gremlin.prototype.subScript = function() {
-    return new Gremlin(this.gRex);
+  ObjectWrapper.prototype.toGroovy = function() {
+    return this.objectName + this.methods.join('');
   };
 
-  Gremlin.prototype.exec = function(callback) {
-    return this.gRex.exec(this.script).nodeify(callback);
+  ObjectWrapper.prototype.asObject = function() {
+    return this.properties;
   };
 
-  /**
-   * Transforms an arbitrary object into a Pipeline
-   * @return {Pipeline}
-   */
-  Gremlin.prototype._ = function() {
-    var gremlin = new Gremlin(this.gRex);
-    gremlin.append('_' + gremlin.argumentHandler.buildString(arguments));
-
-    return new Pipeline(gremlin);
-  };
-
-  /**
-   * Append an arbitrary Gremlin string to current script.
-   *
-   * @private
-   * @param {String} script
-   */
-  Gremlin.prototype.append = function(script) {
-    this.script += script;
-  };
-
-  /**
-   * Append an arbitrary Gremlin string to current script as a new line.
-   *
-   * @public
-   * @param {String} line
-   */
-  Gremlin.prototype.line = function(line) {
-    this.script += '\n'+ line;
-  };
-
-
-  Gremlin.prototype.stringifyArgument = function(argument) {
-    return JSON.stringify(argument).replace('{', '[').replace('}', ']');
-  };
-
-  /**
-   * Populate a Gremlin script string with default behavior. Used for most
-   * commands.
-   * This method optionally takes a new Pipeline object as second parameter.
-   *
-   * @param {String} methodName
-   * @param {Array} args Method's arguments
-   */
-  Gremlin.prototype.appendMain = function(methodName, args) {
-    args = _.isArray(args[0]) ? args[0] : args;
-
-    this.append('.' + methodName + this.argumentHandler.buildString(args));
-  };
-
-  /**
-   * Alternative 'index' and 'range' commands, ie:
-   *   index() => [i]
-   *   range() => [1..2]
-   *
-   * Do not pass in method name, just string range.
-   *
-   * @param {String} arg
-   */
-  Gremlin.prototype.appendIndex = function(arg) {
-    this.append('['+ arg[0].toString() + ']');
-  };
-
-  /**
-   * Used for 'and', 'or' & 'put commands, ie:
-   *   g.v(1).outE().or(g._().has('id', 'T.eq', 9), g._().has('weight', 'T.lt', '0.6f'))
-   *
-   * @param {String} methodName
-   * @param {Array} args Method's arguments
-   */
-  Gremlin.prototype.appendPipes = function(methodName, args) {
-    var argumentList = [];
-    args = _.isArray(args[0]) ? args[0] : args;
-
-    _.each(args, function(arg) {
-      var argObj = new Argument(arg, this.gRex.options);
-      var partialScript = (arg.gremlin && arg.gremlin.script) || argObj.parse();
-      argumentList.push(partialScript);
-    }, this);
-
-    this.append('.' + methodName + '('+ argumentList.join(',') +')');
-  };
-
-  /**
-   * Used for retain & except commands, ie:
-   *   g.V().retain([g.v(1), g.v(2), g.v(3)])
-   *
-   * @param {String} methodName
-   * @param {Array} args Method's arguments
-   */
-  Gremlin.prototype.appendCollection = function(methodName, args) {
-    var argumentList = [];
-
-    if (_.isArray(args[0])) {
-      // Passing in an array of Pipeline with Gremlin script as arguments
-      _.each(args[0], function(pipeline) {
-        argumentList.push(pipeline.gremlin.script);
-      });
-
-      this.append("." + methodName + "([" + argumentList.join(',') + "])");
-    } else {
-      this.append("." + methodName + this.argumentHandler.buildString(args[0]));
-    }
-  };
-
-  return Gremlin;
-
+  return ObjectWrapper;
 })();
+},{}],57:[function(require,module,exports){
+/*jslint node: true */
+'use strict';
+var inherits = require('util').inherits;
 
-},{"./arguments/argument":29,"./graph":39,"./pipeline":42,"lodash":27}],41:[function(require,module,exports){
-var http = require('http');
-var querystring = require('querystring');
-
-var Q = require("q"),
-    _ = require("lodash");
-
-var Gremlin = require('./');
-var Graph = require("./graph");
-var classes = require("./classes");
-
-var ResultFormatter = require("./resultformatter");
-var ArgumentHandler = require("./arguments/argumenthandler");
-
-
-module.exports = (function(){
-  function Grex(options) {
-    this.options = _.defaults(options || {
-      'host': 'localhost',
-      'port': 8182,
-      'graph': 'tinkergraph',
-      'idRegex': false // OrientDB id regex -> /^[0-9]+:[0-9]+$/
-    });
-
-    this.resultFormatter = new ResultFormatter();
-    this.argumentHandler = new ArgumentHandler(this.options);
-
-    _.extend(this, classes);
-    this.ClassTypes = classes;
-  }
-
-  Grex.prototype.connect = function(options, callback) {
-    if(typeof options === 'function'){
-      callback = options;
-      options = undefined;
-    }
-
-    return Q.fcall(function() {
-      return this;
-    }.bind(this))
-    .nodeify(callback);
-  };
-
-  /**
-   * Send a Gremlin script for execution on the server, fetch and format
-   * results.
-   *
-   * @param {String} script A raw Gremlin (Groovy) script to execute
-   */
-  Grex.prototype.exec = function(script) {
-    var deferred = Q.defer();
-
-    var qs = {
-      script: script,
-      'rexster.showTypes': true
-    };
-
-    var options = {
-      hostname: this.options.host,
-      port: this.options.port,
-      path: '/graphs/' + this.options.graph + '/tp/gremlin?' + querystring.stringify(qs),
-      headers: {
-        'Content-type': 'application/json'
-      }
-    };
-
-    var req = http.get(options, function(res) {
-      var body = '';
-
-      res.on('data', function(chunk) {
-        body += chunk;
-      });
-
-      res.on('end', function() {
-        body = JSON.parse(body);
-        var transformedResults = this.transformResults(body.results);
-        body.results = transformedResults.results;
-        body.typeMap = transformedResults.typeMap;
-        return deferred.resolve(body);
-      }.bind(this));
-
-    }.bind(this));
-
-    req.on('error', function() {
-      return deferred.reject(e);
-    });
-
-    return deferred.promise;
-  };
-
-  Grex.prototype.gremlin = function(options) {
-    var gremlin = new Gremlin(this, options);
-
-    return gremlin;
-  };
-
-  Grex.prototype.transformResults = function(results) {
-    return this.resultFormatter.formatResults(results);
-  };
-
-  return Grex;
-})();
-
-},{"./arguments/argumenthandler":30,"./classes":35,"./graph":39,"./":40,"./resultformatter":43,"http":6,"lodash":27,"q":28,"querystring":14}],42:[function(require,module,exports){
-var Gremlin = require('./');
+var ObjectWrapper = require('./objectwrapper');
+var GremlinStep = require('../functions/steps/step');
+var CollectionAccessor = require('../functions/collectionaccessor');
+var CollectionStep = require('../functions/steps/collectionstep');
+var PipesStep = require('../functions/steps/pipesstep');
+var SelectStep = require('../functions/steps/select');
 
 module.exports = (function () {
-  function Pipeline(gremlin) {
-    this.gremlin = gremlin;
+  function PipelineWrapper(object) {
+    ObjectWrapper.call(this, object);
   }
 
+  inherits(PipelineWrapper, ObjectWrapper);
+
   /**
-   * Execute a query against the server.
-   * Support the dual callback/promise API.
+   * Send the underlying GremlinScript to the server for execution, returning
+   * raw results.
    *
-   * WARNING: this method will likely be deprecated in the future.
+   * This method is a shorthand for GremlinScript.exec().
+   *
+   * Support the dual callback/promise API.
    *
    * @param {Function} callback
    */
-  Pipeline.prototype.get = function(callback) {
-    return this.gremlin.exec(callback);
+  PipelineWrapper.prototype.exec =
+  PipelineWrapper.prototype.execute = function(callback) {
+    return this.gremlin.execute(callback);
   };
 
-  Pipeline.prototype.both = function() {
-    this.gremlin.appendMain('both', arguments);
+  /**
+   * Send the underlying GremlinScript script to the server for execution, returning
+   * instantiated results.
+   *
+   * This method is a shorthand for GremlinScript.fetch().
+   *
+   * Support the dual callback/promise API.
+   *
+   * @param {Function} callback
+   */
+  PipelineWrapper.prototype.fetch = function(callback) {
+    return this.gremlin.fetch(callback);
+  };
+
+
+  PipelineWrapper.prototype.both = function() {
+    var step = new GremlinStep('both', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.bothE = function() {
-    this.gremlin.appendMain('bothE', arguments);
+  PipelineWrapper.prototype.bothE = function() {
+    var step = new GremlinStep('bothE', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.bothV = function() {
-    this.gremlin.appendMain('bothV', arguments);
+  PipelineWrapper.prototype.bothV = function() {
+    var step = new GremlinStep('bothV', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.cap = function() {
-    this.gremlin.appendMain('cap', arguments);
+  PipelineWrapper.prototype.cap = function() {
+    var step = new GremlinStep('cap', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.gather = function() {
-    this.gremlin.appendMain('gather', arguments);
+  PipelineWrapper.prototype.gather = function() {
+    var step = new GremlinStep('gather', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.id = function() {
-    this.gremlin.appendMain('id', arguments);
+  PipelineWrapper.prototype.id = function() {
+    var step = new GremlinStep('id', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.in = function() {
-    this.gremlin.appendMain('in', arguments);
+  PipelineWrapper.prototype.in = function() {
+    var step = new GremlinStep('in', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.inE = function() {
-    this.gremlin.appendMain('inE', arguments);
+  PipelineWrapper.prototype.inE = function() {
+    var step = new GremlinStep('inE', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.inV = function() {
-    this.gremlin.appendMain('inV', arguments);
+  PipelineWrapper.prototype.inV = function() {
+    var step = new GremlinStep('inV', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.property = function() {
-    this.gremlin.appendMain('property', arguments);
+  PipelineWrapper.prototype.property = function() {
+    var step = new GremlinStep('property', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.label = function() {
-    this.gremlin.appendMain('label', arguments);
+  PipelineWrapper.prototype.label = function() {
+    var step = new GremlinStep('label', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.map = function() {
-    this.gremlin.appendMain('map', arguments);
+  PipelineWrapper.prototype.map = function() {
+    var step = new GremlinStep('map', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.memoize = function() {
-    this.gremlin.appendMain('memoize', arguments);
+  PipelineWrapper.prototype.memoize = function() {
+    var step = new GremlinStep('memoize', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.order = function() {
-    this.gremlin.appendMain('order', arguments);
+  PipelineWrapper.prototype.order = function() {
+    var step = new GremlinStep('order', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.out = function() {
-    this.gremlin.appendMain('out', arguments);
+  PipelineWrapper.prototype.out = function() {
+    var step = new GremlinStep('out', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.outE = function() {
-    this.gremlin.appendMain('outE', arguments);
+  PipelineWrapper.prototype.outE = function() {
+    var step = new GremlinStep('outE', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.outV = function() {
-    this.gremlin.appendMain('outV', arguments);
+  PipelineWrapper.prototype.outV = function() {
+    var step = new GremlinStep('outV', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.path = function() {
-    this.gremlin.appendMain('path', arguments);
+  PipelineWrapper.prototype.path = function() {
+    var step = new GremlinStep('path', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.scatter = function() {
-    this.gremlin.appendMain('scatter', arguments);
+  PipelineWrapper.prototype.scatter = function() {
+    var step = new GremlinStep('scatter', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.select = function() {
-    this.gremlin.append('.select' + this.gremlin.argumentHandler.buildString(arguments, true));
+  PipelineWrapper.prototype.select = function() {
+    var step = new SelectStep(arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.transform = function() {
-    this.gremlin.appendMain('transform', arguments);
+  PipelineWrapper.prototype.transform = function() {
+    var step = new GremlinStep('transform', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.orderMap = function() {
-    this.gremlin.appendMain('orderMap', arguments);
+  PipelineWrapper.prototype.orderMap = function() {
+    var step = new GremlinStep('orderMap', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
   /*** Filter ***/
   // index(i)
-  Pipeline.prototype.index = function() {
-    this.gremlin.appendIndex(arguments);
+  PipelineWrapper.prototype.index = function() {
+    var step = new CollectionAccessor(arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
   // range('[i..j]')
-  Pipeline.prototype.range = function() {
-    this.gremlin.appendIndex(arguments);
+  PipelineWrapper.prototype.range = function() {
+    var step = new CollectionAccessor(arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.and = function() {
-    this.gremlin.appendPipes('and', arguments);
+  PipelineWrapper.prototype.and = function() {
+    var step = new PipesStep('and', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.back = function() {
-    this.gremlin.appendMain('back', arguments);
+  PipelineWrapper.prototype.back = function() {
+    var step = new GremlinStep('back', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.dedup = function() {
-    this.gremlin.appendMain('dedup', arguments);
+  PipelineWrapper.prototype.dedup = function() {
+    var step = new GremlinStep('dedup', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.except = function() {
-    this.gremlin.appendCollection('except', arguments);
+  PipelineWrapper.prototype.except = function() {
+    var step = new CollectionStep('except', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.filter = function() {
-    this.gremlin.appendMain('filter', arguments);
+  PipelineWrapper.prototype.filter = function() {
+    var step = new GremlinStep('filter', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.has = function() {
-    this.gremlin.appendMain('has', arguments);
+  PipelineWrapper.prototype.has = function() {
+    var step = new GremlinStep('has', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.hasNot = function() {
-    this.gremlin.appendMain('hasNot', arguments);
+  PipelineWrapper.prototype.hasNot = function() {
+    var step = new GremlinStep('hasNot', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.interval = function() {
-    this.gremlin.appendMain('interval', arguments);
+  PipelineWrapper.prototype.interval = function() {
+    var step = new GremlinStep('interval', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.or = function() {
-    this.gremlin.appendPipes('or', arguments);
+  PipelineWrapper.prototype.or = function() {
+    var step = new PipesStep('or', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.random = function() {
-    this.gremlin.appendMain('random', arguments);
+  PipelineWrapper.prototype.random = function() {
+    var step = new GremlinStep('random', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.retain = function() {
-    this.gremlin.appendCollection('retain', arguments);
+  PipelineWrapper.prototype.retain = function() {
+    var step = new CollectionStep('retain', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.simplePath = function() {
-    this.gremlin.appendMain('simplePath', arguments);
+  PipelineWrapper.prototype.simplePath = function() {
+    var step = new GremlinStep('simplePath', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
   /*** Side Effect ***/
-  Pipeline.prototype.aggregate = function() {
+  PipelineWrapper.prototype.aggregate = function() {
     throw new Error('Not implemented.');
   };
 
-  Pipeline.prototype.as = function() {
-    this.gremlin.appendMain('as', arguments);
+  PipelineWrapper.prototype.as = function() {
+    var step = new GremlinStep('as', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.groupBy = function() {
-    this.gremlin.appendMain('groupBy', arguments);
+  PipelineWrapper.prototype.groupBy = function() {
+    var step = new GremlinStep('groupBy', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
   // Not FullyImplemented ??
-  Pipeline.prototype.groupCount = function() {
-    this.gremlin.appendMain('groupCount', arguments);
+  PipelineWrapper.prototype.groupCount = function() {
+    var step = new GremlinStep('groupCount', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.optional = function() {
-    this.gremlin.appendMain('optional', arguments);
+  PipelineWrapper.prototype.optional = function() {
+    var step = new GremlinStep('optional', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.sideEffect = function() {
-    this.gremlin.appendMain('sideEffect', arguments);
+  PipelineWrapper.prototype.sideEffect = function() {
+    var step = new GremlinStep('sideEffect', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.linkBoth = function() {
-    this.gremlin.appendMain('linkBoth', arguments);
+  PipelineWrapper.prototype.linkBoth = function() {
+    var step = new GremlinStep('linkBoth', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.linkIn = function() {
-    this.gremlin.appendMain('linkIn', arguments);
+  PipelineWrapper.prototype.linkIn = function() {
+    var step = new GremlinStep('linkIn', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.linkOut = function() {
-    this.gremlin.appendMain('linkOut', arguments);
+  PipelineWrapper.prototype.linkOut = function() {
+    var step = new GremlinStep('linkOut', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.store = function() {
+  PipelineWrapper.prototype.store = function() {
     throw new Error('Not implemented');
   };
 
-  Pipeline.prototype.table = function() {
+  PipelineWrapper.prototype.table = function() {
     throw new Error('Not implemented');
   };
 
-  Pipeline.prototype.tree = function() {
+  PipelineWrapper.prototype.tree = function() {
     throw new Error('Not implemented');
   };
 
   /*** Branch ***/
-  Pipeline.prototype.copySplit = function() {
-    this.gremlin.appendPipes('copySplit', arguments);
+  PipelineWrapper.prototype.copySplit = function() {
+    var step = new PipesStep('copySplit', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
-  Pipeline.prototype.exhaustMerge = function() {
-    this.gremlin.appendMain('exhaustMerge', arguments);
+  PipelineWrapper.prototype.exhaustMerge = function() {
+    var step = new GremlinStep('exhaustMerge', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.fairMerge = function() {
-    this.gremlin.appendMain('fairMerge', arguments);
+  PipelineWrapper.prototype.fairMerge = function() {
+    var step = new GremlinStep('fairMerge', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
   // g.v(1).out().ifThenElse('{it.name=='josh'}','{it.age}','{it.name}')
-  Pipeline.prototype.ifThenElse = function() {
-    this.gremlin.appendMain('ifThenElse', arguments);
+  PipelineWrapper.prototype.ifThenElse = function() {
+    var step = new GremlinStep('ifThenElse', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.loop = function() {
-    this.gremlin.appendMain('loop', arguments);
+  PipelineWrapper.prototype.loop = function() {
+    var step = new GremlinStep('loop', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
   /*** Methods ***/
-  Pipeline.prototype.fill = function() {
+  PipelineWrapper.prototype.fill = function() {
     throw new Error('Not implemented');
   };
 
-  Pipeline.prototype.count = function() {
-    this.gremlin.appendMain('count', arguments);
+  PipelineWrapper.prototype.count = function() {
+    var step = new GremlinStep('count', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.iterate = function() {
-    this.gremlin.appendMain('iterate', arguments);
+  PipelineWrapper.prototype.iterate = function() {
+    var step = new GremlinStep('iterate', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.next = function() {
-    this.gremlin.appendMain('next', arguments);
+  PipelineWrapper.prototype.next = function() {
+    var step = new GremlinStep('next', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.toList = function() {
-    this.gremlin.appendMain('toList', arguments);
+  PipelineWrapper.prototype.toList = function() {
+    var step = new GremlinStep('toList', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.keys = function() {
-    this.gremlin.appendMain('keys', arguments);
+  PipelineWrapper.prototype.keys = function() {
+    var step = new GremlinStep('keys', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.remove = function() {
-    this.gremlin.appendMain('remove', arguments);
+  PipelineWrapper.prototype.remove = function() {
+    var step = new GremlinStep('remove', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.values = function() {
-    this.gremlin.appendMain('values', arguments);
+  PipelineWrapper.prototype.values = function() {
+    var step = new GremlinStep('values', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.put = function() {
-    this.gremlin.appendPipes('put', arguments);
+  PipelineWrapper.prototype.put = function() {
+    var step = new PipesStep('put', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.getPropertyKeys = function() {
-    this.gremlin.appendMain('getPropertyKeys', arguments);
+  PipelineWrapper.prototype.getPropertyKeys = function() {
+    var step = new GremlinStep('getPropertyKeys', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.setProperty = function() {
-    this.gremlin.appendMain('setProperty', arguments);
+  PipelineWrapper.prototype.setProperty = function() {
+    var step = new GremlinStep('setProperty', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.getProperty = function() {
-    this.gremlin.appendMain('getProperty', arguments);
+  PipelineWrapper.prototype.getProperty = function() {
+    var step = new GremlinStep('getProperty', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
   // Titan specifics
-  Pipeline.prototype.name = function() {
-    this.gremlin.appendMain('name', arguments);
+  PipelineWrapper.prototype.name = function() {
+    var step = new GremlinStep('name', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.dataType = function() {
-    this.gremlin.appendMain('dataType', arguments);
+  PipelineWrapper.prototype.dataType = function() {
+    var step = new GremlinStep('dataType', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.indexed = function() {
-    this.gremlin.appendMain('indexed', arguments);
+  PipelineWrapper.prototype.indexed = function() {
+    var step = new GremlinStep('indexed', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.unique = function() {
-    this.gremlin.appendMain('unique', arguments);
+  PipelineWrapper.prototype.unique = function() {
+    var step = new GremlinStep('unique', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.makePropertyKey = function() {
-    this.gremlin.appendMain('makePropertyKey', arguments);
+  PipelineWrapper.prototype.makePropertyKey = function() {
+    var step = new GremlinStep('makePropertyKey', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.group = function() {
-    this.gremlin.appendMain('group', arguments);
+  PipelineWrapper.prototype.group = function() {
+    var step = new GremlinStep('group', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.makeEdgeLabel = function() {
-    this.gremlin.appendMain('makeEdgeLabel', arguments);
+  PipelineWrapper.prototype.makeEdgeLabel = function() {
+    var step = new GremlinStep('makeEdgeLabel', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.query = function() {
-    this.gremlin.appendMain('query', arguments);
+  PipelineWrapper.prototype.query = function() {
+    var step = new GremlinStep('query', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
   // Titan v0.4.0+
-  Pipeline.prototype.single = function() {
-    this.gremlin.appendMain('single', arguments);
+  PipelineWrapper.prototype.single = function() {
+    var step = new GremlinStep('single', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
   // Titan v0.4.0+
-  Pipeline.prototype.list = function() {
-    this.gremlin.appendMain('list', arguments);
+  PipelineWrapper.prototype.list = function() {
+    var step = new GremlinStep('list', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
   // Titan v0.4.0+: replaces unique(Direction.IN)
-  Pipeline.prototype.oneToMany = function() {
-    this.gremlin.appendMain('oneToMany', arguments);
+  PipelineWrapper.prototype.oneToMany = function() {
+    var step = new GremlinStep('oneToMany', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
   // Titan v0.4.0+: replaces unique(Direction.OUT)
-  Pipeline.prototype.manyToOne = function() {
-    this.gremlin.appendMain('manyToOne', arguments);
+  PipelineWrapper.prototype.manyToOne = function() {
+    var step = new GremlinStep('manyToOne', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
   // Titan v0.4.0+: replaces unique(Direction.IN) and unique(Direction.OUT)
-  Pipeline.prototype.oneToOne = function() {
-    this.gremlin.appendMain('oneToOne', arguments);
+  PipelineWrapper.prototype.oneToOne = function() {
+    var step = new GremlinStep('oneToOne', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
   // Titan v0.4.0+
-  Pipeline.prototype.makeKey = function() {
-    this.gremlin.appendMain('makeKey', arguments);
+  PipelineWrapper.prototype.makeKey = function() {
+    var step = new GremlinStep('makeKey', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
   // Titan v0.4.0+
-  Pipeline.prototype.makeLabel = function() {
-    this.gremlin.appendMain('makeLabel', arguments);
+  PipelineWrapper.prototype.makeLabel = function() {
+    var step = new GremlinStep('makeLabel', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.make = function() {
-    this.gremlin.appendMain('make', arguments);
+  PipelineWrapper.prototype.make = function() {
+    var step = new GremlinStep('make', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.sortKey = function() {
-    this.gremlin.appendMain('sortKey', arguments);
+  PipelineWrapper.prototype.sortKey = function() {
+    var step = new GremlinStep('sortKey', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.signature = function() {
-    this.gremlin.appendMain('signature', arguments);
+  PipelineWrapper.prototype.signature = function() {
+    var step = new GremlinStep('signature', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.unidirected = function() {
-    this.gremlin.appendMain('unidirected', arguments);
+  PipelineWrapper.prototype.unidirected = function() {
+    var step = new GremlinStep('unidirected', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.createKeyIndex = function() {
-    this.gremlin.appendMain('createKeyIndex', arguments);
+  PipelineWrapper.prototype.createKeyIndex = function() {
+    var step = new GremlinStep('createKeyIndex', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.getIndexes = function() {
-    this.gremlin.appendMain('getIndexes', arguments);
+  PipelineWrapper.prototype.getIndexes = function() {
+    var step = new GremlinStep('getIndexes', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.hasIndex = function() {
-    this.gremlin.appendMain('hasIndex', arguments);
+  PipelineWrapper.prototype.hasIndex = function() {
+    var step = new GremlinStep('hasIndex', arguments);
+    this.methods.push(step.toGroovy());
+
     return this;
   };
 
-  Pipeline.prototype.key = function() {
-    this.gremlin.append('.' + arguments[0]);
+  PipelineWrapper.prototype.key = function() {
+    this.methods.push('.'+ arguments[0]);
+
     return this;
   };
 
-  return Pipeline;
+  return PipelineWrapper;
 
 })();
 
-},{"./":40}],43:[function(require,module,exports){
+},{"../functions/collectionaccessor":36,"../functions/steps/collectionstep":47,"../functions/steps/pipesstep":48,"../functions/steps/select":49,"../functions/steps/step":50,"./objectwrapper":56,"util":25}],58:[function(require,module,exports){
+/*jslint node: true */
+'use strict';
+var inherits = require("inherits");
+
+var ElementWrapper = require("./element");
+
+module.exports = (function () {
+  function VertexWrapper() {
+    ElementWrapper.apply(this, arguments);
+
+    this.properties._type = "vertex";
+  }
+
+  inherits(VertexWrapper, ElementWrapper);
+
+  VertexWrapper.toGroovy = function() {
+    return 'Vertex.class';
+  };
+
+  Object.defineProperty(VertexWrapper, 'class', {
+    get: function() {
+      return this.toGroovy();
+    }
+  });
+
+  return VertexWrapper;
+
+})();
+
+},{"./element":54,"inherits":26}],59:[function(require,module,exports){
+/*jslint node: true */
+'use strict';
 var _ = require("lodash");
 
 
@@ -16160,6 +15096,9 @@ module.exports = (function() {
   function ResultFormatter() {
   }
 
+  /**
+   * @param {Array} results
+   */
   ResultFormatter.prototype.formatResults = function(results) {
     var formattedResult = {
       results: [],
@@ -16315,4 +15254,144 @@ module.exports = (function() {
   return ResultFormatter;
 })();
 
-},{"lodash":27}]},{},[1])
+},{"lodash":27}],60:[function(require,module,exports){
+/*jslint node: true */
+'use strict';
+var http = require('http');
+var querystring = require('querystring');
+
+var _ = require("lodash");
+
+var ResultFormatter = require("./resultformatter");
+var ObjectWrapper = require('./objects/objectwrapper');
+var GremlinScript = require('./gremlinscript');
+
+module.exports = (function(){
+  function RexsterClient(options) {
+    var defaultOptions = {
+      host: 'localhost',
+      port: 8182,
+      graph: 'tinkergraph',
+      load: [],
+      showTypes: false
+    };
+
+    this.options = _.defaults(options || {}, defaultOptions);
+    this.fetchHandler = this.options.fetched || this.defaultFetchHandler;
+
+    this.resultFormatter = new ResultFormatter();
+  }
+
+  /**
+   * @param {ObjectWrapper} statement
+   * @return {GremlinScript}
+   */
+  RexsterClient.prototype.createGremlinFromWrapper = function(statement) {
+    var gremlin = new GremlinScript();
+    var appender = gremlin.getAppender();
+    appender(statement);
+
+    return gremlin;
+  };
+
+  RexsterClient.prototype.buildRequestOptions = function(gremlin) {
+    var qs = {
+      script: gremlin.script.replace(/\$/g, "\\$"),
+      'rexster.showTypes': this.options.showTypes,
+    };
+
+    if (this.options.load.length > 0) {
+      qs.load = '['+ this.options.load.join(',') +']';
+    }
+
+    // Build custom bound parameters string
+    var paramString = '&'+ _.map(gremlin.params, function(value, key) {
+      return 'params.'+ key +'='+ querystring.escape(value);
+    }).join('&');
+
+    var requestOptions = {
+      hostname: this.options.host,
+      port: this.options.port,
+      path: '/graphs/' + this.options.graph + '/tp/gremlin?' + querystring.stringify(qs) + paramString,
+      headers: {
+        'Content-type': 'application/json;charset=utf-8'
+      }
+    };
+
+    return requestOptions;
+  };
+
+  /**
+   * Send a GremlinScript script to Rexster for execution via HTTP, fetch and format
+   * results.
+   *
+   * @param {GremlinScript} gremlin A Gremlin-Groovy script to execute
+   *
+   * @return {Promise}
+   */
+  RexsterClient.prototype.execute =
+  RexsterClient.prototype.exec = function(gremlin, callback) {
+    if (gremlin instanceof ObjectWrapper) {
+      var statement = gremlin;
+      gremlin = this.createGremlinFromWrapper(statement);
+    }
+
+    var options = this.buildRequestOptions(gremlin);
+    var req = http.get(options, function(res) {
+      var body = '';
+
+      res.on('data', function(chunk) {
+        body += chunk;
+      });
+
+      res.on('error', function(err) {
+        callback(new Error(err));
+      });
+
+      res.on('end', function() {
+        body = JSON.parse(body);
+
+        if (body.message || body.success === false) {
+          return callback(new Error(body.message || body.results));
+        }
+        callback(null, body);
+      });
+    });
+
+    req.on('error', function(err) {
+      callback(new Error(err));
+    });
+  };
+
+  /**
+   * Send a Gremlin script to Rexster for execution via HTTP, fetch and format
+   * results as instantiated elements (typically Vertices and Edges).
+   *
+   * @param {GremlinScript} gremlin
+   */
+  RexsterClient.prototype.fetch = function(gremlin, callback) {
+    var self = this;
+
+    this.execute(gremlin, function(err, response) {
+      callback(err, self.fetchHandler(response, response.results));
+    });
+  };
+
+  /**
+   * A noop, default handler for RexsterClient.fetch().
+   *
+   * @param {String} response - the complete HTTP response body
+   * @param {Array} results - array of results, shorthand for response.results
+   */
+  RexsterClient.prototype.defaultFetchHandler = function(response, results) {
+    return results;
+  };
+
+  RexsterClient.prototype.transformResults = function(results) {
+    return this.resultFormatter.formatResults(results);
+  };
+
+  return RexsterClient;
+})();
+
+},{"./gremlinscript":51,"./objects/objectwrapper":56,"./resultformatter":59,"http":6,"lodash":27,"querystring":14}]},{},[1])
