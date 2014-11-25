@@ -6,8 +6,9 @@ var querystring = require('querystring');
 var _ = require("lodash");
 
 var ResultFormatter = require("./resultformatter");
-var ObjectWrapper = require('./objects/objectwrapper');
-var GremlinScript = require('./gremlinscript');
+var ObjectWrapper = require('gremlin-script').ObjectWrapper;
+var GremlinScript = require('gremlin-script').GremlinScript;
+
 
 module.exports = (function(){
   function RexsterClient(options) {

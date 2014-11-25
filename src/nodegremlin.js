@@ -1,10 +1,11 @@
 var _ = require('lodash');
 
+var GremlinScript = require('gremlin-script').GremlinScript;
+var classes = require('gremlin-script').Classes;
+var GraphWrapper = require('gremlin-script').Structure.Graph;
+var PipelineWrapper = require('gremlin-script').Structure.Pipeline;
+
 var RexsterClient = require('./rexsterclient');
-var GremlinScript = require('./gremlinscript');
-var classes = require('./classes/classes');
-var GraphWrapper = require("./objects/graph");
-var PipelineWrapper = require('./objects/pipeline');
 
 
 module.exports = (function() {
