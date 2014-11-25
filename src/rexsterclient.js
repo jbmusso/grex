@@ -5,7 +5,6 @@ var querystring = require('querystring');
 
 var _ = require("lodash");
 
-var ResultFormatter = require("./resultformatter");
 var ObjectWrapper = require('gremlin-script').ObjectWrapper;
 var GremlinScript = require('gremlin-script').GremlinScript;
 
@@ -22,8 +21,6 @@ module.exports = (function(){
 
     this.options = _.defaults(options || {}, defaultOptions);
     this.fetchHandler = this.options.fetched || this.defaultFetchHandler;
-
-    this.resultFormatter = new ResultFormatter();
   }
 
   /**
@@ -129,10 +126,6 @@ module.exports = (function(){
    */
   RexsterClient.prototype.defaultFetchHandler = function(response, results) {
     return results;
-  };
-
-  RexsterClient.prototype.transformResults = function(results) {
-    return this.resultFormatter.formatResults(results);
   };
 
   return RexsterClient;
