@@ -1,7 +1,1907 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 module.exports = require('./src/nodegremlin');
 
-},{"./src/nodegremlin":52}],2:[function(require,module,exports){
+},{"./src/nodegremlin":59}],2:[function(require,module,exports){
+module.exports = {
+  GremlinScript: require('./src/gremlinscript'),
+  ObjectWrapper: require('./src/objects/objectwrapper'),
+  Classes: require('./src/classes/classes'),
+  Structure: {
+    Graph: require('./src/objects/structure/graph'),
+    Vertex: require('./src/objects/structure/vertex'),
+    Edge: require('./src/objects/structure/edge'),
+    Traversal: require('./src/objects/process/traversal'),
+  }
+};
+},{"./src/classes/classes":9,"./src/gremlinscript":26,"./src/objects/objectwrapper":27,"./src/objects/process/traversal":28,"./src/objects/structure/edge":29,"./src/objects/structure/graph":31,"./src/objects/structure/vertex":32}],3:[function(require,module,exports){
+'use strict';
+var _ = require('lodash');
+
+
+function Argument(value, func) {
+  this.value = value;
+  this.func = func;
+}
+
+Argument.prototype.toGroovy = function() {
+  return this.parse();
+};
+
+Argument.prototype.parse = function() {
+  var argument = this.value;
+
+  if (argument === null) {
+    return 'null';
+  }
+
+  if (this.isClassReference()) {
+    return argument.toString();
+  }
+
+  if (this.isFloat()) {
+    return this.value;
+  }
+
+  // Handle ids that are not numbers but pass parseFloat test
+  // (ie. Titan edge ids)
+  if (_.isString(argument) && this.isFloat()) {
+    return "'" + argument + "'";
+  }
+
+  if (_.isArray(argument)) {
+    var parsedArray = _.map(argument, function(element) {
+      if (_.isString(element)) {
+        return "'" + element + "'";
+      }
+
+      return element;
+    });
+
+    return parsedArray.toString();
+  }
+
+  if (_.isBoolean(argument)) {
+    return argument.toString();
+  }
+
+  return "'"+ argument +"'";
+};
+
+Argument.prototype.isFloat = function() {
+  return !_.isNaN(parseFloat(this.value)) && this.value.slice(-1) === 'f';
+  // return this.value.slice(-1) === 'f';
+};
+
+Argument.prototype.isClassReference = function() {
+  var graphRegex = /^T\.(gt|gte|eq|neq|lte|lt|decr|incr|notin|in)$|^Contains\.(IN|NOT_IN)$|^g\.|^Vertex(\.class)$|^Edge(\.class)$|^String(\.class)$|^Integer(\.class)$|^Geoshape(\.class)$|^Direction\.(OUT|IN|BOTH)$|^TitanKey(\.class)$|^TitanLabel(\.class)$/;
+
+  return _.isString(this.value) && graphRegex.test(this.value);
+};
+
+module.exports = Argument;
+},{"lodash":58}],4:[function(require,module,exports){
+'use strict';
+var inherits = require('util').inherits;
+var Argument = require('./argument');
+
+
+function ArrayArgument() {
+  Argument.apply(this, arguments);
+}
+
+inherits(ArrayArgument, Argument);
+
+ArrayArgument.prototype.toGroovy = function() {
+  return "[" + this.parse() + "]";
+};
+
+module.exports = ArrayArgument;
+},{"./argument":3,"util":56}],5:[function(require,module,exports){
+'use strict';
+var inherits = require('util').inherits;
+var Argument = require('./argument');
+
+
+function ClassArgument() {
+  Argument.apply(this, arguments);
+}
+
+inherits(ClassArgument, Argument);
+
+ClassArgument.prototype.toGroovy = function() {
+  return this.value.toGroovy();
+};
+
+module.exports = ClassArgument;
+},{"./argument":3,"util":56}],6:[function(require,module,exports){
+'use strict';
+var inherits = require('util').inherits;
+var Argument = require('./argument');
+
+
+function ClosureArgument() {
+  Argument.apply(this, arguments);
+}
+
+inherits(ClosureArgument, Argument);
+
+ClosureArgument.prototype.toGroovy = function() {
+  return this.value;
+};
+
+module.exports = ClosureArgument;
+},{"./argument":3,"util":56}],7:[function(require,module,exports){
+'use strict';
+var inherits = require('util').inherits;
+var Argument = require('./argument');
+
+
+function IntegerArgument() {
+  Argument.apply(this, arguments);
+}
+
+inherits(IntegerArgument, Argument);
+
+IntegerArgument.prototype.toGroovy = function() {
+  return this.value;
+};
+
+module.exports = IntegerArgument;
+},{"./argument":3,"util":56}],8:[function(require,module,exports){
+'use strict';
+var inherits = require('util').inherits;
+var Argument = require('./argument');
+
+
+function ObjectArgument() {
+  Argument.apply(this, arguments);
+}
+
+inherits(ObjectArgument, Argument);
+
+ObjectArgument.prototype.toGroovy = function() {
+  return JSON.stringify(this.value).replace('{', '[').replace('}', ']');
+};
+
+module.exports = ObjectArgument;
+},{"./argument":3,"util":56}],9:[function(require,module,exports){
+'use strict';
+var Vertex = require('../objects/structure/vertex');
+var Edge = require('../objects/structure/edge');
+
+var JavaClass = require('./javaclass');
+
+
+var classes = {
+  Vertex: Vertex,
+  Edge: Edge,
+  Geoshape: new JavaClass('Geoshape'),
+  'String': new JavaClass('String'),
+  Integer: new JavaClass('Integer'),
+  T: {
+    'gt': 'T.gt',
+    'gte': 'T.gte',
+    'eq': 'T.eq',
+    'neq': 'T.neq',
+    'lte': 'T.lte',
+    'lt': 'T.lt',
+    'decr': 'T.decr',
+    'incr': 'T.incr',
+    'notin': 'T.notin',
+    'in': 'T.in'
+  },
+
+  Contains: {
+    'IN': 'Contains.IN',
+    'NOT_IN': 'Contains.NOT_IN'
+  },
+
+  Direction: {
+    'OUT': 'Direction.OUT',
+    'IN': 'Direction.IN',
+    'BOTH': 'Direction.BOTH'
+  },
+
+  TitanKey: new JavaClass('TitanKey'),
+  TitanLabel : new JavaClass('TitanLabel'),
+};
+
+module.exports = classes;
+},{"../objects/structure/edge":29,"../objects/structure/vertex":32,"./javaclass":10}],10:[function(require,module,exports){
+'use strict';
+
+
+function JavaClass(name) {
+  this.name = name;
+}
+
+JavaClass.prototype.toGroovy = function() {
+  return this.name + '.class';
+};
+
+Object.defineProperty(JavaClass.prototype, 'class', {
+  get: function() {
+    return this.toGroovy();
+  }
+});
+
+module.exports = JavaClass;
+},{}],11:[function(require,module,exports){
+'use strict';
+var inherits = require('util').inherits;
+
+var GremlinMethod = require('./method');
+
+
+function CollectionAccessor() {
+  GremlinMethod.call(this, null, arguments[0]);
+}
+
+inherits(CollectionAccessor, GremlinMethod);
+
+CollectionAccessor.prototype.toGroovy = function() {
+  var str = '['+ this.arguments[0].toString() + ']';
+
+  return str;
+};
+
+module.exports = CollectionAccessor;
+},{"./method":21,"util":56}],12:[function(require,module,exports){
+'use strict';
+var inherits = require('util').inherits;
+
+var GremlinMethod = require('../function');
+
+
+function AddPropertiesMethod() {
+  GremlinMethod.call(this, 'addProperties', arguments[0]);
+}
+
+inherits(AddPropertiesMethod, GremlinMethod);
+
+AddPropertiesMethod.prototype.run = function(element) {
+  var key;
+  var args = this.arguments;
+
+  for (key in args) {
+    element[key] = args[key];
+  }
+
+  return element;
+};
+
+AddPropertiesMethod.prototype.toGroovy = function() {
+  return '.addProperties('+ this.stringifyArgument(this.arguments) +')';
+};
+
+module.exports = AddPropertiesMethod;
+},{"../function":17,"util":56}],13:[function(require,module,exports){
+'use strict';
+var inherits = require('util').inherits;
+
+var GremlinMethod = require('../function');
+
+
+function AddPropertyMethod() {
+  GremlinMethod.call(this, 'addProperty', arguments[0]);
+}
+
+inherits(AddPropertyMethod, GremlinMethod);
+
+AddPropertyMethod.prototype.run = function(element) {
+  var key = this.arguments.key;
+  var value = this.arguments.value;
+
+  element[key] = value;
+
+  return element;
+};
+
+AddPropertyMethod.prototype.toGroovy = function() {
+  var key = this.arguments.key;
+  var value = this.arguments.value;
+
+  return ".addProperty('" + key + "','" + value + "')";
+};
+
+module.exports = AddPropertyMethod;
+},{"../function":17,"util":56}],14:[function(require,module,exports){
+'use strict';
+var inherits = require('util').inherits;
+
+var _ = require('lodash');
+
+var GremlinMethod = require('../function');
+
+
+function GetPropertiesMethod() {
+  GremlinMethod.call(this, 'getProperties', arguments[0]);
+}
+
+inherits(GetPropertiesMethod, GremlinMethod);
+
+GetPropertiesMethod.prototype.run = function(element) {
+  var o = {};
+
+  return element.properties;
+};
+
+module.exports = GetPropertiesMethod;
+},{"../function":17,"lodash":58,"util":56}],15:[function(require,module,exports){
+'use strict';
+var inherits = require('util').inherits;
+
+var GremlinMethod = require('../function');
+
+
+function SetPropertiesMethod() {
+  GremlinMethod.call(this, 'setProperties', arguments[0]);
+}
+
+inherits(SetPropertiesMethod, GremlinMethod);
+
+SetPropertiesMethod.prototype.run = function(element) {
+  var key;
+  var args = this.arguments;
+
+  for (key in args) {
+    element[key] = args[key];
+  }
+
+  return element;
+};
+
+SetPropertiesMethod.prototype.toGroovy = function() {
+  return '.setProperties('+ this.stringifyArgument(this.arguments) +')';
+};
+
+module.exports = SetPropertiesMethod;
+},{"../function":17,"util":56}],16:[function(require,module,exports){
+'use strict';
+var inherits = require('util').inherits;
+
+var GremlinMethod = require('../function');
+
+
+function SetPropertyMethod() {
+  GremlinMethod.call(this, 'setProperty', arguments[0]);
+}
+
+inherits(SetPropertyMethod, GremlinMethod);
+
+SetPropertyMethod.prototype.run = function(element) {
+  var key = this.arguments.key;
+  var value = this.arguments.value;
+
+  element.properties[key] = value;
+
+  return element;
+};
+
+SetPropertyMethod.prototype.toGroovy = function() {
+  var key = this.arguments.key;
+  var value = this.arguments.value;
+
+  return ".setProperty('" + key + "','" + value + "')";
+};
+
+module.exports = SetPropertyMethod;
+},{"../function":17,"util":56}],17:[function(require,module,exports){
+'use strict';
+var _ = require('lodash');
+
+var Argument = require('../arguments/argument');
+var ClosureArgument = require('../arguments/closure');
+var ObjectArgument = require('../arguments/object');
+var ArrayArgument = require('../arguments/array');
+var ClassArgument = require('../arguments/class');
+var NumberArgument = require('../arguments/number');
+
+
+function GremlinFunction(name, args) {
+  this.name = name;
+  this.arguments = args;
+  this.closures = [];
+  this.parenthesizedArguments = [];
+  this.buildArguments();
+}
+
+GremlinFunction.prototype.toGroovy = function() {
+  return this.name + this.groovifyArguments();
+};
+
+GremlinFunction.prototype.groovifyArguments = function() {
+  var args = [];
+
+  // Append arguments between parentheses, if any
+  var groovy = '(' + _.map(this.parenthesizedArguments, function(argument) {
+    return argument.toGroovy();
+  }).join(',') + ')';
+
+  // Append closures, if any
+  groovy += _.map(this.closures, function(closure) {
+    return closure.toGroovy();
+  }).join(',');
+
+  return groovy;
+};
+
+GremlinFunction.prototype.buildArguments = function() {
+  var built;
+  _.each(this.arguments, function(argument) {
+    if (this.isClosure(argument)) {
+      built = new ClosureArgument(argument, this);
+      this.closures.push(built);
+    } else if (_.isArray(argument)) {
+      built = new ArrayArgument(argument, this);
+      this.parenthesizedArguments.push(built);
+    } else if (this.isClass(argument)) {
+      built = new ClassArgument(argument, this);
+      this.parenthesizedArguments.push(built);
+    } else if (_.isObject(argument)) {
+      built = new ObjectArgument(argument, this);
+      this.parenthesizedArguments.push(built);
+    } else if (_.isNumber(argument)) {
+      built = new NumberArgument(argument, this);
+      this.parenthesizedArguments.push(built);
+    } else {
+      built = new Argument(argument, this);
+      this.parenthesizedArguments.push(built);
+    }
+  }, this);
+};
+
+GremlinFunction.prototype.isClosure = function(val) {
+  var closureRegex = /^\{.*\}$/;
+
+  return _.isString(val) && closureRegex.test(val);
+};
+
+GremlinFunction.prototype.isClass = function(argument) {
+  return argument && !!argument.class;
+};
+
+var stringify = function(accumulated, value, key, obj) {
+  var newVal;
+  var newKey = JSON.stringify(key);
+  var newEntry;
+
+  if (accumulated) {
+    accumulated += ',';
+  }
+
+  if (typeof value === 'undefined') {
+    value = null;
+  }
+
+  if (_.isObject(value)) {
+    newVal = '[' +  _.reduce(value, stringify, '') + ']' ;
+  } else {
+    newVal = JSON.stringify(value);
+  }
+
+  if (_.isObject(obj) && !_.isArray(obj)) {
+    newEntry = newKey + ':' + newVal;
+  } else {
+    newEntry = newVal;
+  }
+
+  return accumulated += newEntry;
+};
+
+GremlinFunction.prototype.stringifyArgument = function(argument) {
+  var string = stringify('', argument, null, null);
+  return string;
+};
+
+module.exports = GremlinFunction;
+},{"../arguments/argument":3,"../arguments/array":4,"../arguments/class":5,"../arguments/closure":6,"../arguments/number":7,"../arguments/object":8,"lodash":58}],18:[function(require,module,exports){
+'use strict';
+var inherits = require('util').inherits;
+
+var _ = require('lodash');
+
+var GremlinMethod = require('../method');
+
+
+function AddEdgeMethod(edge, properties) {
+  this.edge = edge;
+  GremlinMethod.call(this, 'addEdge', properties);
+}
+
+inherits(AddEdgeMethod, GremlinMethod);
+
+AddEdgeMethod.prototype.run = function(object) {
+  if (this.arguments.properties && this.arguments.properties._id) {
+    this.edge._id = this.arguments.properties._id;
+  }
+
+  this.edge._outV = this.arguments.v1;
+  this.edge._inV = this.arguments.v2;
+  this.edge._label = this.arguments.label;
+
+  var properties = this.arguments.properties;
+
+  _.each(properties, function(value, key) {
+    this.edge[key] = value;
+  }, this);
+
+  delete this.arguments._id;
+
+  return this.edge;
+};
+
+AddEdgeMethod.prototype.groovifyArguments = function() {
+  var id = this.edge._id ? this.edge._id + ',' : '';
+
+  var properties = this.arguments.properties;
+  var propArgument = !_.isEmpty(properties) ? ','+ this.stringifyArgument(this.arguments.properties) : '';
+
+  var _outV = this.edge._outV.identifier || this.arguments.v1;
+  var _inV = this.edge._inV.identifier || this.arguments.v2;
+
+  return '('+ id + _outV +','+ _inV +',"'+ this.edge._label +'"'+ propArgument + ')';
+};
+
+module.exports = AddEdgeMethod;
+},{"../method":21,"lodash":58,"util":56}],19:[function(require,module,exports){
+'use strict';
+var inherits = require('util').inherits;
+
+var _ = require('lodash');
+
+var GremlinMethod = require('../method');
+
+
+function AddVertexMethod(vertex, properties) {
+  this.vertex = vertex;
+  GremlinMethod.call(this, 'addVertex', properties);
+}
+
+inherits(AddVertexMethod, GremlinMethod);
+
+AddVertexMethod.prototype.run = function() {
+  _.each(this.arguments, function(value, key) {
+    this.vertex.properties[key] = value;
+  }, this);
+
+  return this.vertex;
+};
+
+AddVertexMethod.prototype.groovifyArguments = function() {
+  var args = [];
+  var id = this.vertex._id ? this.vertex._id +',' : '';
+
+  if (this.arguments && this.arguments._id) {
+    args.push(this.arguments._id);
+    delete this.arguments._id;
+  }
+
+  if (!_.isEmpty(this.arguments)) {
+    args.push(this.stringifyArgument(this.arguments));
+  }
+
+  return '('+ args.join(',') + ')';
+};
+
+module.exports = AddVertexMethod;
+},{"../method":21,"lodash":58,"util":56}],20:[function(require,module,exports){
+'use strict';
+var inherits = require('util').inherits;
+
+var GremlinMethod = require('../function');
+
+
+function IdxGremlinFunction() {
+  GremlinMethod.call(this, 'idx', arguments[0]);
+}
+
+inherits(IdxGremlinFunction, GremlinMethod);
+
+IdxGremlinFunction.prototype.toGroovy = function() {
+  var str = ".idx('" + this.arguments[0] + "')";
+  var properties = this.arguments[1];
+
+  if (properties) {
+    var keys = [];
+
+    for (var key in properties) {
+      keys.push(key + ":'" + properties[key] + "'");
+    }
+
+    str += "[["+ keys.join(',') + "]]";
+  }
+
+  return str;
+};
+
+module.exports = IdxGremlinFunction;
+},{"../function":17,"util":56}],21:[function(require,module,exports){
+'use strict';
+var inherits = require('util').inherits;
+
+var GremlinFunction = require('./function');
+
+
+function GremlinMethod() {
+  GremlinFunction.apply(this, arguments);
+}
+
+inherits(GremlinMethod, GremlinFunction);
+
+GremlinMethod.prototype.toGroovy = function() {
+  return '.' + this.name + this.groovifyArguments();
+};
+
+module.exports = GremlinMethod;
+},{"./function":17,"util":56}],22:[function(require,module,exports){
+'use strict';
+var inherits = require('util').inherits;
+
+var _ = require('lodash');
+
+var GremlinStep = require('./step');
+
+
+function CollectionStep() {
+  GremlinStep.apply(this, arguments);
+}
+
+inherits(CollectionStep, GremlinStep);
+
+CollectionStep.prototype.toGroovy = function() {
+  var str = '.'+ this.name;
+  var argumentList = [];
+  var args = this.arguments;
+  var firstArg = args[0];
+
+  if (_.isArray(firstArg)) {
+    // Handle .method([g.v(1), g.v(2)]) signature
+    var pipelines = _.map(firstArg, function(a) { return a.toGroovy(); }).join(',');
+    str += "([" + pipelines + "])";
+  } else {
+    str += "('"+ this.arguments[0] + "')";
+  }
+
+  return str;
+};
+
+module.exports = CollectionStep;
+},{"./step":25,"lodash":58,"util":56}],23:[function(require,module,exports){
+'use strict';
+var inherits = require('util').inherits;
+
+var _ = require('lodash');
+
+var GremlinStep = require('./step');
+var Argument = require('../../arguments/argument');
+
+
+function PipesStep() {
+  GremlinStep.apply(this, arguments);
+}
+
+inherits(PipesStep, GremlinStep);
+
+PipesStep.prototype.toGroovy = function() {
+  var str = '';
+  var argumentList = [];
+  var args = this.arguments;
+
+  args = _.isArray(args[0]) ? args[0] : args;
+
+  _.each(args, function(arg) {
+    var argObj = new Argument(arg);
+    var partialScript = (arg.toGroovy && arg.toGroovy()) || argObj.parse();
+    argumentList.push(partialScript);
+  }, this);
+
+  str += '.'+ this.name + '('+ argumentList.join(',') +')';
+
+  return str;
+};
+
+module.exports = PipesStep;
+},{"../../arguments/argument":3,"./step":25,"lodash":58,"util":56}],24:[function(require,module,exports){
+'use strict';
+var inherits = require('util').inherits;
+
+var GremlinStep = require('./step');
+
+
+function SelectStep() {
+  GremlinStep.call(this, 'select', arguments[0]);
+}
+
+inherits(SelectStep, GremlinStep);
+
+SelectStep.prototype.toGroovy = function() {
+  return '.select' + this.groovifyArguments().replace(/\"/g, '\'');
+};
+
+module.exports = SelectStep;
+},{"./step":25,"util":56}],25:[function(require,module,exports){
+'use strict';
+var inherits = require('util').inherits;
+
+var GremlinMethod = require('../method');
+
+
+function GremlinStep(name, args) {
+  GremlinMethod.apply(this, arguments);
+}
+
+inherits(GremlinStep, GremlinMethod);
+
+module.exports = GremlinStep;
+},{"../method":21,"util":56}],26:[function(require,module,exports){
+'use strict';
+var _ = require("lodash");
+var util = require('util');
+
+
+function GremlinScript() {
+  this.script = '';
+  this.params = {};
+  this.paramCount = 0;
+  this.identifierCount = 0;
+}
+
+/**
+ * Append an arbitrary string to the script as a new line.
+ *
+ * @private
+ * @param {String} line
+ */
+GremlinScript.prototype.appendLine = function(line) {
+  this.script += line + '\n';
+};
+
+/**
+ * Add bound parameters to the script. This currently only works when
+ * using the formatted string. It does not work with gRex helpers/wrappers.
+ *
+ * @private
+ * @param {Array} boundParams
+ */
+GremlinScript.prototype.addBoundParams = function(boundParams) {
+  var currentParamNames = [];
+  var identifier;
+
+  _.each(boundParams, function(boundParam) {
+    if (_.isObject(boundParam)) {
+      boundParam = JSON.stringify(boundParam);
+    }
+
+    identifier = 'p'+ this.paramCount++;
+    this.params[identifier] = boundParam;
+    currentParamNames.push(identifier);
+  }, this);
+
+  return currentParamNames;
+};
+
+/**
+ * Handle a string statement using Node util.format() function.
+ *
+ * @private
+ * @param {String} statement
+ */
+GremlinScript.prototype.handleString = function(statement) {
+  var currentParams = [statement];
+  currentParams = currentParams.concat(this.addBoundParams(_.rest(arguments)));
+
+  this.appendLine(util.format.apply(util.format, currentParams));
+};
+
+/**
+ * Handle a helper statement wrapped in one of gRex Wrapper classes
+ *
+ * @private
+ * @param {ObjectWrapper} wrapper
+ * @return {ObjectWrapper}
+ */
+GremlinScript.prototype.handleHelper = function(wrapper) {
+  this.appendLine(wrapper.toGroovy());
+
+  return wrapper;
+};
+
+/**
+ * Identify a statement within the script with the provided optional
+ * identifier. Will assign an automatica identifier instead.
+ *
+ * @public
+ * @param {ObjectWrapper} wrapper
+ * @param {String} identifier - an optional identifier
+ */
+GremlinScript.prototype.var = function(wrapper, identifier) {
+  identifier = identifier || 'i'+ this.identifierCount++;
+  wrapper.identifier = identifier;
+  var prefix = identifier + '=';
+
+  var groovyCode = wrapper.toGroovy ? wrapper.toGroovy() : wrapper;
+
+  this.script += prefix + groovyCode + '\n';
+
+  return wrapper;
+};
+
+/**
+ * According to its type (ie. String or ObjectWrapper), handle and add a
+ * statement to the current script.
+ *
+ * @private
+ * @param {String|ObjectWrapper} statement
+ */
+GremlinScript.prototype.line = function(statement) {
+  if (arguments.length > 1) {
+    // Assume query('g(%s)', 1) signature
+    this.handleString.apply(this, arguments);
+  } else if (_.isString(statement)) {
+    // Assume query('g.v(1)') signature
+    this.appendLine(statement);
+  } else if (statement) {
+    // Assume query(g.v(1)) signature
+    this.handleHelper(statement);
+  }
+};
+
+/**
+ * Returns a function responsible for handling statements and ultimately
+ * appending bits of Gremlin-Groovy to this GremlinScript.
+ *
+ * @private
+ * @return {Function}
+ */
+GremlinScript.prototype.getAppender = function() {
+  var self = this;
+
+  function GremlinAppender() {
+    self.line.apply(self, arguments);
+
+    return self;
+  }
+
+  /**
+   * Proxy some GremlinScript methods/getters to the appender
+   */
+  GremlinAppender.var = GremlinScript.prototype.var.bind(this);
+
+  Object.defineProperty(GremlinAppender, 'script', {
+    get: function() {
+      return self.script;
+    }
+  });
+
+  Object.defineProperty(GremlinAppender, 'params', {
+    get: function() {
+      return self.params;
+    }
+  });
+
+  return GremlinAppender;
+};
+
+module.exports = GremlinScript;
+},{"lodash":58,"util":56}],27:[function(require,module,exports){
+'use strict';
+
+function ObjectWrapper(objectName) {
+  this.objectName = objectName;
+  this.methods = [];
+  this.identifier = '';
+  this.properties = {};
+}
+
+ObjectWrapper.prototype.toGroovy = function() {
+  return this.objectName + this.methods.join('');
+};
+
+ObjectWrapper.prototype.asObject = function() {
+  return this.properties;
+};
+
+module.exports = ObjectWrapper;
+},{}],28:[function(require,module,exports){
+'use strict';
+var inherits = require('util').inherits;
+
+var GremlinStep = require('../../functions/steps/step');
+var CollectionAccessor = require('../../functions/collectionaccessor');
+var CollectionStep = require('../../functions/steps/collectionstep');
+var PipesStep = require('../../functions/steps/pipesstep');
+var SelectStep = require('../../functions/steps/select');
+var ObjectWrapper = require('../objectwrapper');
+
+
+function Traversal(object) {
+  ObjectWrapper.call(this, object);
+}
+
+inherits(Traversal, ObjectWrapper);
+
+Traversal.prototype.both = function() {
+  var step = new GremlinStep('both', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.bothE = function() {
+  var step = new GremlinStep('bothE', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.bothV = function() {
+  var step = new GremlinStep('bothV', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.cap = function() {
+  var step = new GremlinStep('cap', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.gather = function() {
+  var step = new GremlinStep('gather', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.id = function() {
+  var step = new GremlinStep('id', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.in = function() {
+  var step = new GremlinStep('in', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.inE = function() {
+  var step = new GremlinStep('inE', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.inV = function() {
+  var step = new GremlinStep('inV', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.property = function() {
+  var step = new GremlinStep('property', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.label = function() {
+  var step = new GremlinStep('label', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.map = function() {
+  var step = new GremlinStep('map', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.memoize = function() {
+  var step = new GremlinStep('memoize', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.order = function() {
+  var step = new GremlinStep('order', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.out = function() {
+  var step = new GremlinStep('out', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.outE = function() {
+  var step = new GremlinStep('outE', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.outV = function() {
+  var step = new GremlinStep('outV', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.path = function() {
+  var step = new GremlinStep('path', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.scatter = function() {
+  var step = new GremlinStep('scatter', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.select = function() {
+  var step = new SelectStep(arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.transform = function() {
+  var step = new GremlinStep('transform', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.orderMap = function() {
+  var step = new GremlinStep('orderMap', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+/*** Filter ***/
+// index(i)
+Traversal.prototype.index = function() {
+  var step = new CollectionAccessor(arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+// range('[i..j]')
+Traversal.prototype.range = function() {
+  var step = new CollectionAccessor(arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.and = function() {
+  var step = new PipesStep('and', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.back = function() {
+  var step = new GremlinStep('back', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.dedup = function() {
+  var step = new GremlinStep('dedup', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.except = function() {
+  var step = new CollectionStep('except', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.filter = function() {
+  var step = new GremlinStep('filter', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.has = function() {
+  var step = new GremlinStep('has', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.hasNot = function() {
+  var step = new GremlinStep('hasNot', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.interval = function() {
+  var step = new GremlinStep('interval', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.or = function() {
+  var step = new PipesStep('or', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.random = function() {
+  var step = new GremlinStep('random', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.retain = function() {
+  var step = new CollectionStep('retain', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.simplePath = function() {
+  var step = new GremlinStep('simplePath', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+/*** Side Effect ***/
+Traversal.prototype.aggregate = function() {
+  throw new Error('Not implemented.');
+};
+
+Traversal.prototype.as = function() {
+  var step = new GremlinStep('as', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.groupBy = function() {
+  var step = new GremlinStep('groupBy', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+// Not FullyImplemented ??
+Traversal.prototype.groupCount = function() {
+  var step = new GremlinStep('groupCount', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.optional = function() {
+  var step = new GremlinStep('optional', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.sideEffect = function() {
+  var step = new GremlinStep('sideEffect', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.linkBoth = function() {
+  var step = new GremlinStep('linkBoth', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.linkIn = function() {
+  var step = new GremlinStep('linkIn', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.linkOut = function() {
+  var step = new GremlinStep('linkOut', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.store = function() {
+  throw new Error('Not implemented');
+};
+
+Traversal.prototype.table = function() {
+  throw new Error('Not implemented');
+};
+
+Traversal.prototype.tree = function() {
+  throw new Error('Not implemented');
+};
+
+/*** Branch ***/
+Traversal.prototype.copySplit = function() {
+  var step = new PipesStep('copySplit', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+Traversal.prototype.exhaustMerge = function() {
+  var step = new GremlinStep('exhaustMerge', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.fairMerge = function() {
+  var step = new GremlinStep('fairMerge', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+// g.v(1).out().ifThenElse('{it.name=='josh'}','{it.age}','{it.name}')
+Traversal.prototype.ifThenElse = function() {
+  var step = new GremlinStep('ifThenElse', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.loop = function() {
+  var step = new GremlinStep('loop', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+/*** Methods ***/
+Traversal.prototype.fill = function() {
+  throw new Error('Not implemented');
+};
+
+Traversal.prototype.count = function() {
+  var step = new GremlinStep('count', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.iterate = function() {
+  var step = new GremlinStep('iterate', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.next = function() {
+  var step = new GremlinStep('next', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.toList = function() {
+  var step = new GremlinStep('toList', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.keys = function() {
+  var step = new GremlinStep('keys', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.remove = function() {
+  var step = new GremlinStep('remove', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.values = function() {
+  var step = new GremlinStep('values', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.put = function() {
+  var step = new PipesStep('put', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.getPropertyKeys = function() {
+  var step = new GremlinStep('getPropertyKeys', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.setProperty = function() {
+  var step = new GremlinStep('setProperty', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.getProperty = function() {
+  var step = new GremlinStep('getProperty', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+// Titan specifics
+Traversal.prototype.name = function() {
+  var step = new GremlinStep('name', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.dataType = function() {
+  var step = new GremlinStep('dataType', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.indexed = function() {
+  var step = new GremlinStep('indexed', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.unique = function() {
+  var step = new GremlinStep('unique', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.makePropertyKey = function() {
+  var step = new GremlinStep('makePropertyKey', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.group = function() {
+  var step = new GremlinStep('group', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.makeEdgeLabel = function() {
+  var step = new GremlinStep('makeEdgeLabel', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.query = function() {
+  var step = new GremlinStep('query', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+// Titan v0.4.0+
+Traversal.prototype.single = function() {
+  var step = new GremlinStep('single', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+// Titan v0.4.0+
+Traversal.prototype.list = function() {
+  var step = new GremlinStep('list', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+// Titan v0.4.0+: replaces unique(Direction.IN)
+Traversal.prototype.oneToMany = function() {
+  var step = new GremlinStep('oneToMany', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+// Titan v0.4.0+: replaces unique(Direction.OUT)
+Traversal.prototype.manyToOne = function() {
+  var step = new GremlinStep('manyToOne', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+// Titan v0.4.0+: replaces unique(Direction.IN) and unique(Direction.OUT)
+Traversal.prototype.oneToOne = function() {
+  var step = new GremlinStep('oneToOne', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+// Titan v0.4.0+
+Traversal.prototype.makeKey = function() {
+  var step = new GremlinStep('makeKey', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+// Titan v0.4.0+
+Traversal.prototype.makeLabel = function() {
+  var step = new GremlinStep('makeLabel', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.make = function() {
+  var step = new GremlinStep('make', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.sortKey = function() {
+  var step = new GremlinStep('sortKey', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.signature = function() {
+  var step = new GremlinStep('signature', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.unidirected = function() {
+  var step = new GremlinStep('unidirected', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.createKeyIndex = function() {
+  var step = new GremlinStep('createKeyIndex', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.getIndexes = function() {
+  var step = new GremlinStep('getIndexes', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.hasIndex = function() {
+  var step = new GremlinStep('hasIndex', arguments);
+  this.methods.push(step.toGroovy());
+
+  return this;
+};
+
+Traversal.prototype.key = function() {
+  this.methods.push('.'+ arguments[0]);
+
+  return this;
+};
+
+module.exports = Traversal;
+},{"../../functions/collectionaccessor":11,"../../functions/steps/collectionstep":22,"../../functions/steps/pipesstep":23,"../../functions/steps/select":24,"../../functions/steps/step":25,"../objectwrapper":27,"util":56}],29:[function(require,module,exports){
+'use strict';
+var inherits = require('util').inherits;
+
+var GraphElement = require("./element");
+
+
+function Edge() {
+  GraphElement.apply(this, arguments);
+  this.properties._type = "edge";
+}
+
+inherits(Edge, GraphElement);
+
+Edge.toGroovy = function() {
+  return 'Edge.class';
+};
+
+Object.defineProperty(Edge, 'class', {
+  get: function() {
+    return this.toGroovy();
+  }
+});
+
+module.exports = Edge;
+},{"./element":30,"util":56}],30:[function(require,module,exports){
+'use strict';
+var inherits = require('util').inherits;
+
+var GetPropertiesMethod = require('../../functions/element/getproperties');
+var SetPropertiesMethod = require('../../functions/element/setproperties');
+var AddPropertiesMethod = require('../../functions/element/addproperties');
+var SetPropertyMethod = require('../../functions/element/setproperty');
+var AddPropertyMethod = require('../../functions/element/addproperty');
+var GremlinMethod = require('../../functions/method');
+var ObjectWrapper = require('../objectwrapper');
+
+
+/**
+ * Abstract ElementWrapper class
+ */
+function ElementWrapper() {
+  ObjectWrapper.apply(this, arguments);
+  this.properties._id = null;
+}
+
+inherits(ElementWrapper, ObjectWrapper);
+
+ElementWrapper.prototype.getProperties = function() {
+  var method = new GetPropertiesMethod();
+  this.methods.push(method.toGroovy());
+
+  return method.run(this);
+};
+
+ElementWrapper.prototype.setProperty = function(key, value) {
+  var method = new SetPropertyMethod({ key: key, value: value });
+  this.methods.push(method.toGroovy());
+
+  return method.run(this);
+};
+
+ElementWrapper.prototype.setProperties = function(properties) {
+  var method = new SetPropertiesMethod(properties);
+  this.methods.push(method.toGroovy());
+
+  return method.run(this);
+};
+
+/**
+ * Titan specific method
+ *
+ * Use this instead of setProperty() when setting the value of an indexed
+ * property.
+ *
+ * @param {String} key
+ * @param {Object} value
+ */
+ElementWrapper.prototype.addProperty = function(key, value) {
+  var method = new AddPropertyMethod({ key: key, value: value });
+  this.methods.push(method.toGroovy());
+
+  return method.run(this);
+};
+
+/**
+ * Titan specific method
+ *
+ * Use this instead of setProperties() when setting the values of indexed
+ * properties.
+ *
+ * @param {Object} properties
+ */
+ElementWrapper.prototype.addProperties = function(properties) {
+  var method = new AddPropertiesMethod(properties);
+  this.methods.push(method.toGroovy());
+
+  return method.run(this);
+};
+
+ElementWrapper.prototype.remove = function() {
+  var method = new GremlinMethod('remove', []);
+  this.methods.push(method.toGroovy());
+
+  return this;
+};
+
+module.exports = ElementWrapper;
+},{"../../functions/element/addproperties":12,"../../functions/element/addproperty":13,"../../functions/element/getproperties":14,"../../functions/element/setproperties":15,"../../functions/element/setproperty":16,"../../functions/method":21,"../objectwrapper":27,"util":56}],31:[function(require,module,exports){
+'use strict';
+var inherits = require('util').inherits;
+
+var GremlinMethod = require('../../functions/method');
+var IdxGremlinFunction = require('../../functions/graph/idx');
+var AddVertexMethod = require('../../functions/graph/addvertex');
+var AddEdgeMethod = require('../../functions/graph/addedge');
+var TraversalWrapper = require('../process/traversal');
+var ObjectWrapper = require('../objectwrapper');
+var VertexWrapper = require('./vertex');
+var EdgeWrapper = require('./edge');
+
+
+function Graph() {
+  ObjectWrapper.apply(this, arguments);
+}
+
+inherits(Graph, ObjectWrapper);
+
+Graph.prototype.E = function() {
+  var func = new GremlinMethod('E', arguments);
+
+  var traversal = new TraversalWrapper(this.objectName);
+  traversal.methods.push(func.toGroovy());
+
+  return traversal;
+};
+
+Graph.prototype.V = function() {
+  var func = new GremlinMethod('V', arguments);
+
+  var traversal = new TraversalWrapper(this.objectName);
+  traversal.methods.push(func.toGroovy());
+
+  return traversal;
+};
+
+Graph.prototype.e = function() {
+  var func = new GremlinMethod('e', arguments);
+
+  var traversal = new TraversalWrapper(this.objectName);
+  traversal.methods.push(func.toGroovy());
+
+  return traversal;
+};
+
+Graph.prototype.idx = function() {
+  var func = new IdxGremlinFunction(arguments);
+
+  var traversal = new TraversalWrapper(this.objectName);
+  traversal.methods.push(func.toGroovy());
+
+  return traversal;
+};
+
+Graph.prototype.v = function() {
+  var func = new GremlinMethod('v', arguments);
+
+  var traversal = new TraversalWrapper(this.objectName);
+  traversal.methods.push(func.toGroovy());
+
+  return traversal;
+};
+
+// Indexing
+Graph.prototype.createIndex = function() {
+  var func = new GremlinMethod('createIndex', arguments);
+
+  var traversal = new TraversalWrapper(this.objectName);
+  traversal.methods.push(func.toGroovy());
+
+  return traversal;
+};
+
+Graph.prototype.createKeyIndex = function() {
+  var func = new GremlinMethod('createKeyIndex', arguments);
+
+  var traversal = new TraversalWrapper(this.objectName);
+  traversal.methods.push(func.toGroovy());
+
+  return traversal;
+};
+
+Graph.prototype.getIndices = function() {
+  var func = new GremlinMethod('getIndices', arguments);
+
+  var traversal = new TraversalWrapper(this.objectName);
+  traversal.methods.push(func.toGroovy());
+
+  return traversal;
+};
+
+Graph.prototype.getIndexedKeys = function() {
+  var func = new GremlinMethod('getIndexedKeys', arguments);
+
+  var traversal = new TraversalWrapper(this.objectName);
+  traversal.methods.push(func.toGroovy());
+
+  return traversal;
+};
+
+Graph.prototype.getIndex = function() {
+  var func = new GremlinMethod('getIndex', arguments);
+
+  var traversal = new TraversalWrapper(this.objectName);
+  traversal.methods.push(func.toGroovy());
+
+  return traversal;
+};
+
+Graph.prototype.dropIndex = function() {
+  var func = new GremlinMethod('dropIndex', arguments);
+
+  var traversal = new TraversalWrapper(this.objectName);
+  traversal.methods.push(func.toGroovy());
+
+  return traversal;
+};
+
+Graph.prototype.dropKeyIndex = function() {
+  var func = new GremlinMethod('dropKeyIndex', arguments);
+
+  var traversal = new TraversalWrapper(this.objectName);
+  traversal.methods.push(func.toGroovy());
+
+  return traversal;
+};
+
+// Types
+Graph.prototype.makeKey = function() {
+  var func = new GremlinMethod('makeKey', arguments);
+
+  var traversal = new TraversalWrapper(this.objectName);
+  traversal.methods.push(func.toGroovy());
+
+  return traversal;
+};
+
+Graph.prototype.clear = function() {
+  var func = new GremlinMethod('clear', arguments);
+
+  var traversal = new TraversalWrapper(this.objectName);
+  traversal.methods.push(func.toGroovy());
+
+  return traversal;
+};
+
+Graph.prototype.shutdown = function() {
+  var func = new GremlinMethod('shutdown', arguments);
+
+  var traversal = new TraversalWrapper(this.objectName);
+  traversal.methods.push(func.toGroovy());
+
+  return traversal;
+};
+
+Graph.prototype.getFeatures = function() {
+  var func = new GremlinMethod('getFeatures', arguments);
+
+  var traversal = new TraversalWrapper(this.objectName);
+  traversal.methods.push(func.toGroovy());
+
+  return traversal;
+};
+
+// Titan specifics
+Graph.prototype.getTypes = function() {
+  var func = new GremlinMethod('getTypes', arguments);
+
+  var traversal = new TraversalWrapper(this.objectName);
+  traversal.methods.push(func.toGroovy());
+
+  return traversal;
+};
+
+
+/**
+ * Build a Gremlin line used for adding a VertexWrapper in the graph.
+ *
+ * Note: for databases which accept custom _id properties (ie. non generated)
+ * the user must pass a valid _id value in the `properties` map rather than
+ * supply an optional argument parameter as first argument (TinkerPop style).
+ * This slight change to the API of addVertex makes it easier to use
+ * in a JavaScript environment.
+ *
+ * @param {Object} properties
+ * @param {String} object Optional variable name used within the script
+ *    context
+ * @return {VertexWrapper}
+ */
+Graph.prototype.addVertex = function(properties, object) {
+  var vertex = new VertexWrapper('g');
+  var method = new AddVertexMethod(vertex, properties);
+
+  method.run();
+
+  vertex.methods.push(method.toGroovy());
+
+  return vertex;
+};
+
+/**
+ * @param {VertexWrapper|Number} v1
+ * @param {VertexWrapper|Number} v2
+ * @param {String} label
+ * @param {Object} properties
+ * @param {String} object Optional variable name used within the script
+ *    context
+ * @return {EdgeWrapper}
+ */
+Graph.prototype.addEdge = function(v1, v2, label, properties, object) {
+  var params = {
+    v1: v1,
+    v2: v2,
+    label: label,
+    properties: properties
+  };
+
+  var edge = new EdgeWrapper('g');
+  var method = new AddEdgeMethod(edge, params);
+
+  method.run();
+
+  edge.methods.push(method.toGroovy());
+
+  return edge;
+};
+
+module.exports = Graph;
+},{"../../functions/graph/addedge":18,"../../functions/graph/addvertex":19,"../../functions/graph/idx":20,"../../functions/method":21,"../objectwrapper":27,"../process/traversal":28,"./edge":29,"./vertex":32,"util":56}],32:[function(require,module,exports){
+'use strict';
+var inherits = require('util').inherits;
+
+var GraphElement = require("./element");
+
+
+function Vertex() {
+  GraphElement.apply(this, arguments);
+
+  this.properties._type = "vertex";
+}
+
+inherits(Vertex, GraphElement);
+
+Vertex.toGroovy = function() {
+  return 'Vertex.class';
+};
+
+Object.defineProperty(Vertex, 'class', {
+  get: function() {
+    return this.toGroovy();
+  }
+});
+
+module.exports = Vertex;
+},{"./element":30,"util":56}],33:[function(require,module,exports){
 /*!
  * The buffer module from node.js, for the browser.
  *
@@ -1112,7 +3012,7 @@ function assert (test, message) {
   if (!test) throw new Error(message || 'Failed assertion')
 }
 
-},{"base64-js":3,"ieee754":4}],3:[function(require,module,exports){
+},{"base64-js":34,"ieee754":35}],34:[function(require,module,exports){
 var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
 ;(function (exports) {
@@ -1234,7 +3134,7 @@ var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 	exports.fromByteArray = uint8ToBase64
 }(typeof exports === 'undefined' ? (this.base64js = {}) : exports))
 
-},{}],4:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 exports.read = function(buffer, offset, isLE, mLen, nBytes) {
   var e, m,
       eLen = nBytes * 8 - mLen - 1,
@@ -1320,7 +3220,7 @@ exports.write = function(buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128;
 };
 
-},{}],5:[function(require,module,exports){
+},{}],36:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -1623,7 +3523,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],6:[function(require,module,exports){
+},{}],37:[function(require,module,exports){
 var http = module.exports;
 var EventEmitter = require('events').EventEmitter;
 var Request = require('./lib/request');
@@ -1762,7 +3662,7 @@ http.STATUS_CODES = {
     510 : 'Not Extended',               // RFC 2774
     511 : 'Network Authentication Required' // RFC 6585
 };
-},{"./lib/request":7,"events":5,"url":23}],7:[function(require,module,exports){
+},{"./lib/request":38,"events":36,"url":54}],38:[function(require,module,exports){
 var Stream = require('stream');
 var Response = require('./response');
 var Base64 = require('Base64');
@@ -1953,7 +3853,7 @@ var indexOf = function (xs, x) {
     return -1;
 };
 
-},{"./response":8,"Base64":9,"inherits":26,"stream":16}],8:[function(require,module,exports){
+},{"./response":39,"Base64":40,"inherits":57,"stream":47}],39:[function(require,module,exports){
 var Stream = require('stream');
 var util = require('util');
 
@@ -2075,7 +3975,7 @@ var isArray = Array.isArray || function (xs) {
     return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{"stream":16,"util":25}],9:[function(require,module,exports){
+},{"stream":47,"util":56}],40:[function(require,module,exports){
 ;(function () {
 
   var object = typeof exports != 'undefined' ? exports : this; // #8: web workers
@@ -2137,7 +4037,7 @@ var isArray = Array.isArray || function (xs) {
 
 }());
 
-},{}],10:[function(require,module,exports){
+},{}],41:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -2202,7 +4102,7 @@ process.chdir = function (dir) {
     throw new Error('process.chdir is not supported');
 };
 
-},{}],11:[function(require,module,exports){
+},{}],42:[function(require,module,exports){
 (function (global){
 /*! http://mths.be/punycode v1.2.4 by @mathias */
 ;(function(root) {
@@ -2713,7 +4613,7 @@ process.chdir = function (dir) {
 }(this));
 
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],12:[function(require,module,exports){
+},{}],43:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -2799,7 +4699,7 @@ var isArray = Array.isArray || function (xs) {
   return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{}],13:[function(require,module,exports){
+},{}],44:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -2886,13 +4786,13 @@ var objectKeys = Object.keys || function (obj) {
   return res;
 };
 
-},{}],14:[function(require,module,exports){
+},{}],45:[function(require,module,exports){
 'use strict';
 
 exports.decode = exports.parse = require('./decode');
 exports.encode = exports.stringify = require('./encode');
 
-},{"./decode":12,"./encode":13}],15:[function(require,module,exports){
+},{"./decode":43,"./encode":44}],46:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -2966,7 +4866,7 @@ function onend() {
   });
 }
 
-},{"./readable.js":19,"./writable.js":21,"inherits":26,"process/browser.js":17}],16:[function(require,module,exports){
+},{"./readable.js":50,"./writable.js":52,"inherits":57,"process/browser.js":48}],47:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -3095,7 +4995,7 @@ Stream.prototype.pipe = function(dest, options) {
   return dest;
 };
 
-},{"./duplex.js":15,"./passthrough.js":18,"./readable.js":19,"./transform.js":20,"./writable.js":21,"events":5,"inherits":26}],17:[function(require,module,exports){
+},{"./duplex.js":46,"./passthrough.js":49,"./readable.js":50,"./transform.js":51,"./writable.js":52,"events":36,"inherits":57}],48:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -3150,7 +5050,7 @@ process.chdir = function (dir) {
     throw new Error('process.chdir is not supported');
 };
 
-},{}],18:[function(require,module,exports){
+},{}],49:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -3193,7 +5093,7 @@ PassThrough.prototype._transform = function(chunk, encoding, cb) {
   cb(null, chunk);
 };
 
-},{"./transform.js":20,"inherits":26}],19:[function(require,module,exports){
+},{"./transform.js":51,"inherits":57}],50:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -4130,7 +6030,7 @@ function indexOf (xs, x) {
 }
 
 }).call(this,require("IrXUsu"))
-},{"./index.js":16,"IrXUsu":10,"buffer":2,"events":5,"inherits":26,"process/browser.js":17,"string_decoder":22}],20:[function(require,module,exports){
+},{"./index.js":47,"IrXUsu":41,"buffer":33,"events":36,"inherits":57,"process/browser.js":48,"string_decoder":53}],51:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -4336,7 +6236,7 @@ function done(stream, er) {
   return stream.push(null);
 }
 
-},{"./duplex.js":15,"inherits":26}],21:[function(require,module,exports){
+},{"./duplex.js":46,"inherits":57}],52:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -4724,7 +6624,7 @@ function endWritable(stream, state, cb) {
   state.ended = true;
 }
 
-},{"./index.js":16,"buffer":2,"inherits":26,"process/browser.js":17}],22:[function(require,module,exports){
+},{"./index.js":47,"buffer":33,"inherits":57,"process/browser.js":48}],53:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -4917,7 +6817,7 @@ function base64DetectIncompleteChar(buffer) {
   return incomplete;
 }
 
-},{"buffer":2}],23:[function(require,module,exports){
+},{"buffer":33}],54:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -5626,14 +7526,14 @@ function isNullOrUndefined(arg) {
   return  arg == null;
 }
 
-},{"punycode":11,"querystring":14}],24:[function(require,module,exports){
+},{"punycode":42,"querystring":45}],55:[function(require,module,exports){
 module.exports = function isBuffer(arg) {
   return arg && typeof arg === 'object'
     && typeof arg.copy === 'function'
     && typeof arg.fill === 'function'
     && typeof arg.readUInt8 === 'function';
 }
-},{}],25:[function(require,module,exports){
+},{}],56:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -6223,7 +8123,7 @@ function hasOwnProperty(obj, prop) {
 }
 
 }).call(this,require("IrXUsu"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":24,"IrXUsu":10,"inherits":26}],26:[function(require,module,exports){
+},{"./support/isBuffer":55,"IrXUsu":41,"inherits":57}],57:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -6248,7 +8148,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],27:[function(require,module,exports){
+},{}],58:[function(require,module,exports){
 (function (global){
 /**
  * @license
@@ -13037,934 +14937,15 @@ if (typeof Object.create === 'function') {
 }.call(this));
 
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],28:[function(require,module,exports){
-/*jslint node: true */
-'use strict';
+},{}],59:[function(require,module,exports){
 var _ = require('lodash');
 
-module.exports = (function () {
-  function Argument(value, func) {
-    this.value = value;
-    this.func = func;
-  }
-
-  Argument.prototype.toGroovy = function() {
-    return this.parse();
-  };
-
-  Argument.prototype.parse = function() {
-    var argument = this.value;
-
-    if (argument === null) {
-      return 'null';
-    }
-
-    if (this.isClassReference()) {
-      return argument.toString();
-    }
-
-    if (this.isFloat()) {
-      return this.value;
-    }
-
-    // Handle ids that are not numbers but pass parseFloat test
-    // (ie. Titan edge ids)
-    if (_.isString(argument) && this.isFloat()) {
-      return "'" + argument + "'";
-    }
-
-    if (_.isArray(argument)) {
-      var parsedArray = _.map(argument, function(element) {
-        if (_.isString(element)) {
-          return "'" + element + "'";
-        }
-
-        return element;
-      });
-
-      return parsedArray.toString();
-    }
-
-    if (_.isBoolean(argument)) {
-      return argument.toString();
-    }
-
-    return "'"+ argument +"'";
-  };
-
-  Argument.prototype.isFloat = function() {
-    return !_.isNaN(parseFloat(this.value)) && this.value.slice(-1) === 'f';
-    // return this.value.slice(-1) === 'f';
-  };
-
-  Argument.prototype.isClassReference = function() {
-    var graphRegex = /^T\.(gt|gte|eq|neq|lte|lt|decr|incr|notin|in)$|^Contains\.(IN|NOT_IN)$|^g\.|^Vertex(\.class)$|^Edge(\.class)$|^String(\.class)$|^Integer(\.class)$|^Geoshape(\.class)$|^Direction\.(OUT|IN|BOTH)$|^TitanKey(\.class)$|^TitanLabel(\.class)$/;
-
-    return _.isString(this.value) && graphRegex.test(this.value);
-  };
-
-  return Argument;
-})();
-
-},{"lodash":27}],29:[function(require,module,exports){
-/*jslint node: true */
-'use strict';
-var inherits = require('inherits');
-var Argument = require('./argument');
-
-module.exports = (function () {
-  function ArrayArgument() {
-    Argument.apply(this, arguments);
-  }
-
-  inherits(ArrayArgument, Argument);
-
-  ArrayArgument.prototype.toGroovy = function() {
-    return "[" + this.parse() + "]";
-  };
-
-  return ArrayArgument;
-})();
-},{"./argument":28,"inherits":26}],30:[function(require,module,exports){
-/*jslint node: true */
-'use strict';
-var inherits = require('inherits');
-var Argument = require('./argument');
-
-module.exports = (function() {
-  function ClassArgument() {
-    Argument.apply(this, arguments);
-  }
-
-  inherits(ClassArgument, Argument);
-
-  ClassArgument.prototype.toGroovy = function() {
-    return this.value.toGroovy();
-  };
-
-  return ClassArgument;
-})();
-},{"./argument":28,"inherits":26}],31:[function(require,module,exports){
-/*jslint node: true */
-'use strict';
-var inherits = require('inherits');
-var Argument = require('./argument');
-
-module.exports = (function() {
-  function ClosureArgument() {
-    Argument.apply(this, arguments);
-  }
-
-  inherits(ClosureArgument, Argument);
-
-  ClosureArgument.prototype.toGroovy = function() {
-    return this.value;
-  };
-
-  return ClosureArgument;
-})();
-},{"./argument":28,"inherits":26}],32:[function(require,module,exports){
-/*jslint node: true */
-'use strict';
-var inherits = require('inherits');
-var Argument = require('./argument');
-
-module.exports = (function() {
-  function IntegerArgument() {
-    Argument.apply(this, arguments);
-  }
-
-  inherits(IntegerArgument, Argument);
-
-  IntegerArgument.prototype.toGroovy = function() {
-    return this.value;
-  };
-
-  return IntegerArgument;
-})();
-},{"./argument":28,"inherits":26}],33:[function(require,module,exports){
-/*jslint node: true */
-'use strict';
-var inherits = require('inherits');
-var Argument = require('./argument');
-
-module.exports = (function() {
-  function ObjectArgument() {
-    Argument.apply(this, arguments);
-  }
-
-  inherits(ObjectArgument, Argument);
-
-  ObjectArgument.prototype.toGroovy = function() {
-    return JSON.stringify(this.value).replace('{', '[').replace('}', ']');
-  };
-
-  return ObjectArgument;
-})();
-},{"./argument":28,"inherits":26}],34:[function(require,module,exports){
-/*jslint node: true */
-'use strict';
-var VertexWrapper = require('../objects/vertex');
-var EdgeWrapper = require('../objects/edge');
-
-var JavaClass = require('./javaclass');
-
-var classes = {
-  Vertex: VertexWrapper,
-  Edge: EdgeWrapper,
-  Geoshape: new JavaClass('Geoshape'),
-  'String': new JavaClass('String'),
-  Integer: new JavaClass('Integer'),
-  T: {
-    'gt': 'T.gt',
-    'gte': 'T.gte',
-    'eq': 'T.eq',
-    'neq': 'T.neq',
-    'lte': 'T.lte',
-    'lt': 'T.lt',
-    'decr': 'T.decr',
-    'incr': 'T.incr',
-    'notin': 'T.notin',
-    'in': 'T.in'
-  },
-
-  Contains: {
-    'IN': 'Contains.IN',
-    'NOT_IN': 'Contains.NOT_IN'
-  },
-
-  Direction: {
-    'OUT': 'Direction.OUT',
-    'IN': 'Direction.IN',
-    'BOTH': 'Direction.BOTH'
-  },
-
-  TitanKey: new JavaClass('TitanKey'),
-  TitanLabel : new JavaClass('TitanLabel'),
-};
-
-module.exports = classes;
-},{"../objects/edge":53,"../objects/vertex":58,"./javaclass":35}],35:[function(require,module,exports){
-/*jslint node: true */
-'use strict';
-module.exports = (function() {
-  function JavaClass(name) {
-    this.name = name;
-  }
-
-  JavaClass.prototype.toGroovy = function() {
-    return this.name + '.class';
-  };
-
-  Object.defineProperty(JavaClass.prototype, 'class', {
-    get: function() {
-      return this.toGroovy();
-    }
-  });
-
-  return JavaClass;
-})();
-},{}],36:[function(require,module,exports){
-/*jslint node: true */
-'use strict';
-var inherits = require('util').inherits;
-
-var GremlinMethod = require('./method');
-
-module.exports = (function() {
-  function CollectionAccessor() {
-    GremlinMethod.call(this, null, arguments[0]);
-  }
-
-  inherits(CollectionAccessor, GremlinMethod);
-
-  CollectionAccessor.prototype.toGroovy = function() {
-    var str = '['+ this.arguments[0].toString() + ']';
-
-    return str;
-  };
-
-  return CollectionAccessor;
-})();
-},{"./method":46,"util":25}],37:[function(require,module,exports){
-/*jslint node: true */
-'use strict';
-var inherits = require('util').inherits;
-
-var GremlinMethod = require('../function');
-
-module.exports = (function() {
-  function AddPropertiesMethod() {
-    GremlinMethod.call(this, 'addProperties', arguments[0]);
-  }
-
-  inherits(AddPropertiesMethod, GremlinMethod);
-
-  AddPropertiesMethod.prototype.run = function(element) {
-    var key;
-    var args = this.arguments;
-
-    for (key in args) {
-      element[key] = args[key];
-    }
-
-    return element;
-  };
-
-  AddPropertiesMethod.prototype.toGroovy = function() {
-    return '.addProperties('+ this.stringifyArgument(this.arguments) +')';
-  };
-
-  return AddPropertiesMethod;
-})();
-},{"../function":42,"util":25}],38:[function(require,module,exports){
-/*jslint node: true */
-'use strict';
-var inherits = require('util').inherits;
-
-var GremlinMethod = require('../function');
-
-module.exports = (function() {
-  function AddPropertyMethod() {
-    GremlinMethod.call(this, 'addProperty', arguments[0]);
-  }
-
-  inherits(AddPropertyMethod, GremlinMethod);
-
-  AddPropertyMethod.prototype.run = function(element) {
-    var key = this.arguments.key;
-    var value = this.arguments.value;
-
-    element[key] = value;
-
-    return element;
-  };
-
-  AddPropertyMethod.prototype.toGroovy = function() {
-    var key = this.arguments.key;
-    var value = this.arguments.value;
-
-    return ".addProperty('" + key + "','" + value + "')";
-  };
-
-  return AddPropertyMethod;
-})();
-},{"../function":42,"util":25}],39:[function(require,module,exports){
-/*jslint node: true */
-'use strict';
-var inherits = require('util').inherits;
-
-var _ = require('lodash');
-
-var GremlinMethod = require('../function');
-
-module.exports = (function() {
-  function GetPropertiesMethod() {
-    GremlinMethod.call(this, 'getProperties', arguments[0]);
-  }
-
-  inherits(GetPropertiesMethod, GremlinMethod);
-
-  GetPropertiesMethod.prototype.run = function(element) {
-    var o = {};
-
-    return element.properties;
-  };
-
-  return GetPropertiesMethod;
-})();
-},{"../function":42,"lodash":27,"util":25}],40:[function(require,module,exports){
-/*jslint node: true */
-'use strict';
-var inherits = require('util').inherits;
-
-var GremlinMethod = require('../function');
-
-module.exports = (function() {
-  function SetPropertiesMethod() {
-    GremlinMethod.call(this, 'setProperties', arguments[0]);
-  }
-
-  inherits(SetPropertiesMethod, GremlinMethod);
-
-  SetPropertiesMethod.prototype.run = function(element) {
-    var key;
-    var args = this.arguments;
-
-    for (key in args) {
-      element[key] = args[key];
-    }
-
-    return element;
-  };
-
-  SetPropertiesMethod.prototype.toGroovy = function() {
-    return '.setProperties('+ this.stringifyArgument(this.arguments) +')';
-  };
-
-  return SetPropertiesMethod;
-})();
-},{"../function":42,"util":25}],41:[function(require,module,exports){
-/*jslint node: true */
-'use strict';
-var inherits = require('util').inherits;
-
-var GremlinMethod = require('../function');
-
-module.exports = (function() {
-  function SetPropertyMethod() {
-    GremlinMethod.call(this, 'setProperty', arguments[0]);
-  }
-
-  inherits(SetPropertyMethod, GremlinMethod);
-
-  SetPropertyMethod.prototype.run = function(element) {
-    var key = this.arguments.key;
-    var value = this.arguments.value;
-
-    element.properties[key] = value;
-
-    return element;
-  };
-
-  SetPropertyMethod.prototype.toGroovy = function() {
-    var key = this.arguments.key;
-    var value = this.arguments.value;
-
-    return ".setProperty('" + key + "','" + value + "')";
-  };
-
-  return SetPropertyMethod;
-})();
-},{"../function":42,"util":25}],42:[function(require,module,exports){
-/*jslint node: true */
-'use strict';
-var _ = require('lodash');
-
-var Argument = require('../arguments/argument');
-var ClosureArgument = require('../arguments/closure');
-var ObjectArgument = require('../arguments/object');
-var ArrayArgument = require('../arguments/array');
-var ClassArgument = require('../arguments/class');
-var NumberArgument = require('../arguments/number');
-
-module.exports = (function() {
-  function GremlinFunction(name, args) {
-    this.name = name;
-    this.arguments = args;
-    this.closures = [];
-    this.parenthesizedArguments = [];
-    this.buildArguments();
-  }
-
-  GremlinFunction.prototype.toGroovy = function() {
-    return this.name + this.groovifyArguments();
-  };
-
-  GremlinFunction.prototype.groovifyArguments = function() {
-    var args = [];
-
-    // Append arguments between parentheses, if any
-    var groovy = '(' + _.map(this.parenthesizedArguments, function(argument) {
-      return argument.toGroovy();
-    }).join(',') + ')';
-
-    // Append closures, if any
-    groovy += _.map(this.closures, function(closure) {
-      return closure.toGroovy();
-    }).join(',');
-
-    return groovy;
-  };
-
-  GremlinFunction.prototype.buildArguments = function() {
-    var built;
-    _.each(this.arguments, function(argument) {
-      if (this.isClosure(argument)) {
-        built = new ClosureArgument(argument, this);
-        this.closures.push(built);
-      } else if (_.isArray(argument)) {
-        built = new ArrayArgument(argument, this);
-        this.parenthesizedArguments.push(built);
-      } else if (this.isClass(argument)) {
-        built = new ClassArgument(argument, this);
-        this.parenthesizedArguments.push(built);
-      } else if (_.isObject(argument)) {
-        built = new ObjectArgument(argument, this);
-        this.parenthesizedArguments.push(built);
-      } else if (_.isNumber(argument)) {
-        built = new NumberArgument(argument, this);
-        this.parenthesizedArguments.push(built);
-      } else {
-        built = new Argument(argument, this);
-        this.parenthesizedArguments.push(built);
-      }
-    }, this);
-  };
-
-  GremlinFunction.prototype.isClosure = function(val) {
-    var closureRegex = /^\{.*\}$/;
-
-    return _.isString(val) && closureRegex.test(val);
-  };
-
-  GremlinFunction.prototype.isClass = function(argument) {
-    return argument && !!argument.class;
-  };
-
-  var stringify = function(accumulated, value, key, obj) {
-    var newVal;
-    var newKey = JSON.stringify(key);
-    var newEntry;
-
-    if (accumulated) {
-      accumulated += ',';
-    }
-
-    if (typeof value === 'undefined') {
-      value = null;
-    }
-
-    if (_.isObject(value)) {
-      newVal = '[' +  _.reduce(value, stringify, '') + ']' ;
-    } else {
-      newVal = JSON.stringify(value);
-    }
-
-    if (_.isObject(obj) && !_.isArray(obj)) {
-      newEntry = newKey + ':' + newVal;
-    } else {
-      newEntry = newVal;
-    }
-
-    return accumulated += newEntry;
-  };
-
-  GremlinFunction.prototype.stringifyArgument = function(argument) {
-    var string = stringify('', argument, null, null);
-    return string;
-  };
-
-  return GremlinFunction;
-})();
-
-},{"../arguments/argument":28,"../arguments/array":29,"../arguments/class":30,"../arguments/closure":31,"../arguments/number":32,"../arguments/object":33,"lodash":27}],43:[function(require,module,exports){
-/*jslint node: true */
-'use strict';
-var inherits = require('util').inherits;
-
-var _ = require('lodash');
-
-var GremlinMethod = require('../method');
-
-module.exports = (function() {
-  function AddEdgeMethod(edge, properties) {
-    this.edge = edge;
-    GremlinMethod.call(this, 'addEdge', properties);
-  }
-
-  inherits(AddEdgeMethod, GremlinMethod);
-
-  AddEdgeMethod.prototype.run = function(object) {
-    if (this.arguments.properties && this.arguments.properties._id) {
-      this.edge._id = this.arguments.properties._id;
-    }
-
-    this.edge._outV = this.arguments.v1;
-    this.edge._inV = this.arguments.v2;
-    this.edge._label = this.arguments.label;
-
-    var properties = this.arguments.properties;
-
-    _.each(properties, function(value, key) {
-      this.edge[key] = value;
-    }, this);
-
-    delete this.arguments._id;
-
-    return this.edge;
-  };
-
-  AddEdgeMethod.prototype.groovifyArguments = function() {
-    var id = this.edge._id ? this.edge._id + ',' : '';
-
-    var properties = this.arguments.properties;
-    var propArgument = !_.isEmpty(properties) ? ','+ this.stringifyArgument(this.arguments.properties) : '';
-
-    var _outV = this.edge._outV.identifier || this.arguments.v1;
-    var _inV = this.edge._inV.identifier || this.arguments.v2;
-
-    return '('+ id + _outV +','+ _inV +',"'+ this.edge._label +'"'+ propArgument + ')';
-  };
-
-  return AddEdgeMethod;
-})();
-},{"../method":46,"lodash":27,"util":25}],44:[function(require,module,exports){
-/*jslint node: true */
-'use strict';
-var inherits = require('util').inherits;
-
-var _ = require('lodash');
-
-var GremlinMethod = require('../method');
-
-module.exports = (function() {
-  function AddVertexMethod(vertex, properties) {
-    this.vertex = vertex;
-    GremlinMethod.call(this, 'addVertex', properties);
-  }
-
-  inherits(AddVertexMethod, GremlinMethod);
-
-  AddVertexMethod.prototype.run = function() {
-    _.each(this.arguments, function(value, key) {
-      this.vertex.properties[key] = value;
-    }, this);
-
-    return this.vertex;
-  };
-
-  AddVertexMethod.prototype.groovifyArguments = function() {
-    var args = [];
-    var id = this.vertex._id ? this.vertex._id +',' : '';
-
-    if (this.arguments && this.arguments._id) {
-      args.push(this.arguments._id);
-      delete this.arguments._id;
-    }
-
-    if (!_.isEmpty(this.arguments)) {
-      args.push(this.stringifyArgument(this.arguments));
-    }
-
-    return '('+ args.join(',') + ')';
-  };
-
-  return AddVertexMethod;
-})();
-},{"../method":46,"lodash":27,"util":25}],45:[function(require,module,exports){
-/*jslint node: true */
-'use strict';
-var inherits = require('util').inherits;
-
-var GremlinMethod = require('../function');
-
-module.exports = (function() {
-  function IdxGremlinFunction() {
-    GremlinMethod.call(this, 'idx', arguments[0]);
-  }
-
-  inherits(IdxGremlinFunction, GremlinMethod);
-
-  IdxGremlinFunction.prototype.toGroovy = function() {
-    var str = ".idx('" + this.arguments[0] + "')";
-    var properties = this.arguments[1];
-
-    if (properties) {
-      var keys = [];
-
-      for (var key in properties) {
-        keys.push(key + ":'" + properties[key] + "'");
-      }
-
-      str += "[["+ keys.join(',') + "]]";
-    }
-
-    return str;
-  };
-
-  return IdxGremlinFunction;
-})();
-},{"../function":42,"util":25}],46:[function(require,module,exports){
-/*jslint node: true */
-'use strict';
-var inherits = require('util').inherits;
-
-var GremlinFunction = require('./function');
-
-module.exports = (function() {
-  function GremlinMethod() {
-    GremlinFunction.apply(this, arguments);
-  }
-
-  inherits(GremlinMethod, GremlinFunction);
-
-  GremlinMethod.prototype.toGroovy = function() {
-    return '.' + this.name + this.groovifyArguments();
-  };
-
-  return GremlinMethod;
-})();
-},{"./function":42,"util":25}],47:[function(require,module,exports){
-/*jslint node: true */
-'use strict';
-var inherits = require('util').inherits;
-
-var _ = require('lodash');
-
-var GremlinStep = require('./step');
-
-module.exports = (function() {
-  function CollectionStep() {
-    GremlinStep.apply(this, arguments);
-  }
-
-  inherits(CollectionStep, GremlinStep);
-
-  CollectionStep.prototype.toGroovy = function() {
-    var str = '.'+ this.name;
-    var argumentList = [];
-    var args = this.arguments;
-    var firstArg = args[0];
-
-    if (_.isArray(firstArg)) {
-      // Handle .method([g.v(1), g.v(2)]) signature
-      var pipelines = _.map(firstArg, function(a) { return a.toGroovy(); }).join(',');
-      str += "([" + pipelines + "])";
-    } else {
-      str += "('"+ this.arguments[0] + "')";
-    }
-
-    return str;
-  };
-
-  return CollectionStep;
-})();
-},{"./step":50,"lodash":27,"util":25}],48:[function(require,module,exports){
-/*jslint node: true */
-'use strict';
-var inherits = require('util').inherits;
-
-var _ = require('lodash');
-
-var GremlinStep = require('./step');
-var Argument = require('../../arguments/argument');
-
-module.exports = (function() {
-  function PipesStep() {
-    GremlinStep.apply(this, arguments);
-  }
-
-  inherits(PipesStep, GremlinStep);
-
-  PipesStep.prototype.toGroovy = function() {
-    var str = '';
-    var argumentList = [];
-    var args = this.arguments;
-
-    args = _.isArray(args[0]) ? args[0] : args;
-
-    _.each(args, function(arg) {
-      var argObj = new Argument(arg);
-      var partialScript = (arg.toGroovy && arg.toGroovy()) || argObj.parse();
-      argumentList.push(partialScript);
-    }, this);
-
-    str += '.'+ this.name + '('+ argumentList.join(',') +')';
-
-    return str;
-  };
-
-  return PipesStep;
-})();
-},{"../../arguments/argument":28,"./step":50,"lodash":27,"util":25}],49:[function(require,module,exports){
-/*jslint node: true */
-'use strict';
-var inherits = require('util').inherits;
-
-var GremlinStep = require('./step');
-
-module.exports = (function() {
-  function SelectStep() {
-    GremlinStep.call(this, 'select', arguments[0]);
-  }
-
-  inherits(SelectStep, GremlinStep);
-
-  SelectStep.prototype.toGroovy = function() {
-    return '.select' + this.groovifyArguments().replace(/\"/g, '\'');
-  };
-
-  return SelectStep;
-})();
-},{"./step":50,"util":25}],50:[function(require,module,exports){
-/*jslint node: true */
-'use strict';
-var inherits = require('util').inherits;
-
-var GremlinMethod = require('../method');
-
-module.exports = (function() {
-  function GremlinStep(name, args) {
-    GremlinMethod.apply(this, arguments);
-  }
-
-  inherits(GremlinStep, GremlinMethod);
-
-  return GremlinStep;
-})();
-},{"../method":46,"util":25}],51:[function(require,module,exports){
-/*jslint node: true */
-'use strict';
-var _ = require("lodash");
-var util = require('util');
-
-var GraphWrapper = require('./objects/graph');
-var PipelineWrapper = require('./objects/pipeline');
-var Argument = require('./arguments/argument');
-var GremlinFunction = require('./functions/function');
-
-module.exports = (function() {
-  function GremlinScript() {
-    this.script = '';
-    this.params = {};
-    this.paramCount = 0;
-    this.identifierCount = 0;
-  }
-
-  /**
-   * Append an arbitrary string to the script as a new line.
-   *
-   * @private
-   * @param {String} line
-   */
-  GremlinScript.prototype.line = function(line) {
-    this.script += line + '\n';
-  };
-
-  /**
-   * Add bound parameters to the script. This currently only works when
-   * using the formatted string. It does not work with gRex helpers/wrappers.
-   *
-   * @private
-   * @param {Array} boundParams
-   */
-  GremlinScript.prototype.addBoundParams = function(boundParams) {
-    var currentParamNames = [];
-    var identifier;
-
-    _.each(boundParams, function(boundParam) {
-      identifier = 'p'+ this.paramCount++;
-      this.params[identifier] = boundParam;
-      currentParamNames.push(identifier);
-    }, this);
-
-    return currentParamNames;
-  };
-
-  /**
-   * Handle a string statement using Node util.format() function.
-   *
-   * @private
-   * @param {String} statement
-   */
-  GremlinScript.prototype.handleString = function(statement) {
-    var currentParams = [statement];
-    currentParams = currentParams.concat(this.addBoundParams(_.rest(arguments)));
-
-    this.line(util.format.apply(util.format, currentParams));
-  };
-
-  /**
-   * Handle a helper statement wrapped in one of gRex Wrapper classes
-   *
-   * @private
-   * @param {ObjectWrapper} wrapper
-   * @return {ObjectWrapper}
-   */
-  GremlinScript.prototype.handleHelper = function(wrapper) {
-    this.line(wrapper.toGroovy());
-
-    return wrapper;
-  };
-
-  /**
-   * Identify a statement within the script with the provided optional
-   * identifier. Will assign an automatica identifier instead.
-   *
-   * @public
-   * @param {ObjectWrapper} wrapper
-   * @param {String} identifier - an optional identifier
-   */
-  GremlinScript.prototype.var = function(wrapper, identifier) {
-    identifier = identifier || 'i'+ this.identifierCount++;
-    wrapper.identifier = identifier;
-    var prefix = identifier + '=';
-
-    var groovyCode = wrapper.toGroovy ? wrapper.toGroovy() : wrapper;
-
-    this.script += prefix + groovyCode + '\n';
-
-    return wrapper;
-  };
-
-  /**
-   * According to its type (ie. String or ObjectWrapper), handle and add a
-   * statement to the current script.
-   *
-   * @private
-   * @param {String|ObjectWrapper} statement
-   */
-  GremlinScript.prototype.appendStatement = function(statement) {
-    if (arguments.length > 1) {
-      // Assume query('g(%s)', 1) signature
-      this.handleString.apply(this, arguments);
-    } else if (_.isString(statement)) {
-      // Assume query('g.v(1)') signature
-      this.line(statement);
-    } else if (statement) {
-      // Assume query(g.v(1)) signature
-      this.handleHelper(statement);
-    }
-  };
-
-  /**
-   * Returns a function responsible for handling statements and ultimately
-   * appending bits of Gremlin-Groovy to this GremlinScript.
-   *
-   * @private
-   * @return {Function}
-   */
-  GremlinScript.prototype.getAppender = function() {
-    var self = this;
-
-    function GremlinAppender() {
-      self.appendStatement.apply(self, arguments);
-
-      return self;
-    }
-
-    /**
-     * Proxy some GremlinScript methods/getters to the appender
-     */
-    GremlinAppender.var = GremlinScript.prototype.var.bind(this);
-
-    Object.defineProperty(GremlinAppender, 'script', {
-      get: function() {
-        return self.script;
-      }
-    });
-
-    Object.defineProperty(GremlinAppender, 'params', {
-      get: function() {
-        return self.params;
-      }
-    });
-
-    return GremlinAppender;
-  };
-
-  return GremlinScript;
-})();
-
-},{"./arguments/argument":28,"./functions/function":42,"./objects/graph":55,"./objects/pipeline":57,"lodash":27,"util":25}],52:[function(require,module,exports){
-var _ = require('lodash');
+var GremlinScript = require('gremlin-script').GremlinScript;
+var classes = require('gremlin-script').Classes;
+var GraphWrapper = require('gremlin-script').Structure.Graph;
+var PipelineWrapper = require('gremlin-script').Structure.Pipeline;
 
 var RexsterClient = require('./rexsterclient');
-var GremlinScript = require('./gremlinscript');
-var classes = require('./classes/classes');
-var GraphWrapper = require("./objects/graph");
-var PipelineWrapper = require('./objects/pipeline');
 
 
 module.exports = (function() {
@@ -14012,1249 +14993,7 @@ module.exports = (function() {
 
   return NodeGremlin;
 })();
-},{"./classes/classes":34,"./gremlinscript":51,"./objects/graph":55,"./objects/pipeline":57,"./rexsterclient":60,"lodash":27}],53:[function(require,module,exports){
-/*jslint node: true */
-'use strict';
-var inherits = require("inherits");
-
-var ElementWrapper = require("./element");
-
-module.exports = (function (){
-  function EdgeWrapper() {
-    ElementWrapper.apply(this, arguments);
-    this.properties._type = "edge";
-  }
-
-  inherits(EdgeWrapper, ElementWrapper);
-
-  EdgeWrapper.toGroovy = function() {
-    return 'Edge.class';
-  };
-
-  Object.defineProperty(EdgeWrapper, 'class', {
-    get: function() {
-      return this.toGroovy();
-    }
-  });
-
-  return EdgeWrapper;
-
-})();
-
-},{"./element":54,"inherits":26}],54:[function(require,module,exports){
-/*jslint node: true */
-'use strict';
-var inherits = require('util').inherits;
-
-var _ = require('lodash');
-
-var ObjectWrapper = require('./objectwrapper');
-var GetPropertiesMethod = require('../functions/element/getproperties');
-var SetPropertiesMethod = require('../functions/element/setproperties');
-var AddPropertiesMethod = require('../functions/element/addproperties');
-var SetPropertyMethod = require('../functions/element/setproperty');
-var AddPropertyMethod = require('../functions/element/addproperty');
-var GremlinMethod = require('../functions/method');
-
-/**
- * Abstract ElementWrapper class
- */
-module.exports = (function() {
-  function ElementWrapper() {
-    ObjectWrapper.apply(this, arguments);
-    this.properties._id = null;
-  }
-
-  inherits(ElementWrapper, ObjectWrapper);
-
-  ElementWrapper.prototype.getProperties = function() {
-    var method = new GetPropertiesMethod();
-    this.methods.push(method.toGroovy());
-
-    return method.run(this);
-  };
-
-  ElementWrapper.prototype.setProperty = function(key, value) {
-    var method = new SetPropertyMethod({ key: key, value: value });
-    this.methods.push(method.toGroovy());
-
-    return method.run(this);
-  };
-
-  ElementWrapper.prototype.setProperties = function(properties) {
-    var method = new SetPropertiesMethod(properties);
-    this.methods.push(method.toGroovy());
-
-    return method.run(this);
-  };
-
-  /**
-   * Titan specific method
-   *
-   * Use this instead of setProperty() when setting the value of an indexed
-   * property.
-   *
-   * @param {String} key
-   * @param {Object} value
-   */
-  ElementWrapper.prototype.addProperty = function(key, value) {
-    var method = new AddPropertyMethod({ key: key, value: value });
-    this.methods.push(method.toGroovy());
-
-    return method.run(this);
-  };
-
-  /**
-   * Titan specific method
-   *
-   * Use this instead of setProperties() when setting the values of indexed
-   * properties.
-   *
-   * @param {Object} properties
-   */
-  ElementWrapper.prototype.addProperties = function(properties) {
-    var method = new AddPropertiesMethod(properties);
-    this.methods.push(method.toGroovy());
-
-    return method.run(this);
-  };
-
-  ElementWrapper.prototype.remove = function() {
-    var method = new GremlinMethod('remove', []);
-    this.methods.push(method.toGroovy());
-
-    return this;
-  };
-
-  return ElementWrapper;
-
-})();
-
-},{"../functions/element/addproperties":37,"../functions/element/addproperty":38,"../functions/element/getproperties":39,"../functions/element/setproperties":40,"../functions/element/setproperty":41,"../functions/method":46,"./objectwrapper":56,"lodash":27,"util":25}],55:[function(require,module,exports){
-/*jslint node: true */
-'use strict';
-var inherits = require('util').inherits;
-
-var _ = require("lodash");
-
-var ObjectWrapper = require('./objectwrapper');
-var VertexWrapper = require('./vertex');
-var EdgeWrapper = require('./edge');
-var GremlinMethod = require('../functions/method');
-var IdxGremlinFunction = require('../functions/graph/idx');
-var AddVertexMethod = require('../functions/graph/addvertex');
-var AddEdgeMethod = require('../functions/graph/addedge');
-
-var PipelineWrapper = require('./pipeline');
-
-module.exports = (function() {
-  function GraphWrapper() {
-    ObjectWrapper.apply(this, arguments);
-  }
-
-  inherits(GraphWrapper, ObjectWrapper);
-
-  GraphWrapper.prototype.E = function() {
-    var func = new GremlinMethod('E', arguments);
-
-    var pipeline = new PipelineWrapper(this.objectName);
-    pipeline.methods.push(func.toGroovy());
-
-    return pipeline;
-  };
-
-  GraphWrapper.prototype.V = function() {
-    var func = new GremlinMethod('V', arguments);
-
-    var pipeline = new PipelineWrapper(this.objectName);
-    pipeline.methods.push(func.toGroovy());
-
-    return pipeline;
-  };
-
-  GraphWrapper.prototype.e = function() {
-    var func = new GremlinMethod('e', arguments);
-
-    var pipeline = new PipelineWrapper(this.objectName);
-    pipeline.methods.push(func.toGroovy());
-
-    return pipeline;
-  };
-
-  GraphWrapper.prototype.idx = function() {
-    var func = new IdxGremlinFunction(arguments);
-
-    var pipeline = new PipelineWrapper(this.objectName);
-    pipeline.methods.push(func.toGroovy());
-
-    return pipeline;
-  };
-
-  GraphWrapper.prototype.v = function() {
-    var func = new GremlinMethod('v', arguments);
-
-    var pipeline = new PipelineWrapper(this.objectName);
-    pipeline.methods.push(func.toGroovy());
-
-    return pipeline;
-  };
-
-  // Indexing
-  GraphWrapper.prototype.createIndex = function() {
-    var func = new GremlinMethod('createIndex', arguments);
-
-    var pipeline = new PipelineWrapper(this.objectName);
-    pipeline.methods.push(func.toGroovy());
-
-    return pipeline;
-  };
-
-  GraphWrapper.prototype.createKeyIndex = function() {
-    var func = new GremlinMethod('createKeyIndex', arguments);
-
-    var pipeline = new PipelineWrapper(this.objectName);
-    pipeline.methods.push(func.toGroovy());
-
-    return pipeline;
-  };
-
-  GraphWrapper.prototype.getIndices = function() {
-    var func = new GremlinMethod('getIndices', arguments);
-
-    var pipeline = new PipelineWrapper(this.objectName);
-    pipeline.methods.push(func.toGroovy());
-
-    return pipeline;
-  };
-
-  GraphWrapper.prototype.getIndexedKeys = function() {
-    var func = new GremlinMethod('getIndexedKeys', arguments);
-
-    var pipeline = new PipelineWrapper(this.objectName);
-    pipeline.methods.push(func.toGroovy());
-
-    return pipeline;
-  };
-
-  GraphWrapper.prototype.getIndex = function() {
-    var func = new GremlinMethod('getIndex', arguments);
-
-    var pipeline = new PipelineWrapper(this.objectName);
-    pipeline.methods.push(func.toGroovy());
-
-    return pipeline;
-  };
-
-  GraphWrapper.prototype.dropIndex = function() {
-    var func = new GremlinMethod('dropIndex', arguments);
-
-    var pipeline = new PipelineWrapper(this.objectName);
-    pipeline.methods.push(func.toGroovy());
-
-    return pipeline;
-  };
-
-  GraphWrapper.prototype.dropKeyIndex = function() {
-    var func = new GremlinMethod('dropKeyIndex', arguments);
-
-    var pipeline = new PipelineWrapper(this.objectName);
-    pipeline.methods.push(func.toGroovy());
-
-    return pipeline;
-  };
-
-  // Types
-  GraphWrapper.prototype.makeKey = function() {
-    var func = new GremlinMethod('makeKey', arguments);
-
-    var pipeline = new PipelineWrapper(this.objectName);
-    pipeline.methods.push(func.toGroovy());
-
-    return pipeline;
-  };
-
-  GraphWrapper.prototype.clear = function() {
-    var func = new GremlinMethod('clear', arguments);
-
-    var pipeline = new PipelineWrapper(this.objectName);
-    pipeline.methods.push(func.toGroovy());
-
-    return pipeline;
-  };
-
-  GraphWrapper.prototype.shutdown = function() {
-    var func = new GremlinMethod('shutdown', arguments);
-
-    var pipeline = new PipelineWrapper(this.objectName);
-    pipeline.methods.push(func.toGroovy());
-
-    return pipeline;
-  };
-
-  GraphWrapper.prototype.getFeatures = function() {
-    var func = new GremlinMethod('getFeatures', arguments);
-
-    var pipeline = new PipelineWrapper(this.objectName);
-    pipeline.methods.push(func.toGroovy());
-
-    return pipeline;
-  };
-
-  // Titan specifics
-  GraphWrapper.prototype.getTypes = function() {
-    var func = new GremlinMethod('getTypes', arguments);
-
-    var pipeline = new PipelineWrapper(this.objectName);
-    pipeline.methods.push(func.toGroovy());
-
-    return pipeline;
-  };
-
-
-  /**
-   * Build a Gremlin line used for adding a VertexWrapper in the graph.
-   *
-   * Note: for databases which accept custom _id properties (ie. non generated)
-   * the user must pass a valid _id value in the `properties` map rather than
-   * supply an optional argument parameter as first argument (TinkerPop style).
-   * This slight change to the API of addVertex makes it easier to use
-   * in a JavaScript environment.
-   *
-   * @param {Object} properties
-   * @param {String} object Optional variable name used within the script
-   *    context
-   * @return {VertexWrapper}
-   */
-  GraphWrapper.prototype.addVertex = function(properties, object) {
-    var vertex = new VertexWrapper('g');
-    var method = new AddVertexMethod(vertex, properties);
-
-    method.run();
-
-    vertex.methods.push(method.toGroovy());
-
-    return vertex;
-  };
-
-  /**
-   * @param {VertexWrapper|Number} v1
-   * @param {VertexWrapper|Number} v2
-   * @param {String} label
-   * @param {Object} properties
-   * @param {String} object Optional variable name used within the script
-   *    context
-   * @return {EdgeWrapper}
-   */
-  GraphWrapper.prototype.addEdge = function(v1, v2, label, properties, object) {
-    var params = {
-      v1: v1,
-      v2: v2,
-      label: label,
-      properties: properties
-    };
-
-    var edge = new EdgeWrapper('g');
-    var method = new AddEdgeMethod(edge, params);
-
-    method.run();
-
-    edge.methods.push(method.toGroovy());
-
-    return edge;
-  };
-
-  return GraphWrapper;
-})();
-
-},{"../functions/graph/addedge":43,"../functions/graph/addvertex":44,"../functions/graph/idx":45,"../functions/method":46,"./edge":53,"./objectwrapper":56,"./pipeline":57,"./vertex":58,"lodash":27,"util":25}],56:[function(require,module,exports){
-/*jslint node: true */
-'use strict';
-
-module.exports = (function() {
-  function ObjectWrapper(objectName) {
-    this.objectName = objectName;
-    this.methods = [];
-    this.identifier = '';
-    this.properties = {};
-  }
-
-  ObjectWrapper.prototype.toGroovy = function() {
-    return this.objectName + this.methods.join('');
-  };
-
-  ObjectWrapper.prototype.asObject = function() {
-    return this.properties;
-  };
-
-  return ObjectWrapper;
-})();
-},{}],57:[function(require,module,exports){
-/*jslint node: true */
-'use strict';
-var inherits = require('util').inherits;
-
-var ObjectWrapper = require('./objectwrapper');
-var GremlinStep = require('../functions/steps/step');
-var CollectionAccessor = require('../functions/collectionaccessor');
-var CollectionStep = require('../functions/steps/collectionstep');
-var PipesStep = require('../functions/steps/pipesstep');
-var SelectStep = require('../functions/steps/select');
-
-module.exports = (function () {
-  function PipelineWrapper(object) {
-    ObjectWrapper.call(this, object);
-  }
-
-  inherits(PipelineWrapper, ObjectWrapper);
-
-  /**
-   * Send the underlying GremlinScript to the server for execution, returning
-   * raw results.
-   *
-   * This method is a shorthand for GremlinScript.exec().
-   *
-   * Support the dual callback/promise API.
-   *
-   * @param {Function} callback
-   */
-  PipelineWrapper.prototype.exec =
-  PipelineWrapper.prototype.execute = function(callback) {
-    return this.gremlin.execute(callback);
-  };
-
-  /**
-   * Send the underlying GremlinScript script to the server for execution, returning
-   * instantiated results.
-   *
-   * This method is a shorthand for GremlinScript.fetch().
-   *
-   * Support the dual callback/promise API.
-   *
-   * @param {Function} callback
-   */
-  PipelineWrapper.prototype.fetch = function(callback) {
-    return this.gremlin.fetch(callback);
-  };
-
-
-  PipelineWrapper.prototype.both = function() {
-    var step = new GremlinStep('both', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.bothE = function() {
-    var step = new GremlinStep('bothE', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.bothV = function() {
-    var step = new GremlinStep('bothV', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.cap = function() {
-    var step = new GremlinStep('cap', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.gather = function() {
-    var step = new GremlinStep('gather', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.id = function() {
-    var step = new GremlinStep('id', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.in = function() {
-    var step = new GremlinStep('in', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.inE = function() {
-    var step = new GremlinStep('inE', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.inV = function() {
-    var step = new GremlinStep('inV', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.property = function() {
-    var step = new GremlinStep('property', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.label = function() {
-    var step = new GremlinStep('label', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.map = function() {
-    var step = new GremlinStep('map', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.memoize = function() {
-    var step = new GremlinStep('memoize', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.order = function() {
-    var step = new GremlinStep('order', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.out = function() {
-    var step = new GremlinStep('out', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.outE = function() {
-    var step = new GremlinStep('outE', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.outV = function() {
-    var step = new GremlinStep('outV', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.path = function() {
-    var step = new GremlinStep('path', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.scatter = function() {
-    var step = new GremlinStep('scatter', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.select = function() {
-    var step = new SelectStep(arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.transform = function() {
-    var step = new GremlinStep('transform', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.orderMap = function() {
-    var step = new GremlinStep('orderMap', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  /*** Filter ***/
-  // index(i)
-  PipelineWrapper.prototype.index = function() {
-    var step = new CollectionAccessor(arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  // range('[i..j]')
-  PipelineWrapper.prototype.range = function() {
-    var step = new CollectionAccessor(arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.and = function() {
-    var step = new PipesStep('and', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.back = function() {
-    var step = new GremlinStep('back', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.dedup = function() {
-    var step = new GremlinStep('dedup', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.except = function() {
-    var step = new CollectionStep('except', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.filter = function() {
-    var step = new GremlinStep('filter', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.has = function() {
-    var step = new GremlinStep('has', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.hasNot = function() {
-    var step = new GremlinStep('hasNot', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.interval = function() {
-    var step = new GremlinStep('interval', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.or = function() {
-    var step = new PipesStep('or', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.random = function() {
-    var step = new GremlinStep('random', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.retain = function() {
-    var step = new CollectionStep('retain', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.simplePath = function() {
-    var step = new GremlinStep('simplePath', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  /*** Side Effect ***/
-  PipelineWrapper.prototype.aggregate = function() {
-    throw new Error('Not implemented.');
-  };
-
-  PipelineWrapper.prototype.as = function() {
-    var step = new GremlinStep('as', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.groupBy = function() {
-    var step = new GremlinStep('groupBy', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  // Not FullyImplemented ??
-  PipelineWrapper.prototype.groupCount = function() {
-    var step = new GremlinStep('groupCount', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.optional = function() {
-    var step = new GremlinStep('optional', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.sideEffect = function() {
-    var step = new GremlinStep('sideEffect', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.linkBoth = function() {
-    var step = new GremlinStep('linkBoth', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.linkIn = function() {
-    var step = new GremlinStep('linkIn', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.linkOut = function() {
-    var step = new GremlinStep('linkOut', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.store = function() {
-    throw new Error('Not implemented');
-  };
-
-  PipelineWrapper.prototype.table = function() {
-    throw new Error('Not implemented');
-  };
-
-  PipelineWrapper.prototype.tree = function() {
-    throw new Error('Not implemented');
-  };
-
-  /*** Branch ***/
-  PipelineWrapper.prototype.copySplit = function() {
-    var step = new PipesStep('copySplit', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-  PipelineWrapper.prototype.exhaustMerge = function() {
-    var step = new GremlinStep('exhaustMerge', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.fairMerge = function() {
-    var step = new GremlinStep('fairMerge', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  // g.v(1).out().ifThenElse('{it.name=='josh'}','{it.age}','{it.name}')
-  PipelineWrapper.prototype.ifThenElse = function() {
-    var step = new GremlinStep('ifThenElse', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.loop = function() {
-    var step = new GremlinStep('loop', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  /*** Methods ***/
-  PipelineWrapper.prototype.fill = function() {
-    throw new Error('Not implemented');
-  };
-
-  PipelineWrapper.prototype.count = function() {
-    var step = new GremlinStep('count', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.iterate = function() {
-    var step = new GremlinStep('iterate', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.next = function() {
-    var step = new GremlinStep('next', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.toList = function() {
-    var step = new GremlinStep('toList', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.keys = function() {
-    var step = new GremlinStep('keys', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.remove = function() {
-    var step = new GremlinStep('remove', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.values = function() {
-    var step = new GremlinStep('values', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.put = function() {
-    var step = new PipesStep('put', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.getPropertyKeys = function() {
-    var step = new GremlinStep('getPropertyKeys', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.setProperty = function() {
-    var step = new GremlinStep('setProperty', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.getProperty = function() {
-    var step = new GremlinStep('getProperty', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  // Titan specifics
-  PipelineWrapper.prototype.name = function() {
-    var step = new GremlinStep('name', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.dataType = function() {
-    var step = new GremlinStep('dataType', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.indexed = function() {
-    var step = new GremlinStep('indexed', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.unique = function() {
-    var step = new GremlinStep('unique', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.makePropertyKey = function() {
-    var step = new GremlinStep('makePropertyKey', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.group = function() {
-    var step = new GremlinStep('group', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.makeEdgeLabel = function() {
-    var step = new GremlinStep('makeEdgeLabel', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.query = function() {
-    var step = new GremlinStep('query', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  // Titan v0.4.0+
-  PipelineWrapper.prototype.single = function() {
-    var step = new GremlinStep('single', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  // Titan v0.4.0+
-  PipelineWrapper.prototype.list = function() {
-    var step = new GremlinStep('list', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  // Titan v0.4.0+: replaces unique(Direction.IN)
-  PipelineWrapper.prototype.oneToMany = function() {
-    var step = new GremlinStep('oneToMany', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  // Titan v0.4.0+: replaces unique(Direction.OUT)
-  PipelineWrapper.prototype.manyToOne = function() {
-    var step = new GremlinStep('manyToOne', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  // Titan v0.4.0+: replaces unique(Direction.IN) and unique(Direction.OUT)
-  PipelineWrapper.prototype.oneToOne = function() {
-    var step = new GremlinStep('oneToOne', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  // Titan v0.4.0+
-  PipelineWrapper.prototype.makeKey = function() {
-    var step = new GremlinStep('makeKey', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  // Titan v0.4.0+
-  PipelineWrapper.prototype.makeLabel = function() {
-    var step = new GremlinStep('makeLabel', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.make = function() {
-    var step = new GremlinStep('make', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.sortKey = function() {
-    var step = new GremlinStep('sortKey', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.signature = function() {
-    var step = new GremlinStep('signature', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.unidirected = function() {
-    var step = new GremlinStep('unidirected', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.createKeyIndex = function() {
-    var step = new GremlinStep('createKeyIndex', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.getIndexes = function() {
-    var step = new GremlinStep('getIndexes', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.hasIndex = function() {
-    var step = new GremlinStep('hasIndex', arguments);
-    this.methods.push(step.toGroovy());
-
-    return this;
-  };
-
-  PipelineWrapper.prototype.key = function() {
-    this.methods.push('.'+ arguments[0]);
-
-    return this;
-  };
-
-  return PipelineWrapper;
-
-})();
-
-},{"../functions/collectionaccessor":36,"../functions/steps/collectionstep":47,"../functions/steps/pipesstep":48,"../functions/steps/select":49,"../functions/steps/step":50,"./objectwrapper":56,"util":25}],58:[function(require,module,exports){
-/*jslint node: true */
-'use strict';
-var inherits = require("inherits");
-
-var ElementWrapper = require("./element");
-
-module.exports = (function () {
-  function VertexWrapper() {
-    ElementWrapper.apply(this, arguments);
-
-    this.properties._type = "vertex";
-  }
-
-  inherits(VertexWrapper, ElementWrapper);
-
-  VertexWrapper.toGroovy = function() {
-    return 'Vertex.class';
-  };
-
-  Object.defineProperty(VertexWrapper, 'class', {
-    get: function() {
-      return this.toGroovy();
-    }
-  });
-
-  return VertexWrapper;
-
-})();
-
-},{"./element":54,"inherits":26}],59:[function(require,module,exports){
-/*jslint node: true */
-'use strict';
-var _ = require("lodash");
-
-
-module.exports = (function() {
-  function ResultFormatter() {
-  }
-
-  /**
-   * @param {Array} results
-   */
-  ResultFormatter.prototype.formatResults = function(results) {
-    var formattedResult = {
-      results: [],
-      typeMap: {}
-    };
-
-    _.each(results, function(resultItem) {
-      if (_.isObject(resultItem)) {
-        this.formatGraphElement(resultItem, formattedResult);
-      } else {
-        formattedResult.results.push(resultItem);
-      }
-    }, this);
-
-    return formattedResult;
-  };
-
-  /**
-   * Populate a gRex result object with given graph element. Rexster returns
-   * a graph element property as an object whose properties each states their
-   * respective type and value.
-   *
-   * For example, a vertex element with an 'age' property with value '29'
-   * will be retrieved as the following JavaScript object (_id property
-   * ommitted for brevity):
-   *
-   * {
-   *   _type: 'vertex',
-   *   age: {
-   *     type: 'integer',
-   *     value: '29'
-   *   }
-   * }
-   *
-   * This method will convert this raw vertex object into:
-   *
-   * {
-   *   _type: 'vertex',
-   *   age: 29
-   * }
-   *
-   * @param {Object} graphElement A raw graph element as returned by Rexster
-   * @param {Object} formattedResult gRex result object to populate
-   */
-  ResultFormatter.prototype.formatGraphElement = function(graphElement, formattedResult) {
-    var returnObject = {};
-    var typeObject = {};
-
-    _.forOwn(graphElement, function(v, k) {
-      if (_.isObject(v) && 'type' in v) {
-        if(!!formattedResult.typeMap[k] && formattedResult.typeMap[k] != v.type){
-          // An error occured
-          if(!formattedResult.typeMapErr){
-              formattedResult.typeMapErr = {};
-          }
-
-          console.error('_id:' + graphElement._id + ' => {' + k + ':' + v.type + '}');
-
-          //only capture the first error
-          if(!(k in formattedResult.typeMapErr)){
-              formattedResult.typeMapErr[k] = formattedResult.typeMap[k] + ' <=> ' + v.type;
-          }
-        }
-
-        if (v.type == 'map' || v.type == 'list') {
-          //build recursive func to build object
-          typeObject = this.createTypeDefinition(v.value);
-          formattedResult.typeMap[k] = typeObject.typeDef;
-          returnObject[k] = typeObject.result;
-        } else {
-          formattedResult.typeMap[k] = v.type;
-          returnObject[k] = v.value;
-        }
-      } else {
-        returnObject[k] = v;
-      }
-    }, this);
-
-    formattedResult.results.push(returnObject);
-  };
-
-  ResultFormatter.prototype.createTypeDefinition = function(obj) {
-    var tempObject = {},
-      tempTypeObj = {},
-      tempResultObj = {},
-      tempTypeArray = [],
-      tempResultArr = [],
-      tempTypeArrLen = 0,
-      rest = 1,
-      mergedObject = {},
-      returnObj = {
-        typeDefinition: {},
-        result: {}
-      };
-
-    if (_.isArray(obj)) {
-
-      _.each(obj, function(property, i) {
-        if (property.type == 'map' || property.type == 'list') {
-          tempObject = this.createTypeDefinition(property.value);
-          tempTypeArray[i] = tempObject.typeDefinition;
-          tempResultArr[i] = tempObject.result;
-        } else {
-          tempTypeArray.push(property.type);
-          tempResultArr.push(property.value);
-        }
-
-        if (i > 0) {
-          //If type is map or list need to do deep compare
-          //to ascertain whether equal or not
-          //determine if the array has same types
-          //then only show the type upto that index
-          if (property.type !== obj[i - 1].type) {
-              rest = i + 1;
-          }
-        }
-      }, this);
-
-      if(rest > 1 && _.isObject(tempTypeArray[rest])){
-        //merge remaining objects
-        tempTypeArrLen = tempTypeArray.length;
-        mergedObject = tempTypeArray[rest - 1];
-
-        for(var j = rest; j < tempTypeArrLen; j++){
-          mergedObject = _.extend(mergedObject, tempTypeArray[j]);
-        }
-
-        tempResultArr[rest - 1] = mergedObject;
-      }
-
-      tempTypeArray.length = rest;
-      returnObj.typeDefinition = tempTypeArray;
-      returnObj.result = tempResultArr;
-    } else {
-      _.forOwn(obj, function(property, k) {
-        if (property.type == 'map' || property.type == 'list') {
-          tempObject = this.createTypeDefinition(property.value);
-          tempTypeObj[k] = tempObject.typeDefinition;
-          tempResultObj[k] = tempObject.result;
-        } else {
-          tempTypeObj[k] = property.type;
-          tempResultObj[k] = property.value;
-        }
-      }, this);
-
-      returnObj.typeDefinition = tempTypeObj;
-      returnObj.result = tempResultObj;
-    }
-
-    return returnObj;
-  };
-
-  return ResultFormatter;
-})();
-
-},{"lodash":27}],60:[function(require,module,exports){
+},{"./rexsterclient":60,"gremlin-script":2,"lodash":58}],60:[function(require,module,exports){
 /*jslint node: true */
 'use strict';
 var http = require('http');
@@ -15262,9 +15001,9 @@ var querystring = require('querystring');
 
 var _ = require("lodash");
 
-var ResultFormatter = require("./resultformatter");
-var ObjectWrapper = require('./objects/objectwrapper');
-var GremlinScript = require('./gremlinscript');
+var ObjectWrapper = require('gremlin-script').ObjectWrapper;
+var GremlinScript = require('gremlin-script').GremlinScript;
+
 
 module.exports = (function(){
   function RexsterClient(options) {
@@ -15278,8 +15017,6 @@ module.exports = (function(){
 
     this.options = _.defaults(options || {}, defaultOptions);
     this.fetchHandler = this.options.fetched || this.defaultFetchHandler;
-
-    this.resultFormatter = new ResultFormatter();
   }
 
   /**
@@ -15351,8 +15088,8 @@ module.exports = (function(){
       res.on('end', function() {
         body = JSON.parse(body);
 
-        if (body.message || body.success === false) {
-          return callback(new Error(body.message || body.results));
+        if (body.error || body.message || body.success === false) {
+          return callback(new Error(body.error || body.message || body.results));
         }
         callback(null, body);
       });
@@ -15387,11 +15124,7 @@ module.exports = (function(){
     return results;
   };
 
-  RexsterClient.prototype.transformResults = function(results) {
-    return this.resultFormatter.formatResults(results);
-  };
-
   return RexsterClient;
 })();
 
-},{"./gremlinscript":51,"./objects/objectwrapper":56,"./resultformatter":59,"http":6,"lodash":27,"querystring":14}]},{},[1])
+},{"gremlin-script":2,"http":37,"lodash":58,"querystring":45}]},{},[1])
