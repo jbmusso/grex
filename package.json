@@ -34,7 +34,7 @@
     "url": "https://github.com/gulthor/grex/issues"
   },
   "dependencies": {
-    "gremlin-script": "^1.0.0",
+    "gremlin-script": "^1.0.1",
     "inherits": "~2.0.1",
     "lodash": "~2.4.1"
   },
