@@ -2,7 +2,7 @@ var should = require('should');
 
 var grex = require('../');
 
-describe('client', function() {
+describe('gRex', function() {
   describe('.createClient()', function() {
     describe('when passing no parameters', function() {
       var defaultOptions = {

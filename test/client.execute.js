@@ -37,6 +37,18 @@ describe('client', function() {
         done();
       });
     });
+
+    it('should serialize an object passed as an argument', function() {
+      var client = grex.createClient();
+      var query = gremlin('return %s', { foo: "bar", baz: 1 });
+
+      client.execute(query, function(err, response) {
+        should.not.exist(err);
+        var result = response.results[0];
+        result.foo.should.equal('bar');
+        result.baz.should.equal(1);
+      });
+    });
   });
 
   describe('.execute() - error handling', function() {
