@@ -1,7 +1,7 @@
 {
   "name": "grex",
   "description": "Client for Rexster Graph Server",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "keywords": [
     "database",
     "graph",
@@ -34,9 +34,10 @@
     "url": "https://github.com/gulthor/grex/issues"
   },
   "dependencies": {
-    "gremlin-script": "^1.0.1",
+    "gremlin-script": "^1.0.2",
     "inherits": "~2.0.1",
-    "lodash": "~2.4.1"
+    "lodash": "~2.4.1",
+    "request": "^2.49.0"
   },
   "license": "MIT",
   "engines": {

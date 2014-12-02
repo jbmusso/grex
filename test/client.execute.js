@@ -51,6 +51,36 @@ describe('client', function() {
     });
   });
 
+  describe('.execute() - bound parameters', function() {
+    it('should handle an object passed as an argument', function(done) {
+      var client = grex.createClient();
+      var query = gremlin('return %s', { foo: "bar", baz: 1 });
+
+      client.execute(query, function(err, response) {
+        should.not.exist(err);
+        var result = response.results[0];
+        result.foo.should.equal('bar');
+        result.baz.should.equal(1);
+        done();
+      });
+    });
+
+    it('should handling an Array of Objects', function(done) {
+      var client = grex.createClient();
+      var query = gremlin('return %s', [{ foo: "bar", baz: 1 }, { baz: "duh", boo: true }]);
+
+      client.execute(query, function(err, response) {
+        should.not.exist(err);
+        var results = response.results;
+        results[0].foo.should.equal('bar');
+        results[0].baz.should.equal(1);
+        results[1].baz.should.equal('duh');
+        results[1].boo.should.equal(true);
+        done();
+      });
+    });
+  });
+
   describe('.execute() - error handling', function() {
     it('should return an error when port is incorrect', function(done) {
       var client = grex.createClient({
