@@ -2,6 +2,7 @@
 'use strict';
 var http = require('http');
 var querystring = require('querystring');
+var request = require('request');
 
 var _ = require("lodash");
 
@@ -36,26 +37,14 @@ module.exports = (function(){
   };
 
   RexsterClient.prototype.buildRequestOptions = function(gremlin) {
-    var qs = {
-      script: gremlin.script.replace(/\$/g, "\\$"),
-      'rexster.showTypes': this.options.showTypes,
-    };
-
-    if (this.options.load.length > 0) {
-      qs.load = '['+ this.options.load.join(',') +']';
-    }
-
-    // Build custom bound parameters string
-    var paramString = '&'+ _.map(gremlin.params, function(value, key) {
-      return 'params.'+ key +'='+ querystring.escape(value);
-    }).join('&');
-
     var requestOptions = {
-      hostname: this.options.host,
-      port: this.options.port,
-      path: '/graphs/' + this.options.graph + '/tp/gremlin?' + querystring.stringify(qs) + paramString,
-      headers: {
-        'Content-type': 'application/json;charset=utf-8'
+      json: true,
+      uri: 'http://' + this.options.host + ':' + this.options.port + '/graphs/' + this.options.graph + '/tp/gremlin',
+      body: {
+        script: gremlin.script.replace(/\$/g, "\\$"),
+        params: gremlin.params,
+        'rexster.showTypes': this.options.showTypes,
+        load: this.options.load
       }
     };
 
@@ -78,29 +67,17 @@ module.exports = (function(){
     }
 
     var options = this.buildRequestOptions(gremlin);
-    var req = http.get(options, function(res) {
-      var body = '';
 
-      res.on('data', function(chunk) {
-        body += chunk;
-      });
+    request.post(options, function(err, response, body) {
+      if (err) {
+        return callback(new Error(err));
+      }
 
-      res.on('error', function(err) {
-        callback(new Error(err));
-      });
+      if (body.error || body.message || body.success === false) {
+        return callback(new Error(body.error || body.message || body.results));
+      }
 
-      res.on('end', function() {
-        body = JSON.parse(body);
-
-        if (body.error || body.message || body.success === false) {
-          return callback(new Error(body.error || body.message || body.results));
-        }
-        callback(null, body);
-      });
-    });
-
-    req.on('error', function(err) {
-      callback(new Error(err));
+      callback(null, body);
     });
   };
 
