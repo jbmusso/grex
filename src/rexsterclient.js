@@ -91,7 +91,11 @@ module.exports = (function(){
     var self = this;
 
     this.execute(gremlin, function(err, response) {
-      callback(err, self.fetchHandler(response, response.results));
+      if (err) {
+        return callback(new Error(err));
+      }
+
+      callback(null, self.fetchHandler(response, response.results));
     });
   };
 
