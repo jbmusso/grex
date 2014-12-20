@@ -7,10 +7,22 @@ var g = grex.g;
 
 describe('client', function() {
   describe('.fetch() - script handling', function() {
-    it('should fetch the resulf of a script', function(done) {
+    it('should return results and response objects', function(done) {
       var client = grex.createClient();
 
-      client.fetch(gremlin(g.v(1)), function(err, results) {
+      client.fetch(g.v(1), function(err, results, response) {
+        should.not.exist(err);
+        should.exist(results);
+        should.exist(response);
+        should.exist(response.queryTime);
+        done();
+      });
+    });
+
+    it('should fetch the result of a script', function(done) {
+      var client = grex.createClient();
+
+      client.fetch(g.v(1), function(err, results) {
         should.not.exist(err);
         should.exist(results);
         done();
@@ -76,7 +88,7 @@ describe('client', function() {
         graph: 'tinkergraph'
       });
 
-      client.fetch(gremlin(g.v(1)), function(err, results) {
+      client.fetch(g.v(1), function(err, results) {
         should.exist(err);
         should.not.exist(results);
         done();
@@ -91,7 +103,7 @@ describe('client', function() {
       };
       var client = grex.createClient(options);
 
-      client.fetch(gremlin(g.v(1)), function(err, results) {
+      client.fetch(g.v(1), function(err, results) {
         should.exist(err);
         should.not.exist(results);
         done();
@@ -107,7 +119,7 @@ describe('client', function() {
 
       var client = grex.createClient(options);
 
-      client.fetch(gremlin(g.v(1)), function(err, results) {
+      client.fetch(g.v(1), function(err, results) {
         should.exist(err);
         should.not.exist(results);
         done();

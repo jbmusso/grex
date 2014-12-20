@@ -95,13 +95,13 @@ module.exports = (function(){
         return callback(new Error(err));
       }
 
-      callback(null, self.fetchHandler(response, response.results));
+      callback(null, self.fetchHandler(response, response.results), response);
     });
   };
 
   RexsterClient.prototype.fetchOne = function(gremlin, callback) {
-    this.fetch(gremlin, function(err, results) {
-      callback(null, results[0]);
+    this.fetch(gremlin, function(err, results, response) {
+      callback(null, results[0], response);
     });
   };
 
