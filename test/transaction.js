@@ -7,7 +7,23 @@ var g = grex.g;
 var gremlin = grex.gremlin;
 
 
+function cleanGraph(done) {
+  var query = gremlin();
+  query(g.V('name', 'Alice').remove());
+  query(g.V('name', 'Bob').remove());
+  query(g.V('name', 'Carol').remove());
+  query(g.V('name', 'Eve').remove());
+  query(g.V('name', 'John').remove());
+  query(g.V('name', 'Waldo').remove());
+
+  client.execute(query, function(err, results) {
+    done();
+  });
+}
+
 describe('Transactions', function() {
+  afterEach(cleanGraph);
+
   it('should add a vertex to the graph', function(done) {
     var query = gremlin(g.addVertex({ name: "Alice" }));
 
