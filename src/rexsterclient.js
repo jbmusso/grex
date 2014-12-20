@@ -99,6 +99,12 @@ module.exports = (function(){
     });
   };
 
+  RexsterClient.prototype.fetchOne = function(gremlin, callback) {
+    this.fetch(gremlin, function(err, results) {
+      callback(null, results[0]);
+    });
+  };
+
   /**
    * A noop, default handler for RexsterClient.fetch().
    *
