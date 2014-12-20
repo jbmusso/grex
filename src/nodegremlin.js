@@ -1,6 +1,7 @@
 var _ = require('lodash');
 
 var GremlinScript = require('gremlin-script').GremlinScript;
+var bindParameter = require('gremlin-script').bindParameter;
 var classes = require('gremlin-script').Classes;
 var GraphWrapper = require('gremlin-script').Structure.Graph;
 var PipelineWrapper = require('gremlin-script').Structure.Pipeline;
@@ -21,6 +22,8 @@ module.exports = (function() {
 
     return client;
   };
+
+  NodeGremlin.bindParameter = bindParameter;
 
   Object.defineProperty(NodeGremlin, 'gremlin', {
     get: function() {
