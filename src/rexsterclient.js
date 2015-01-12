@@ -53,12 +53,11 @@ module.exports = (function(){
   };
 
   /**
-   * Send a GremlinScript script to Rexster for execution via HTTP, fetch and format
-   * results.
+   * Send a GremlinScript script to Rexster for execution via HTTP, and
+   * retrieve the raw Rexster response.
    *
    * @param {GremlinScript} gremlin A Gremlin-Groovy script to execute
-   *
-   * @return {Promise}
+   * @param {Function} callback
    */
   RexsterClient.prototype.execute =
   RexsterClient.prototype.exec = function(gremlin, callback) {
@@ -83,10 +82,11 @@ module.exports = (function(){
   };
 
   /**
-   * Send a Gremlin script to Rexster for execution via HTTP, fetch and format
-   * results as instantiated elements (typically Vertices and Edges).
+   * Send a Gremlin script to Rexster for execution via HTTP, and
+   * retrieve the `results` Array of the Rexster response.
    *
    * @param {GremlinScript} gremlin
+   * @param {Function} callback
    */
   RexsterClient.prototype.fetch = function(gremlin, callback) {
     var self = this;
@@ -100,6 +100,14 @@ module.exports = (function(){
     });
   };
 
+
+  /**
+   * Send a Gremlin script to Rexster for execution via HTTP, and
+   * retrieve the first element of the `results` Array of the Rexster response.
+   *
+   * @param {GremlinScript} gremlin
+   * @param {Function} callback
+   */
   RexsterClient.prototype.fetchOne = function(gremlin, callback) {
     this.fetch(gremlin, function(err, results, response) {
       callback(null, results[0], response);
@@ -113,7 +121,7 @@ module.exports = (function(){
   };
 
   /**
-   * A noop, default handler for RexsterClient.fetch().
+   * A default handler for RexsterClient.fetch().
    *
    * @param {String} response - the complete HTTP response body
    * @param {Array} results - array of results, shorthand for response.results
