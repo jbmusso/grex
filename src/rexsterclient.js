@@ -11,7 +11,22 @@ var ObjectWrapper = require('gremlin-script').ObjectWrapper;
 var GremlinScript = require('gremlin-script').GremlinScript;
 
 
-module.exports = (function(){
+function buildRequestOptions(gremlin, settings) {
+  var requestOptions = {
+    json: true,
+    uri: 'http://' + settings.host + ':' + settings.port + '/graphs/' + settings.graph + '/tp/gremlin',
+    body: {
+      script: gremlin.script.replace(/\$/g, "\\$"),
+      params: gremlin.params,
+      'rexster.showTypes': settings.showTypes,
+      load: settings.load
+    }
+  };
+
+  return requestOptions;
+}
+
+var RexsterClient = (function(){
   function RexsterClient(options) {
     var defaultSettings = {
       host: 'localhost',
@@ -27,21 +42,6 @@ module.exports = (function(){
     };
   }
 
-  RexsterClient.prototype.buildRequestOptions = function(gremlin) {
-    var requestOptions = {
-      json: true,
-      uri: 'http://' + this.settings.host + ':' + this.settings.port + '/graphs/' + this.settings.graph + '/tp/gremlin',
-      body: {
-        script: gremlin.script.replace(/\$/g, "\\$"),
-        params: gremlin.params,
-        'rexster.showTypes': this.settings.showTypes,
-        load: this.settings.load
-      }
-    };
-
-    return requestOptions;
-  };
-
   /**
    * Send a GremlinScript script to Rexster for execution via HTTP, and
    * retrieve the raw Rexster response.
@@ -53,13 +53,12 @@ module.exports = (function(){
   RexsterClient.prototype.exec = function(gremlin, callback) {
     if (gremlin instanceof ObjectWrapper) {
       var statement = gremlin;
-
       gremlin = new GremlinScript();
       var appender = gremlin.getAppender();
       appender(statement);
     }
 
-    var options = this.buildRequestOptions(gremlin);
+    var options = buildRequestOptions(gremlin, this.settings);
 
     request.post(options, function(err, response, body) {
       if (err) {
@@ -93,7 +92,6 @@ module.exports = (function(){
     });
   };
 
-
   /**
    * Send a Gremlin script to Rexster for execution via HTTP, and
    * retrieve the first element of the `results` Array of the Rexster response.
@@ -108,10 +106,12 @@ module.exports = (function(){
   };
 
   RexsterClient.prototype.stream = function(gremlin) {
-    var options = this.buildRequestOptions(gremlin);
+    var options = buildRequestOptions(gremlin, this.settings);
 
     return request.post(options).pipe(JSONStream.parse('results.*'));
   };
 
   return RexsterClient;
-})();
+}());
+
+module.exports = RexsterClient;
