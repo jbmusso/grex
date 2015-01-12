@@ -34,6 +34,7 @@
     "url": "https://github.com/jbmusso/grex/issues"
   },
   "dependencies": {
+    "JSONStream": "^0.10.0",
     "gremlin-script": "^1.1.0",
     "inherits": "~2.0.1",
     "lodash": "~2.4.1",

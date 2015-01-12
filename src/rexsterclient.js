@@ -3,6 +3,7 @@
 var http = require('http');
 var querystring = require('querystring');
 var request = require('request');
+var JSONStream = require('JSONStream');
 
 var _ = require("lodash");
 
@@ -103,6 +104,12 @@ module.exports = (function(){
     this.fetch(gremlin, function(err, results, response) {
       callback(null, results[0], response);
     });
+  };
+
+  RexsterClient.prototype.stream = function(gremlin) {
+    var options = this.buildRequestOptions(gremlin);
+
+    return request.post(options).pipe(JSONStream.parse('results.*'));
   };
 
   /**
