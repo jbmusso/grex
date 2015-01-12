@@ -13,7 +13,7 @@ var GremlinScript = require('gremlin-script').GremlinScript;
 
 module.exports = (function(){
   function RexsterClient(options) {
-    var defaultOptions = {
+    var defaultSettings = {
       host: 'localhost',
       port: 8182,
       graph: 'tinkergraph',
@@ -21,8 +21,8 @@ module.exports = (function(){
       showTypes: false
     };
 
-    this.options = _.defaults(options || {}, defaultOptions);
-    this.fetchHandler = this.options.fetched || this.defaultFetchHandler;
+    this.settings = _.defaults(options || {}, defaultSettings);
+    this.fetchHandler = this.settings.fetched || this.defaultFetchHandler;
   }
 
   /**
@@ -40,12 +40,12 @@ module.exports = (function(){
   RexsterClient.prototype.buildRequestOptions = function(gremlin) {
     var requestOptions = {
       json: true,
-      uri: 'http://' + this.options.host + ':' + this.options.port + '/graphs/' + this.options.graph + '/tp/gremlin',
+      uri: 'http://' + this.settings.host + ':' + this.settings.port + '/graphs/' + this.settings.graph + '/tp/gremlin',
       body: {
         script: gremlin.script.replace(/\$/g, "\\$"),
         params: gremlin.params,
-        'rexster.showTypes': this.options.showTypes,
-        load: this.options.load
+        'rexster.showTypes': this.settings.showTypes,
+        load: this.settings.load
       }
     };
 

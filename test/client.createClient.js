@@ -15,7 +15,7 @@ describe('gRex', function() {
 
       it('should use default options', function() {
         var client = grex.createClient();
-        client.options.should.eql(defaultOptions);
+        client.settings.should.eql(defaultOptions);
       });
     });
 
@@ -28,7 +28,7 @@ describe('gRex', function() {
 
       it('should use this new options', function() {
         var client = grex.createClient(options);
-        client.options.graph.should.equal(options.graph);
+        client.settings.graph.should.equal(options.graph);
       });
     });
 
@@ -41,7 +41,7 @@ describe('gRex', function() {
 
       it('should use the right options', function() {
         var client = grex.createClient(options);
-        client.options.graph.should.equal(options.graph);
+        client.settings.graph.should.equal(options.graph);
       });
     });
   });
