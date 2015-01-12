@@ -10,7 +10,7 @@
     "gremlin",
     "blueprints"
   ],
-  "homepage": "https://github.com/gulthor/grex",
+  "homepage": "https://github.com/jbmusso/grex",
   "author": [
     {
       "name": "Frank Panetta",
@@ -28,10 +28,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/gulthor/grex.git"
+    "url": "https://github.com/jbmusso/grex.git"
   },
   "bugs": {
-    "url": "https://github.com/gulthor/grex/issues"
+    "url": "https://github.com/jbmusso/grex/issues"
   },
   "dependencies": {
     "gremlin-script": "^1.1.0",
