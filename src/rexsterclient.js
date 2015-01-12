@@ -22,20 +22,10 @@ module.exports = (function(){
     };
 
     this.settings = _.defaults(options || {}, defaultSettings);
-    this.fetchHandler = this.settings.fetched || this.defaultFetchHandler;
+    this.fetchHandler = this.settings.fetched || function(response, results) {
+      return results;
+    };
   }
-
-  /**
-   * @param {ObjectWrapper} statement
-   * @return {GremlinScript}
-   */
-  RexsterClient.prototype.createGremlinFromWrapper = function(statement) {
-    var gremlin = new GremlinScript();
-    var appender = gremlin.getAppender();
-    appender(statement);
-
-    return gremlin;
-  };
 
   RexsterClient.prototype.buildRequestOptions = function(gremlin) {
     var requestOptions = {
@@ -63,7 +53,10 @@ module.exports = (function(){
   RexsterClient.prototype.exec = function(gremlin, callback) {
     if (gremlin instanceof ObjectWrapper) {
       var statement = gremlin;
-      gremlin = this.createGremlinFromWrapper(statement);
+
+      gremlin = new GremlinScript();
+      var appender = gremlin.getAppender();
+      appender(statement);
     }
 
     var options = this.buildRequestOptions(gremlin);
@@ -118,16 +111,6 @@ module.exports = (function(){
     var options = this.buildRequestOptions(gremlin);
 
     return request.post(options).pipe(JSONStream.parse('results.*'));
-  };
-
-  /**
-   * A default handler for RexsterClient.fetch().
-   *
-   * @param {String} response - the complete HTTP response body
-   * @param {Array} results - array of results, shorthand for response.results
-   */
-  RexsterClient.prototype.defaultFetchHandler = function(response, results) {
-    return results;
   };
 
   return RexsterClient;
