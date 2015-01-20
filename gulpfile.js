@@ -9,6 +9,13 @@ var bump = require('gulp-bump');
 var browserify = require('browserify');
 var transform = require('vinyl-transform');
 
+var argv = require('yargs')
+    .options('s', {
+      alias: 'semver',
+      default: 'patch'
+    })
+    .argv;
+
 
 gulp.task('scripts', function () {
   var browserified = transform(function(filename) {
@@ -53,16 +60,10 @@ gulp.task('watch', function() {
 });
 
 // Bump tasks
-gulp.task('bump-patch', function() {
-  gulp.src('./package.json').pipe(bump({ type: 'patch' })).pipe(gulp.dest('./'));
-});
-
-gulp.task('bump-minor', function() {
-  gulp.src('./package.json').pipe(bump({ type: 'minor' })).pipe(gulp.dest('./'));
-});
-
-gulp.task('bump-major', function() {
-  gulp.src('./package.json').pipe(bump({ type: 'major' })).pipe(gulp.dest('./'));
+gulp.task('bump-version', function() {
+  gulp.src('./package.json')
+      .pipe(bump({ type: argv.semver }))
+      .pipe(gulp.dest('./'));
 });
 
 // Main tasks
