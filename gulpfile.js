@@ -1,21 +1,27 @@
 var gulp = require('gulp');
 
-var browserify = require('gulp-browserify');
-var jshint = require('gulp-jshint');
 var mocha = require('gulp-mocha');
 var uglify = require('gulp-uglify');
 var size = require('gulp-size');
 var rename = require('gulp-rename');
 var bump = require('gulp-bump');
 
-gulp.task('scripts', function() {
-  gulp.src('src/grex.js')
-      .pipe(browserify())
-      .pipe(jshint())
-      .pipe(rename('grex.js'))
+var browserify = require('browserify');
+var transform = require('vinyl-transform');
+
+
+gulp.task('scripts', function () {
+  var browserified = transform(function(filename) {
+    var b = browserify(filename, {
+      debug: true
+    });
+    return b.bundle();
+  });
+
+  return gulp.src(['./src/grex.js'])
+      .pipe(browserified)
       .pipe(gulp.dest('./build'))
       .pipe(size({ showFiles: true }))
-      // Minified version
       .pipe(uglify())
       .pipe(rename('grex.min.js'))
       .pipe(gulp.dest('./build'))
