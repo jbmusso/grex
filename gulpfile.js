@@ -9,7 +9,7 @@ var rename = require('gulp-rename');
 var bump = require('gulp-bump');
 
 gulp.task('scripts', function() {
-  gulp.src('index.js')
+  gulp.src('src/grex.js')
       .pipe(browserify())
       .pipe(jshint())
       .pipe(rename('grex.js'))
