@@ -52,8 +52,8 @@
     "gulp-jshint": "^1.9.0",
     "gulp-mocha": "^2.0.0",
     "gulp-rename": "~1.2.0",
-    "gulp-size": "^1.1.0",
-    "gulp-uglify": "^1.0.1",
-    "should": "^4.3.0"
+    "gulp-size": "^1.2.0",
+    "gulp-uglify": "^1.1.0",
+    "should": "^4.6.1"
   }
 }
