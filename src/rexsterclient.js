@@ -1,7 +1,5 @@
 /*jslint node: true */
 'use strict';
-var http = require('http');
-var querystring = require('querystring');
 var request = require('request');
 var JSONStream = require('JSONStream');
 
