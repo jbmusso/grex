@@ -1,14 +1,15 @@
 var should = require('should');
 
 var grex = require('../');
-var client = grex.createClient();
 var bind = grex.bindParameter;
 var g = grex.g;
 var gremlin = grex.gremlin;
 
 
 function cleanGraph(done) {
+  var client = grex.createClient();
   var query = gremlin();
+
   query(g.V('name', 'Alice').remove());
   query(g.V('name', 'Bob').remove());
   query(g.V('name', 'Carol').remove());
@@ -25,6 +26,7 @@ describe('Transactions', function() {
   afterEach(cleanGraph);
 
   it('should add a vertex to the graph', function(done) {
+    var client = grex.createClient();
     var query = gremlin(g.addVertex({ name: "Alice" }));
 
     client.execute(query, function(err, result) {
@@ -35,6 +37,7 @@ describe('Transactions', function() {
   });
 
   it('should add a vertex with bound properties to the graph', function(done) {
+    var client = grex.createClient();
     var query = gremlin(g.addVertex(bind({ name: "Eve" })));
 
     query.script.should.equal('g.addVertex(p0)\n');
@@ -48,6 +51,7 @@ describe('Transactions', function() {
   });
 
   it('should add two vertices and an edge in a transaction', function(done) {
+    var client = grex.createClient();
     var query = gremlin();
     var bob = query.var(g.addVertex({ name: 'Bob' }));
     var waldo = query.var(g.addVertex({ name: 'Waldo' }));
@@ -63,6 +67,7 @@ describe('Transactions', function() {
   });
 
   it('should add two vertices and an edge with bound properties', function(done) {
+    var client = grex.createClient();
     var query = gremlin();
     var john = query.var(g.addVertex(bind({ name: 'John' })));
     var carol = query.var(g.addVertex(bind({ name: 'Carol' })));
