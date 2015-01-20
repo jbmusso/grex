@@ -19,5 +19,18 @@ describe('client', function() {
         done();
       });
     });
+
+    it('should support an object with a bound parameter', function(done) {
+      var client = grex.createClient();
+
+      client.fetchOne('g.v(vid)', { vid: 1 }, function(err, vertex, response) {
+        should.not.exist(err);
+        should.exist(vertex); /*jshint -W030 */
+        vertex.should.not.be.an.Array;
+        should.exist(response);
+        should.exist(response.queryTime);
+        done();
+      });
+    });
   });
 });

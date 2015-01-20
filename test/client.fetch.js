@@ -19,16 +19,6 @@ describe('client', function() {
       });
     });
 
-    it('should fetch the result of a script', function(done) {
-      var client = grex.createClient();
-
-      client.fetch(g.v(1), function(err, results) {
-        should.not.exist(err);
-        should.exist(results);
-        done();
-      });
-    });
-
     it('should automatically instantiate a GremlinScript and fetch the results of executing it', function(done) {
       var client = grex.createClient();
       client.fetch(g.v(1), function(err, results) {
@@ -75,6 +65,16 @@ describe('client', function() {
         results[0].baz.should.equal(1);
         results[1].baz.should.equal('duh');
         results[1].boo.should.equal(true);
+        done();
+      });
+    });
+
+    it('should support an object with a bound parameter', function(done) {
+      var client = grex.createClient();
+
+      client.fetch('g.v(vid)', { vid: 1 }, function(err, results) {
+        should.not.exist(err);
+        should.exist(results);
         done();
       });
     });

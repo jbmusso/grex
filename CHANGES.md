@@ -1,5 +1,6 @@
 ## 0.8.0
 
+- Add: all query methods now support passing an object of bindings as optional second parameter
 - Add: `client.fetchOne()` which only returns the first result
 - Fix: `client.fetch()` properly returns the raw response as third parameter
 - Rename `client.options` to `client.settings`

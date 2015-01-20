@@ -67,6 +67,28 @@ describe('client', function() {
         done();
       });
     });
+
+    it('should support an object with a bound parameter', function(done) {
+      var client = grex.createClient();
+
+      client.execute('g.v(vid)', { vid: 1 }, function(err, response) {
+        should.not.exist(err);
+        should.exist(response);
+        response.results[0]._id.should.equal('1');
+        done();
+      });
+    });
+
+    it('should support an object with many bound parameters', function(done) {
+      var client = grex.createClient();
+
+      client.execute('foo + bar', { foo: 1, bar: 2 }, function(err, response) {
+        should.not.exist(err);
+        should.exist(response);
+        response.results[0].should.equal(3);
+        done();
+      });
+    });
   });
 
   describe('.execute() - error handling', function() {
