@@ -19,9 +19,7 @@ var argv = require('yargs')
 
 gulp.task('scripts', function () {
   var browserified = transform(function(filename) {
-    var b = browserify(filename, {
-      debug: true
-    });
+    var b = browserify(filename, { });
     return b.bundle();
   });
 
