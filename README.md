@@ -1,18 +1,29 @@
 Grex
 ====
 
-A JavaScript [TinkerPop Rexster 2.x+](https://github.com/tinkerpop/rexster/wiki) client for Node.js and the browsern.
+A JavaScript [TinkerPop Rexster 2.x+](https://github.com/tinkerpop/rexster/wiki) client for Node.js and the browser.
 
-gRex helps you send [Gremlin](https://github.com/tinkerpop/gremlin/wiki) queries to Rexster via HTTP. It supports [script engine bindings](https://github.com/tinkerpop/rexster/wiki/Gremlin-Extension#script-engine-bindings), [server-side scripts](https://github.com/tinkerpop/rexster/wiki/Gremlin-Extension#load-parameter) and [type system](https://github.com/tinkerpop/rexster/wiki/Property-Data-Types).
+gRex helps you send [Gremlin](https://github.com/tinkerpop/gremlin/wiki) queries via HTTP to Rexster with the Gremlin extension enabled.
+The library supports [script engine bindings](https://github.com/tinkerpop/rexster/wiki/Gremlin-Extension#script-engine-bindings) and [server-side scripts](https://github.com/tinkerpop/rexster/wiki/Gremlin-Extension#load-parameter).
 
-If you need help understanding the Gremlin API, you'll find [GremlinDocs](http://gremlindocs.com/), [SQL2Gremlin](http://sql2gremlin.com) and upcoming [TinkerPop3 documentation](http://www.tinkerpop.com/docs/current/) to be useful resources. The official [Gremlin users mailing list](https://groups.google.com/forum/#!forum/gremlin-users) is also a very valuable source of information.
+## Learning Gremlin
 
-Feel free to [open issues](https://github.com/gulthor/grex/issues) if you have trouble using the library (bugs, feature requests). Questions should be posted on [StackOverflow](http://stackoverflow.com/) with the `javascript` and `gremlin` tags.
+Valuable source of information:
+* [GremlinDocs](http://gremlindocs.com/)
+* [SQL2Gremlin](http://sql2gremlin.com)
+* Upcoming [TinkerPop3 documentation](http://www.tinkerpop.com/docs/current/)
+* The official [Gremlin users mailing list](https://groups.google.com/forum/#!forum/gremlin-users).
+
+## Troubleshooting
+
+Feel free to [open issues](https://github.com/gulthor/grex/issues) if you have trouble using the library (bugs, feature requests).
+
+General questions should be posted on [StackOverflow](http://stackoverflow.com/questions/tagged/gremlin) with the `javascript` and `gremlin` tags.
 
 ## Contributing
 
-The [master branch](https://github.com/gulthor/grex/tree/master) is a stable, release-only branch. Please check out the [develop branch](https://github.com/gulthor/grex/tree/develop) for the latest changes. Pull requests are welcome and should be sent against [develop](https://github.com/gulthor/grex/tree/develop).
-* In case of bug fixes, please provide your pull requests with two commits: the first one with tests that show the problem being fixed (so I can checkout to it and see what's wrong), and the last one with the actual fix.
+The [master branch](https://github.com/gulthor/grex/tree/master) is a stable, release-only branch. Please checkout the [develop branch](https://github.com/gulthor/grex/tree/develop) for the latest changes. Pull requests are welcome and should be sent against [develop](https://github.com/gulthor/grex/tree/develop).
+* In case of bug fixes, please provide your pull requests with two commits: the first one with tests that show the problem being fixed (so people can checkout the commit and see what's wrong), and the last one with the actual fix.
 * If you wish to send a pull request with a new feature, please open an issue first so we can discuss about it.
 
 ## Testing
@@ -64,10 +75,9 @@ client.execute(query, function(err, response) {
 })
 ```
 
-Shorter version (with dynamic query creation):
-
+Shorter version:
 ```javascript
-client.execute(g.v(1)).done(function(response) {
+client.execute(g.v(1), function(err, response) {
   // ...
 });
 ```
@@ -80,9 +90,8 @@ In order to get an API closer to Groovy-flavored Gremlin, it is recommended that
 
 ```javascript
 var g = grex.g; // Graph getter
-var _ = grex._; // Pipeline getter. Beware of not conflicts and make sure you don't override libraries such as Underscore.js or Lodash.js
+var _ = grex._; // Pipeline getter. Beware of conflicts and make sure you don't override libraries such as Underscore.js or Lodash.js
 ```
-Be aware though that bound parameters are not yet supported when using the object wrappers. You should use the `printf` style for better performance and security (this will be discussed later in the documentation).
 
 ### Building a Gremlin script
 
@@ -152,6 +161,22 @@ Will generate:
 ```groovy
 // Groovy
 v1 = g.addVertex(["name": "Bob"])
+```
+
+### Bound parameters
+
+Binding parameters can be done in several ways. This is recommended to use for performance and security reasons.
+
+#### Explicit parameter binding
+
+Grex provides a `bindParameter` function which returns an instance of `BoundParameter`. Such parameter is automatically attached as a binding.
+
+```javascript
+var bind = grex.bindParameter;
+
+var query = gremlin(g.addVertex(bind({ name: "Eve" })));
+query.script.should.equal('g.addVertex(p0)\n');
+query.params.p0.name.should.equal('Eve');
 ```
 
 #### Building a Gremlin script with string formatting and bound parameters
@@ -231,7 +256,7 @@ Executing a one line script is trivial:
 client.execute(gremlin(g.v(1)), function (e, response) { console.log(response) });
 ```
 
-##### Lazy query creation for one line scripts
+##### Automatic query creation for one line scripts
 
 For single line scripts, gRex allows you to directly pass an instance of `ObjectWrapper` to `client.execute()` (and `client.fetch()`). These methods will internally create a 'GremlinScript' which will be executed right away.
 
@@ -242,6 +267,12 @@ client.fetch(g.V(), function (e, vertices) { console.log(vertices) });
 Which is a shorthand for:
 ```javascript
 client.fetch(gremlin(g.V()), function (e, vertices) { console.log(vertices) });
+```
+
+You can also pass a raw String.
+
+```javascript
+client.fetch('g.V()', function (e, vertices) { console.log(vertices) });
 ```
 
 #### Fetching
@@ -273,6 +304,17 @@ client.fetchOne(g.v(6), function(err, vertex) {
 });
 ```
 However, be aware that `fetchOne()` will **NOT** prevent Rexster from sending a lot of data; make sure your Gremlin query is restrictive enough to limit the number of results returned.
+
+#### Returning a stream of results
+
+```javascript
+var s = client.stream(g.V());
+
+s.on('data', function(vertex) {
+  // handle vertex
+});
+```
+This will return a stream of objects which can be pipe'd into any Node.js transform streams.
 
 #### Executing a stored, server-side script
 
@@ -550,27 +592,37 @@ Graph methods return convenient wrapper objects, which is either:
 
 A getter returning a `new Pipeline()` wrapper instance.
 
+#### grex.bindParameter(value)
+
+Returns an instance of `BoundParameter` for the given `value`.
 
 ### Client
 
-#### client.execute(gremlinScript, callback)
+For all four query methods, `bindings` are optional.
 
-Sends the generated `GremlinScript` to the server for execution.
+#### client.execute(gremlin, bindings, callback)
 
-The callback takes an `err` object and a raw Rexster `response` object as arguments.
+Callback signature: `(err, response)`
+* `err` object
+* raw Rexster `response` object
 
-#### client.fetch(gremlinScript, callback)
+#### client.fetch(gremlin, bindings, callback)
 
-Sends the generated `GremlinScript` to the server for execution.
+Callback signature: `(err, results, response)`
+* `err` object
+* `results` array (shortcut for `response.results`)
+* raw Rexster `response` object
 
-The callback takes an `err` object, a `results` object (as a shortcut for `response.results`) and a `response` object.
+#### client.fetchOne(gremlin, bindings, callback)
 
-#### client.fetchOne(gremlinScript, callback)
+Callback signature: `(err, result)`
+* `err` object
+* the first element of the raw `response.results` array
+* raw Rexster `response` object
 
-Sends the generated `GremlinScript` to the server for execution.
+#### client.stream(gremlin, bindings)
 
-The callback takes an `err` object, a `result` object (as a shortcut for `response.results[0]`) and a `response` object.
-
+Returns a Stream of objects which can be pipe'd into any Node.js transform stream.
 
 ## Todo
 
