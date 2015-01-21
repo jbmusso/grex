@@ -1,8 +1,7 @@
 /*jslint node: true */
 'use strict';
-var http = require('http');
-var querystring = require('querystring');
 var request = require('request');
+var JSONStream = require('JSONStream');
 
 var _ = require("lodash");
 
@@ -10,9 +9,35 @@ var ObjectWrapper = require('gremlin-script').ObjectWrapper;
 var GremlinScript = require('gremlin-script').GremlinScript;
 
 
-module.exports = (function(){
+function buildRequestOptions(gremlin, settings) {
+  var requestOptions = {
+    json: true,
+    uri: 'http://' + settings.host + ':' + settings.port + '/graphs/' + settings.graph + '/tp/gremlin',
+    body: {
+      script: gremlin.script.replace(/\$/g, "\\$"),
+      params: gremlin.params,
+      'rexster.showTypes': settings.showTypes,
+      load: settings.load
+    }
+  };
+
+  return requestOptions;
+}
+
+function ensureGremlin(gremlin) {
+  if (gremlin instanceof ObjectWrapper || _.isString(gremlin)) {
+    var statement = gremlin;
+    gremlin = new GremlinScript();
+    var appender = gremlin.getAppender();
+    appender(statement);
+  }
+
+  return gremlin;
+}
+
+var RexsterClient = (function(){
   function RexsterClient(options) {
-    var defaultOptions = {
+    var defaultSettings = {
       host: 'localhost',
       port: 8182,
       graph: 'tinkergraph',
@@ -20,53 +45,30 @@ module.exports = (function(){
       showTypes: false
     };
 
-    this.options = _.defaults(options || {}, defaultOptions);
-    this.fetchHandler = this.options.fetched || this.defaultFetchHandler;
+    this.settings = _.defaults(options || {}, defaultSettings);
+    this.fetchHandler = this.settings.fetched || function(response, results) {
+      return results;
+    };
   }
 
   /**
-   * @param {ObjectWrapper} statement
-   * @return {GremlinScript}
-   */
-  RexsterClient.prototype.createGremlinFromWrapper = function(statement) {
-    var gremlin = new GremlinScript();
-    var appender = gremlin.getAppender();
-    appender(statement);
-
-    return gremlin;
-  };
-
-  RexsterClient.prototype.buildRequestOptions = function(gremlin) {
-    var requestOptions = {
-      json: true,
-      uri: 'http://' + this.options.host + ':' + this.options.port + '/graphs/' + this.options.graph + '/tp/gremlin',
-      body: {
-        script: gremlin.script.replace(/\$/g, "\\$"),
-        params: gremlin.params,
-        'rexster.showTypes': this.options.showTypes,
-        load: this.options.load
-      }
-    };
-
-    return requestOptions;
-  };
-
-  /**
-   * Send a GremlinScript script to Rexster for execution via HTTP, fetch and format
-   * results.
+   * Send a GremlinScript script to Rexster for execution via HTTP, and
+   * retrieve the raw Rexster response.
    *
-   * @param {GremlinScript} gremlin A Gremlin-Groovy script to execute
-   *
-   * @return {Promise}
+   * @param {GremlinScript|ObjectWrapper|String} gremlin Script to execute
+   * @param {Function} callback
    */
   RexsterClient.prototype.execute =
-  RexsterClient.prototype.exec = function(gremlin, callback) {
-    if (gremlin instanceof ObjectWrapper) {
-      var statement = gremlin;
-      gremlin = this.createGremlinFromWrapper(statement);
+  RexsterClient.prototype.exec = function(gremlin, bindings, callback) {
+    if (typeof bindings === 'function') {
+      callback = bindings;
+      bindings = {};
     }
 
-    var options = this.buildRequestOptions(gremlin);
+    gremlin = ensureGremlin(gremlin);
+    _.extend(gremlin.params, bindings);
+
+    var options = buildRequestOptions(gremlin, this.settings);
 
     request.post(options, function(err, response, body) {
       if (err) {
@@ -82,32 +84,57 @@ module.exports = (function(){
   };
 
   /**
-   * Send a Gremlin script to Rexster for execution via HTTP, fetch and format
-   * results as instantiated elements (typically Vertices and Edges).
+   * Send a Gremlin script to Rexster for execution via HTTP, and
+   * retrieve the `results` Array of the Rexster response.
    *
    * @param {GremlinScript} gremlin
+   * @param {Function} callback
    */
-  RexsterClient.prototype.fetch = function(gremlin, callback) {
+  RexsterClient.prototype.fetch = function(gremlin, bindings, callback) {
     var self = this;
 
-    this.execute(gremlin, function(err, response) {
+    if (typeof bindings === 'function') {
+      callback = bindings;
+      bindings = {};
+    }
+
+    this.execute(gremlin, bindings, function(err, response) {
       if (err) {
         return callback(new Error(err));
       }
 
-      callback(null, self.fetchHandler(response, response.results));
+      callback(null, self.fetchHandler(response, response.results), response);
     });
   };
 
   /**
-   * A noop, default handler for RexsterClient.fetch().
+   * Send a Gremlin script to Rexster for execution via HTTP, and
+   * retrieve the first element of the `results` Array of the Rexster response.
    *
-   * @param {String} response - the complete HTTP response body
-   * @param {Array} results - array of results, shorthand for response.results
+   * @param {GremlinScript} gremlin
+   * @param {Function} callback
    */
-  RexsterClient.prototype.defaultFetchHandler = function(response, results) {
-    return results;
+  RexsterClient.prototype.fetchOne = function(gremlin, bindings, callback) {
+    if (typeof bindings === 'function') {
+      callback = bindings;
+      bindings = {};
+    }
+
+    this.fetch(gremlin, bindings, function(err, results, response) {
+      callback(null, results[0], response);
+    });
+  };
+
+  RexsterClient.prototype.stream = function(gremlin, bindings) {
+    gremlin = ensureGremlin(gremlin);
+    _.extend(gremlin.params, bindings || {});
+
+    var options = buildRequestOptions(gremlin, this.settings);
+
+    return request.post(options).pipe(JSONStream.parse('results.*'));
   };
 
   return RexsterClient;
-})();
+}());
+
+module.exports = RexsterClient;

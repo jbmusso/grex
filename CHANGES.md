@@ -1,3 +1,21 @@
+## 0.8.0
+
+- Add: all query methods now support passing an object of bindings as optional second parameter
+- Add: `client.fetchOne()` which only returns the first result
+- Fix: `client.fetch()` properly returns the raw response as third parameter
+- Rename `client.options` to `client.settings`
+- Update gremlin-script to v1.1.0
+
+## 0.7.3
+- Fix: `client.fetch()` should now handle errors properly
+
+## 0.7.2
+- Fix: issues when using bound parameters
+
+## 0.7.1
+- Fix: handle bound parameters passed as objects
+- Fix: properly return some error messages
+
 ## 0.7.0
 - Remove Q dependency: async functions no longer support the dual callback/promise API. Please use your own promise library
 - Replace `client.exec()` with `client.execute()`

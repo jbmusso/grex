@@ -263,6 +263,17 @@ client.fetch(query, function(err, results) {
 
 When creating your client with `grex.createClient(options)`, it is also possible to define your own custom function in `options.fetched` in order to change the behavior of `client.fetch()`. This is useful if you wish to automatically instantiate returned graph Elements with custom classes of your own. The default handlers in gRex only returns the `results` part of the `response`, making `client.fetch()` a very close cousin of `client.execute()`.
 
+#### Fetching a single result from the graph
+
+If you know in advance that a given query should return no more than one result, gRex provides a convenient `client.fetchOne()` method that retrieves the first element of the `results` array returned by Rexster.
+
+```javascript
+client.fetchOne(g.v(6), function(err, vertex) {
+  var user = new UserModel(vertex);
+});
+```
+However, be aware that `fetchOne()` will **NOT** prevent Rexster from sending a lot of data; make sure your Gremlin query is restrictive enough to limit the number of results returned.
+
 #### Executing a stored, server-side script
 
 Please refer to Rexster documentation for help on [setting up server-side scripts](https://github.com/tinkerpop/rexster/wiki/Gremlin-Extension#load-parameter).
@@ -553,6 +564,12 @@ The callback takes an `err` object and a raw Rexster `response` object as argume
 Sends the generated `GremlinScript` to the server for execution.
 
 The callback takes an `err` object, a `results` object (as a shortcut for `response.results`) and a `response` object.
+
+#### client.fetchOne(gremlinScript, callback)
+
+Sends the generated `GremlinScript` to the server for execution.
+
+The callback takes an `err` object, a `result` object (as a shortcut for `response.results[0]`) and a `response` object.
 
 
 ## Todo

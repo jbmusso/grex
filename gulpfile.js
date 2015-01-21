@@ -1,21 +1,32 @@
 var gulp = require('gulp');
 
-var browserify = require('gulp-browserify');
-var jshint = require('gulp-jshint');
 var mocha = require('gulp-mocha');
 var uglify = require('gulp-uglify');
 var size = require('gulp-size');
 var rename = require('gulp-rename');
 var bump = require('gulp-bump');
 
-gulp.task('scripts', function() {
-  gulp.src('index.js')
-      .pipe(browserify())
-      .pipe(jshint())
-      .pipe(rename('grex.js'))
+var browserify = require('browserify');
+var transform = require('vinyl-transform');
+
+var argv = require('yargs')
+    .options('s', {
+      alias: 'semver',
+      default: 'patch'
+    })
+    .argv;
+
+
+gulp.task('scripts', function () {
+  var browserified = transform(function(filename) {
+    var b = browserify(filename, { });
+    return b.bundle();
+  });
+
+  return gulp.src(['./src/grex.js'])
+      .pipe(browserified)
       .pipe(gulp.dest('./build'))
       .pipe(size({ showFiles: true }))
-      // Minified version
       .pipe(uglify())
       .pipe(rename('grex.min.js'))
       .pipe(gulp.dest('./build'))
@@ -47,16 +58,10 @@ gulp.task('watch', function() {
 });
 
 // Bump tasks
-gulp.task('bump-patch', function() {
-  gulp.src('./package.json').pipe(bump({ type: 'patch' })).pipe(gulp.dest('./'));
-});
-
-gulp.task('bump-minor', function() {
-  gulp.src('./package.json').pipe(bump({ type: 'minor' })).pipe(gulp.dest('./'));
-});
-
-gulp.task('bump-major', function() {
-  gulp.src('./package.json').pipe(bump({ type: 'major' })).pipe(gulp.dest('./'));
+gulp.task('bump-version', function() {
+  gulp.src('./package.json')
+      .pipe(bump({ type: argv.semver }))
+      .pipe(gulp.dest('./'));
 });
 
 // Main tasks

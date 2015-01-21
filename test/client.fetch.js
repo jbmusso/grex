@@ -7,12 +7,14 @@ var g = grex.g;
 
 describe('client', function() {
   describe('.fetch() - script handling', function() {
-    it('should fetch the resulf of a script', function(done) {
+    it('should return results and response objects', function(done) {
       var client = grex.createClient();
 
-      client.fetch(gremlin(g.v(1)), function(err, results) {
+      client.fetch(g.v(1), function(err, results, response) {
         should.not.exist(err);
         should.exist(results);
+        should.exist(response);
+        should.exist(response.queryTime);
         done();
       });
     });
@@ -66,50 +68,13 @@ describe('client', function() {
         done();
       });
     });
-  });
 
-  describe('.fetch() - error handling', function() {
-    it('should return an error when port is incorrect', function(done) {
-      var client = grex.createClient({
-        host: 'localhost',
-        port: 123456,
-        graph: 'tinkergraph'
-      });
+    it('should support an object with a bound parameter', function(done) {
+      var client = grex.createClient();
 
-      client.fetch(gremlin(g.v(1)), function(err, results) {
-        should.exist(err);
-        should.not.exist(results);
-        done();
-      });
-    });
-
-    it('should return an error when host is incorrect', function(done) {
-      var options = {
-        'host': 'local-host',
-        'port': 8182,
-        'graph': 'tinkergraph'
-      };
-      var client = grex.createClient(options);
-
-      client.fetch(gremlin(g.v(1)), function(err, results) {
-        should.exist(err);
-        should.not.exist(results);
-        done();
-      });
-    });
-
-    it('should return an error when graph name is incorrect', function(done) {
-      var options = {
-        'host': 'localhost',
-        'port': 8182,
-        'graph': 'tinker-graph'
-      };
-
-      var client = grex.createClient(options);
-
-      client.fetch(gremlin(g.v(1)), function(err, results) {
-        should.exist(err);
-        should.not.exist(results);
+      client.fetch('g.v(vid)', { vid: 1 }, function(err, results) {
+        should.not.exist(err);
+        should.exist(results);
         done();
       });
     });
